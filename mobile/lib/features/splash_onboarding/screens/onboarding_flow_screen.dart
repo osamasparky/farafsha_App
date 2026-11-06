@@ -281,8 +281,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   }
 
   Widget _buildAvatarOverlap(String path, {double offsetRight = 0}) {
-    return Container(
-      margin: EdgeInsets.only(right: offsetRight),
+    final avatar = Container(
       width: 48,
       height: 48,
       decoration: BoxDecoration(
@@ -290,6 +289,11 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
         border: Border.all(color: const Color(0xFF2A1458), width: 3),
         image: DecorationImage(image: AssetImage(path), fit: BoxFit.cover),
       ),
+    );
+    if (offsetRight == 0) return avatar;
+    return Transform.translate(
+      offset: Offset(offsetRight, 0),
+      child: avatar,
     );
   }
 
@@ -312,3 +316,4 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
     );
   }
 }
+

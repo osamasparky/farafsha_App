@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../theme/lamma_theme.dart';
 
 enum GameButtonVariant { primary, secondary }
@@ -48,9 +49,7 @@ class _GameButtonState extends State<GameButton> {
         ? LammaColors.pink700
         : LammaColors.violet900;
 
-    final Color textColor = isPrimary
-        ? LammaColors.onCta
-        : Colors.white;
+    const Color textColor = Colors.white;
 
     final List<BoxShadow> shadows = _isPressed || !isEnabled
         ? []
@@ -63,9 +62,13 @@ class _GameButtonState extends State<GameButton> {
               blurRadius: 24,
               spreadRadius: 2,
             ),
+            BoxShadow(
+              color: bottomBorderColor,
+              offset: const Offset(0, 4.5),
+              blurRadius: 0,
+            ),
           ];
 
-    final double bottomBorderWidth = _isPressed ? 2.0 : 5.0;
     final double translateY = _isPressed ? 3.0 : 0.0;
 
     return GestureDetector(
@@ -95,20 +98,15 @@ class _GameButtonState extends State<GameButton> {
           gradient: isEnabled ? bgGradient : null,
           color: isEnabled ? null : Colors.grey.shade700,
           borderRadius: BorderRadius.circular(999),
-          border: Border(
-            top: const BorderSide(color: Colors.white54, width: 1.2),
-            left: const BorderSide(color: Colors.white24, width: 0.5),
-            right: const BorderSide(color: Colors.white24, width: 0.5),
-            bottom: BorderSide(
-              color: isEnabled ? bottomBorderColor : Colors.grey.shade900,
-              width: bottomBorderWidth,
-            ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.35),
+            width: 1.2,
           ),
           boxShadow: shadows,
         ),
         child: Center(
           child: widget.isLoading
-              ? SizedBox(
+              ? const SizedBox(
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
@@ -126,12 +124,18 @@ class _GameButtonState extends State<GameButton> {
                     ],
                     Text(
                       widget.text,
-                      style: TextStyle(
-                        fontSize: 21,
+                      style: GoogleFonts.cairo(
+                        fontSize: 20,
                         fontWeight: FontWeight.w900,
                         color: textColor,
-                        fontFamily: 'Cairo',
                         letterSpacing: -0.3,
+                        shadows: const [
+                          Shadow(
+                            color: Colors.black26,
+                            offset: Offset(0, 2),
+                            blurRadius: 4,
+                          ),
+                        ],
                       ),
                     ),
                     if (widget.showArrow) ...[
@@ -145,7 +149,7 @@ class _GameButtonState extends State<GameButton> {
                               ? Colors.white.withValues(alpha: 0.35)
                               : Colors.white.withValues(alpha: 0.2),
                         ),
-                        child: Center(
+                        child: const Center(
                           child: Icon(
                             Icons.arrow_forward_ios_rounded,
                             size: 14,
@@ -161,3 +165,4 @@ class _GameButtonState extends State<GameButton> {
     );
   }
 }
+
