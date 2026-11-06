@@ -1,0 +1,35 @@
+# Git ignore for Lammah monorepo
+
+# Environment files
+.env
+.env.backup
+.env.production
+
+# IDE and OS
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.DS_Store
+Thumbs.db
+
+# Laravel Backend ignore
+backend/vendor/
+backend/node_modules/
+backend/public/storage
+backend/storage/*.key
+backend/database/*.sqlite
+backend/database/*.sqlite-journal
+
+# Flutter Mobile ignore
+mobile/.dart_tool/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/build/
+mobile/.pub-cache/
+mobile/.pub/
+

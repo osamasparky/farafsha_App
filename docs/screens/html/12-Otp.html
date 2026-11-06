@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لعبة الجماعة — رمز التحقق</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(90% 45% at 50% 20%, #4E2590 0%, #2A1458 50%, #170B30 100%); display: flex; flex-direction: column; overflow: hidden; position: relative; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 24px 34px">
+
+  <a href="Login.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+    <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+  </a>
+
+  <div aria-hidden="true" style="align-self: center; width: 120px; height: 120px; margin-top: 24px; border-radius: 36px; background: linear-gradient(160deg, #B98AFF, #6A24C9); border-bottom: 6px solid #4A1690; box-shadow: inset 0 2px 0 rgba(255,255,255,0.45), 0 0 50px rgba(163,91,255,0.6); display: flex; align-items: center; justify-content: center; transform: rotate(-6deg)">
+    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2.5" width="12" height="19" rx="2.5"></rect><path d="M10.5 18.5h3"></path><path d="M9 10l2 2 4-4" stroke="#FFC24B" stroke-width="2.4"></path></svg>
+  </div>
+
+  <h1 style="margin: 32px 0 0; font-size: 28px; font-weight: 900; text-align: center">اكتب رمز التحقق</h1>
+  <p style="margin: 8px 0 28px; font-size: 15px; color: #D9CCF2; text-align: center; line-height: 1.7">بعتنالك رمز من 4 أرقام على<br><span dir="ltr" style="font-weight: 800; color: #FFFFFF">+966 5X XXX XX21</span> <a href="Login.dc.html" style="font-weight: 700">تغيير</a></p>
+
+  <fieldset style="border: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; direction: ltr">
+    <legend style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">رمز التحقق</legend>
+    <input aria-label="الرقم 1" value="7" maxlength="1" inputmode="numeric" style="height: 72px; border-radius: 18px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFFFFF; font-size: 32px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الرقم 2" value="4" maxlength="1" inputmode="numeric" style="height: 72px; border-radius: 18px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFFFFF; font-size: 32px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الرقم 3" value="" maxlength="1" inputmode="numeric" style="height: 72px; border-radius: 18px; border: 2.5px solid #FFC24B; background: rgba(0,0,0,0.25); color: #FFFFFF; font-size: 32px; font-weight: 900; text-align: center; outline: none; box-shadow: 0 0 0 4px rgba(255,194,75,0.2)">
+    <input aria-label="الرقم 4" value="" maxlength="1" inputmode="numeric" style="height: 72px; border-radius: 18px; border: 1.5px solid rgba(163,91,255,0.4); background: rgba(0,0,0,0.25); color: #FFFFFF; font-size: 32px; font-weight: 900; text-align: center; outline: none">
+  </fieldset>
+
+  <p style="margin: 24px 0 0; font-size: 15px; color: #D9CCF2; text-align: center">ما وصلكش؟ إعادة الإرسال بعد <span style="font-weight: 900; color: #FFC24B">00:42</span></p>
+
+  <div style="flex: 1"></div>
+  <a href="Register.dc.html" style="text-decoration: none; height: 62px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.45)">تأكيد</a>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

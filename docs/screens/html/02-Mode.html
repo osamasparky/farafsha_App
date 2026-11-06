@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لعبة الجماعة — اختيار طريقة اللعب</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(90% 55% at 50% 25%, #4E2590 0%, #2A1458 50%, #170B30 100%); display: flex; flex-direction: column; overflow: hidden; position: relative; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 34px; gap: 22px">
+  <div aria-hidden="true" style="position: absolute; top: 120px; right: -30px; width: 160px; height: 160px; border-radius: 50%; background: #A35BFF; filter: blur(60px); opacity: 0.45"></div>
+
+  <a href="Main.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center; position: relative">
+    <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+  </a>
+  <h1 style="margin: 0; font-size: 30px; font-weight: 900; text-align: center; position: relative; text-shadow: 0 3px 0 #6A24C9">اختر طريقة اللعب</h1>
+
+  <a href="Home.dc.html" style="text-decoration: none; color: #FFFFFF; position: relative; border-radius: 26px; padding: 14px 18px 14px 10px; background: linear-gradient(160deg, #6A33C4 0%, #3E1C82 100%); border: 2px solid #B98AFF; box-shadow: inset 0 1px 0 rgba(255,255,255,0.35), 0 0 0 5px rgba(163,91,255,0.18), 0 0 40px rgba(163,91,255,0.55); display: flex; align-items: center; gap: 8px; min-height: 176px">
+    <span aria-label="محدد" style="position: absolute; top: -13px; left: -10px; width: 34px; height: 34px; border-radius: 50%; background: #35B88E; border: 3px solid #21143F; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 14px rgba(53,184,142,0.7)">
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12l5 5 9-10"></path></svg>
+    </span>
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 26px; font-weight: 900">لعبة محلية</span>
+      <span style="font-size: 15px; color: #EADFFF; line-height: 1.5">على جهاز واحد<br>مع أصحابك جنبك</span>
+    </div>
+    <img src="../../assets/local.png" alt="" style="width: 160px; height: 140px; object-fit: cover; flex: none; -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 60%, transparent 100%); mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 60%, transparent 100%)">
+  </a>
+
+  <a href="Room.dc.html" style="text-decoration: none; color: #FFFFFF; position: relative; border-radius: 26px; padding: 14px 18px 14px 10px; background: linear-gradient(160deg, #2E1A5C 0%, #1F1042 100%); border: 1.5px solid rgba(163,91,255,0.4); box-shadow: inset 0 1px 0 rgba(255,255,255,0.12); display: flex; align-items: center; gap: 8px; min-height: 176px">
+    <div style="flex: 1; display: flex; flex-direction: column; gap: 4px">
+      <span style="font-size: 26px; font-weight: 900">لعبة أونلاين</span>
+      <span style="font-size: 15px; color: #CFC6E4; line-height: 1.5">العب مع أصحابك<br>عن بُعد بغرفة ورمز</span>
+    </div>
+    <img src="../../assets/online.png" alt="" style="width: 160px; height: 140px; object-fit: cover; flex: none; -webkit-mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 60%, transparent 100%); mask-image: radial-gradient(ellipse 60% 60% at 50% 50%, #000 60%, transparent 100%)">
+  </a>
+
+  <div style="flex: 1"></div>
+  <div aria-hidden="true" style="display: flex; gap: 6px; justify-content: center">
+    <span style="width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.35)"></span>
+    <span style="width: 24px; height: 8px; border-radius: 4px; background: #FFFFFF"></span>
+    <span style="width: 8px; height: 8px; border-radius: 4px; background: rgba(255,255,255,0.35)"></span>
+  </div>
+  <a href="Home.dc.html" style="text-decoration: none; height: 62px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.45)">متابعة</a>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

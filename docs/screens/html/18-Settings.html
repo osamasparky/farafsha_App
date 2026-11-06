@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لمّة — الإعدادات</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 35% at 50% 0%, #4A2290 0%, #241050 55%, #150A2E 100%); display: flex; flex-direction: column; overflow: hidden; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 24px; gap: 12px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Profile.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 900">الإعدادات</h1>
+    <span style="width: 44px"></span>
+  </div>
+
+  <h2 style="margin: 0; font-size: 13px; font-weight: 800; color: #C9A2FF">التفضيلات</h2>
+  <div style="border-radius: 18px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; flex-direction: column">
+    <button style="height: 52px; padding: 0 16px; border: none; border-bottom: 1px solid rgba(255,255,255,0.07); background: transparent; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; text-align: right">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h16v10H9l-5 4z"></path></svg>
+      <span style="flex: 1">لهجة المحتوى</span><span style="color: #FFD27A; font-weight: 800">مصري</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </button>
+    <div style="height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"></path></svg>
+      <span id="l-dark" style="flex: 1">الوضع الليلي</span>
+      <button role="switch" aria-checked="{{t.dark.on}}" aria-labelledby="l-dark" onClick="{{t.dark.flip}}" style="{{t.dark.track}}"><span style="{{t.dark.knob}}"></span></button>
+    </div>
+  </div>
+
+  <h2 style="margin: 4px 0 0; font-size: 13px; font-weight: 800; color: #C9A2FF">الصوت والحركة</h2>
+  <div style="border-radius: 18px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; flex-direction: column">
+    <div style="height: 52px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h4l5-4v14l-5-4H4z"></path><path d="M17 9a4 4 0 0 1 0 6"></path></svg>
+      <span id="l-sound" style="flex: 1">المؤثرات الصوتية</span>
+      <button role="switch" aria-checked="{{t.sound.on}}" aria-labelledby="l-sound" onClick="{{t.sound.flip}}" style="{{t.sound.track}}"><span style="{{t.sound.knob}}"></span></button>
+    </div>
+    <div style="height: 52px; padding: 0 16px; border-bottom: 1px solid rgba(255,255,255,0.07); display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="7" y="3" width="10" height="18" rx="2"></rect><path d="M3 9v6M21 9v6"></path></svg>
+      <span id="l-vib" style="flex: 1">الاهتزاز مع المؤقت</span>
+      <button role="switch" aria-checked="{{t.vib.on}}" aria-labelledby="l-vib" onClick="{{t.vib.flip}}" style="{{t.vib.track}}"><span style="{{t.vib.knob}}"></span></button>
+    </div>
+    <div style="height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l3-7 4 14 3-7h4"></path></svg>
+      <span id="l-motion" style="flex: 1">تقليل الحركة</span>
+      <button role="switch" aria-checked="{{t.motion.on}}" aria-labelledby="l-motion" onClick="{{t.motion.flip}}" style="{{t.motion.track}}"><span style="{{t.motion.knob}}"></span></button>
+    </div>
+  </div>
+
+  <h2 style="margin: 4px 0 0; font-size: 13px; font-weight: 800; color: #C9A2FF">المحتوى</h2>
+  <div style="border-radius: 18px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3)">
+    <div style="min-height: 60px; padding: 8px 16px; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z"></path></svg>
+      <span style="flex: 1; display: flex; flex-direction: column; line-height: 1.35"><span id="l-family">الوضع العائلي</span><span style="font-size: 12px; color: #A99BC8; font-weight: 600">يخفي المحتوى غير المناسب للعيلة</span></span>
+      <button role="switch" aria-checked="{{t.family.on}}" aria-labelledby="l-family" onClick="{{t.family.flip}}" style="{{t.family.track}}"><span style="{{t.family.knob}}"></span></button>
+    </div>
+  </div>
+
+  <h2 style="margin: 4px 0 0; font-size: 13px; font-weight: 800; color: #C9A2FF">الحساب</h2>
+  <nav aria-label="الحساب" style="border-radius: 18px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; flex-direction: column">
+    <a href="Settings.dc.html" style="text-decoration: none; height: 50px; padding: 0 16px; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.07)">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"></path><path d="M10.3 20a2 2 0 0 0 3.4 0"></path></svg>
+      <span style="flex: 1">الإشعارات</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <a href="Settings.dc.html" style="text-decoration: none; height: 50px; padding: 0 16px; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.07)">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg>
+      <span style="flex: 1">الخصوصية والبيانات</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <a href="Settings.dc.html" style="text-decoration: none; height: 50px; padding: 0 16px; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.07)">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .8-1 1.5M12 17h.01"></path></svg>
+      <span style="flex: 1">المساعدة والتواصل</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <a href="Login.dc.html" style="text-decoration: none; height: 50px; padding: 0 16px; color: #FF8FA0; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 800">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"></path><path d="M10 17l-5-5 5-5M5 12h11"></path></svg>
+      تسجيل الخروج
+    </a>
+  </nav>
+  <p style="margin: 0; font-size: 12px; color: #A99BC8; text-align: center">لمّة — الإصدار 1.0.0</p>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+constructor(p) { super(p); this.state = { dark: true, sound: false, vib: true, motion: false, family: true }; }
+renderVals() {
+const t = {};
+Object.keys(this.state).forEach(k => {
+const on = !!this.state[k];
+t[k] = {
+on: on ? 'true' : 'false',
+flip: () => this.setState({ [k]: !on }),
+track: 'width: 54px; height: 32px; flex: none; border-radius: 999px; border: none; padding: 3px; cursor: pointer; display: flex; justify-content: ' + (on ? 'flex-end' : 'flex-start') + '; background: ' + (on ? 'linear-gradient(90deg, #A35BFF, #7A2FE0); box-shadow: 0 0 12px rgba(163,91,255,0.55)' : 'rgba(255,255,255,0.18)'),
+knob: 'width: 26px; height: 26px; border-radius: 50%; background: ' + (on ? '#FFFFFF' : '#CFC6E4') + '; box-shadow: 0 2px 4px rgba(0,0,0,0.3)'
+};
+});
+return { t };
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

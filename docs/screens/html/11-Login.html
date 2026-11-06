@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لمّة — تسجيل الدخول</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+input::placeholder{color:#A99BC8}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(90% 45% at 50% 12%, #5A2A9E 0%, #2A1458 50%, #170B30 100%); display: flex; flex-direction: column; overflow: hidden; position: relative; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 12px 24px 30px">
+  <div aria-hidden="true" style="position: absolute; top: 20px; right: 40px; width: 140px; height: 140px; border-radius: 50%; background: #A35BFF; filter: blur(60px); opacity: 0.5"></div>
+
+  <div role="img" aria-label="لمّة" style="position: relative; align-self: center; margin-top: 20px; display: flex; flex-direction: column; align-items: center">
+    <svg aria-hidden="true" width="62" height="44" viewBox="0 0 78 56" style="position: relative; z-index: 1; margin-bottom: -20px; margin-left: 50px; transform: rotate(-12deg); filter: drop-shadow(0 3px 5px rgba(0,0,0,0.45))"><path d="M6 18l16 14L39 4l17 28 16-14-8 32H14z" fill="#FFC24B" stroke="#C98A12" stroke-width="3" stroke-linejoin="round"></path></svg>
+    <span aria-hidden="true" style="font-size: 86px; font-weight: 900; line-height: 1.2; color: #FFFFFF; text-shadow: 3px 0 0 #F2569A, -3px 0 0 #F2569A, 0 3px 0 #F2569A, 0 -3px 0 #F2569A, 0 7px 0 #6A24C9, 0 12px 0 #3E1585, 0 20px 26px rgba(0,0,0,0.5)">لمّة</span>
+  </div>
+
+  <h1 style="margin: 14px 0 0; font-size: 28px; font-weight: 900; text-align: center; position: relative">أهلاً بيك في اللمّة!</h1>
+  <p style="margin: 4px 0 24px; font-size: 15px; color: #D9CCF2; text-align: center; position: relative">سجّل برقم موبايلك عشان تحفظ نقاطك وأصحابك</p>
+
+  <label for="phone" style="font-size: 14px; font-weight: 700; color: #EADFFF; margin-bottom: 8px">رقم الموبايل</label>
+  <div style="display: flex; gap: 10px; direction: ltr">
+    <button aria-label="كود الدولة: السعودية +966" style="height: 58px; padding: 0 12px; border-radius: 16px; border: 1.5px solid rgba(163,91,255,0.45); background: rgba(0,0,0,0.25); color: #FFFFFF; display: flex; align-items: center; gap: 6px; font-size: 16px; font-weight: 700">
+      +966
+      <svg aria-hidden="true" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9l6 6 6-6"></path></svg>
+    </button>
+    <input id="phone" type="tel" inputmode="numeric" placeholder="5X XXX XXXX" style="flex: 1; min-width: 0; height: 58px; padding: 0 16px; border-radius: 16px; border: 2px solid #B98AFF; background: rgba(0,0,0,0.25); color: #FFFFFF; font-size: 18px; font-weight: 700; letter-spacing: 1px; outline: none; box-shadow: 0 0 0 4px rgba(163,91,255,0.2)">
+  </div>
+
+  <a href="Otp.dc.html" style="margin-top: 18px; text-decoration: none; height: 60px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.4)">إرسال رمز التحقق</a>
+
+  <div style="display: flex; align-items: center; gap: 12px; margin: 22px 0; color: #A99BC8; font-size: 14px; font-weight: 600">
+    <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.15)"></span>أو<span style="flex: 1; height: 1px; background: rgba(255,255,255,0.15)"></span>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px">
+    <button style="height: 54px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.18); background: #FFFFFF; color: #21143F; font-size: 15px; font-weight: 800">متابعة بـ Google</button>
+    <button style="height: 54px; border-radius: 16px; border: 1.5px solid rgba(255,255,255,0.18); background: #000000; color: #FFFFFF; font-size: 15px; font-weight: 800">متابعة بـ Apple</button>
+  </div>
+
+  <a href="Home.dc.html" style="margin-top: 12px; text-decoration: none; height: 54px; border-radius: 16px; border: 1.5px solid rgba(163,91,255,0.45); background: rgba(163,91,255,0.12); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 16px; font-weight: 800">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"></circle><path d="M4 21c1-4 4-6 8-6s7 2 8 6"></path></svg>
+    العب كضيف من غير حساب
+  </a>
+
+  <div style="flex: 1"></div>
+  <p style="margin: 0; font-size: 12px; color: #A99BC8; text-align: center; line-height: 1.7">بالمتابعة إنت موافق على <a href="Settings.dc.html" style="font-weight: 700">الشروط</a> و<a href="Settings.dc.html" style="font-weight: 700">سياسة الخصوصية</a></p>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

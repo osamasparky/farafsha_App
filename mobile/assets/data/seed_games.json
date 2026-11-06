@@ -1,0 +1,177 @@
+[
+  {
+    "id": 1,
+    "name": "أمثال شعبية",
+    "slug": "amthal-shaabiya",
+    "subtitle": "كمّل المثل الشعبي",
+    "description": "يظهر صدر مثل شعبي مصري أو عربي وعلى اللاعبين إكماله",
+    "icon": "quote",
+    "category": "أمثال",
+    "template_type": "choice",
+    "min_players": 2,
+    "max_players": 10,
+    "default_rounds": 10,
+    "default_duration_seconds": 20,
+    "badge_text": "شائع",
+    "cards": [
+      {
+        "id": 101,
+        "prompt": "اللي اختشوا ...",
+        "answer": "ماتوا",
+        "distractors": ["في حظهم", "من الجوع", "من الخوف"],
+        "explanation": "يُضرب لمن فقد الحياء وأصبح لا يبالي بعواقب أفعاله."
+      },
+      {
+        "id": 102,
+        "prompt": "القرد في عين أمه ...",
+        "answer": "غزال",
+        "distractors": ["سلطان", "جميل", "أمير"],
+        "explanation": "يُضرب في حب الأم الفطري الذي يجعلها ترى ابنها الأجمل."
+      },
+      {
+        "id": 103,
+        "prompt": "على قد لحافك ...",
+        "answer": "مد رجليك",
+        "distractors": ["نام وارتاح", "غطي نفسك", "عيش حياتك"],
+        "explanation": "يُضرب في تدبير المعيشة والإنفاق بحسب الإمكانيات."
+      },
+      {
+        "id": 104,
+        "prompt": "باب النجار ...",
+        "answer": "مخلّع",
+        "distractors": ["مكسور", "مفتوح", "حديدي"],
+        "explanation": "يُضرب لمن ينفع الناس ويهمل شؤونه الخاصة."
+      },
+      {
+        "id": 105,
+        "prompt": "اطبخ يا جارية كلف يا ...",
+        "answer": "سيدي",
+        "distractors": ["مولاي", "باشا", "معلم"],
+        "explanation": "يُضرب في أن العمل المتقن يتطلب توفير المتطلبات."
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "جمل مشهورة",
+    "slug": "famous-quotes",
+    "subtitle": "إفيهات من الأفلام والمسلسلات",
+    "description": "إكمال أشهر الإفيهات والجمل الأيقونية من السينما المصرية",
+    "icon": "movie",
+    "category": "إفيهات",
+    "template_type": "choice",
+    "min_players": 2,
+    "max_players": 12,
+    "default_rounds": 10,
+    "default_duration_seconds": 20,
+    "badge_text": "ضحك",
+    "cards": [
+      {
+        "id": 201,
+        "prompt": "يا بابا .. أنا مش زعلان ...",
+        "answer": "أنا متضايق بس",
+        "distractors": ["أنا مش باطل", "أنا زعلان قوي", "أنا مصدوم وخلاص"],
+        "explanation": "فيلم الكيف - الفنان محمود عبد العزيز (مزاجنجي)."
+      },
+      {
+        "id": 202,
+        "prompt": "هو كله ضرب ضرب ...",
+        "answer": "مفيش شتيمة؟",
+        "distractors": ["مفيش راحة؟", "مفيش كلام؟", "مفيش طيبة؟"],
+        "explanation": "فيلم بوحة - الفنان محمد سعد."
+      },
+      {
+        "id": 203,
+        "prompt": "أنا مش كريم أنا ...",
+        "answer": "أنا شحاتة يا عمري",
+        "distractors": ["أنا حمادة", "أنا غلبان", "أنا مخلص"],
+        "explanation": "فيلم كركر - الفنان محمد سعد والفنان حسن حسني."
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "name": "مين أنا؟",
+    "slug": "who-am-i",
+    "subtitle": "شخصيات وأشياء بأسئلة نعم/لا",
+    "description": "خمن الشخصية أو الشيء عن طريق أسئلة يجاب عنها بنعم أو لا فقط",
+    "icon": "person",
+    "category": "تخمين",
+    "template_type": "who_am_i",
+    "min_players": 3,
+    "max_players": 12,
+    "default_rounds": 6,
+    "default_duration_seconds": 60,
+    "cards": [
+      {
+        "id": 301,
+        "prompt": "نجيب محفوظ",
+        "answer": "نجيب محفوظ",
+        "hints": ["أديب مصري", "حائز على جائزة نوبل في الأدب", "صاحب الثلاثية"]
+      },
+      {
+        "id": 302,
+        "prompt": "محمد صلاح",
+        "answer": "محمد صلاح",
+        "hints": ["لاعب كرة قدم مصري عالمي", "يلعب لنادي ليفربول", "الملك المصري"]
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "name": "ممنوع تقول",
+    "slug": "forbidden-words",
+    "subtitle": "اشرح الكلمة بدون المحظورات",
+    "description": "اشرح الكلمة لفريقك بدون ذكر الكلمات الممنوعة في البطاقة",
+    "icon": "block",
+    "category": "ذكاء وسرعة",
+    "template_type": "forbidden_words",
+    "min_players": 4,
+    "max_players": 12,
+    "default_rounds": 6,
+    "default_duration_seconds": 45,
+    "cards": [
+      {
+        "id": 401,
+        "prompt": "أهرامات الجيزة",
+        "answer": "الأهرامات",
+        "forbidden_words": ["فراعنة", "مصر", "أبو الهول", "خوفو"]
+      },
+      {
+        "id": 402,
+        "prompt": "فنجان قهوة",
+        "answer": "قهوة",
+        "forbidden_words": ["شرب", "كافيين", "بن", "سكر"]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "name": "سؤال على السريع",
+    "slug": "speed-trivia",
+    "subtitle": "معلومات عامة وتحدي السرعة",
+    "description": "أسئلة سريعة وثقافة عامة وتنافس بالثواني",
+    "icon": "bolt",
+    "category": "معلومات عامة",
+    "template_type": "choice",
+    "min_players": 2,
+    "max_players": 12,
+    "default_rounds": 10,
+    "default_duration_seconds": 15,
+    "cards": [
+      {
+        "id": 501,
+        "prompt": "ما هي أكبر قارة من حيث المساحة في العالم؟",
+        "answer": "آسيا",
+        "distractors": ["أفريقيا", "أمريكا الشمالية", "أوروبا"]
+      },
+      {
+        "id": 502,
+        "prompt": "كم عدد لاعبي فريق كرة القدم في الملعب؟",
+        "answer": "11 لاعب",
+        "distractors": ["10 لاعبين", "12 لاعب", "9 لاعبين"]
+      }
+    ]
+  }
+]
+

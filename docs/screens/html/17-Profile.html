@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لمّة — الملف الشخصي</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 40% at 50% 12%, #5A2A9E 0%, #2A1458 50%, #150A2E 100%); display: flex; flex-direction: column; overflow: hidden; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 24px; gap: 14px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Home.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 20px; font-weight: 900">الملف الشخصي</h1>
+    <a href="Settings.dc.html" aria-label="الإعدادات" style="width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.06); color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>
+    </a>
+  </div>
+
+  <div style="display: flex; flex-direction: column; align-items: center; gap: 4px">
+    <div style="position: relative">
+      <img src="../../assets/av-ahmed.png" alt="صورة أسامة" style="width: 116px; height: 116px; border-radius: 50%; object-fit: cover; border: 4px solid #B98AFF; box-shadow: 0 0 0 6px rgba(163,91,255,0.2), 0 0 36px rgba(163,91,255,0.55)">
+      <a href="Register.dc.html" aria-label="تعديل الصورة" style="position: absolute; bottom: 2px; left: 2px; width: 36px; height: 36px; border-radius: 50%; background: #FFC24B; border: 3px solid #2A1458; color: #2A0E35; display: flex; align-items: center; justify-content: center">
+        <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"></path></svg>
+      </a>
+    </div>
+    <span style="font-size: 24px; font-weight: 900; margin-top: 6px">أسامة صبري</span>
+    <span style="display: flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 800; color: #FFD27A">
+      <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="#FFC24B"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6L2.5 9.3l6.6-.8z"></path></svg>
+      المستوى 12
+    </span>
+    <div style="width: 220px; display: flex; flex-direction: column; gap: 4px; margin-top: 4px">
+      <div role="progressbar" aria-label="التقدم للمستوى 13" aria-valuenow="69" aria-valuemin="0" aria-valuemax="100" style="height: 10px; border-radius: 999px; background: rgba(0,0,0,0.35); overflow: hidden">
+        <div style="width: 69%; height: 100%; border-radius: 999px; background: linear-gradient(90deg, #FFC24B, #FF8A4C)"></div>
+      </div>
+      <span style="font-size: 12px; color: #CFC6E4; text-align: center">3,450 / 5,000 نقطة خبرة</span>
+    </div>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px">
+    <div style="border-radius: 18px; padding: 12px 6px; background: linear-gradient(160deg, #3A1F74, #241050); border: 1.5px solid rgba(163,91,255,0.4); display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.12)">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#FFC24B"><path d="M7 3h10v5a5 5 0 0 1-10 0zM5 4H3a3 3 0 0 0 3 4M19 4h2a3 3 0 0 1-3 4M10 14h4v3h-4zM7 18h10v3H7z"></path></svg>
+      <span style="font-size: 22px; font-weight: 900">32</span>
+      <span style="font-size: 12px; color: #CFC6E4; font-weight: 700">فوز</span>
+    </div>
+    <div style="border-radius: 18px; padding: 12px 6px; background: linear-gradient(160deg, #3A1F74, #241050); border: 1.5px solid rgba(163,91,255,0.4); display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.12)">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#C9A2FF"><path d="M7 7h10a5 5 0 0 1 5 5v3a3.2 3.2 0 0 1-5.8 1.9L14.6 15H9.4l-1.6 1.9A3.2 3.2 0 0 1 2 15v-3a5 5 0 0 1 5-5z"></path></svg>
+      <span style="font-size: 22px; font-weight: 900">148</span>
+      <span style="font-size: 12px; color: #CFC6E4; font-weight: 700">لعبة</span>
+    </div>
+    <div style="border-radius: 18px; padding: 12px 6px; background: linear-gradient(160deg, #3A1F74, #241050); border: 1.5px solid rgba(163,91,255,0.4); display: flex; flex-direction: column; align-items: center; gap: 2px; box-shadow: inset 0 1px 0 rgba(255,255,255,0.12)">
+      <svg aria-hidden="true" width="28" height="28" viewBox="0 0 24 24" fill="#FF8A4C"><path d="M12 2.5l2.9 6 6.6.8-4.9 4.6 1.3 6.6L12 17.3l-5.9 3.2 1.3-6.6L2.5 9.3l6.6-.8z"></path></svg>
+      <span style="font-size: 22px; font-weight: 900">4,320</span>
+      <span style="font-size: 12px; color: #CFC6E4; font-weight: 700">نقطة</span>
+    </div>
+  </div>
+
+  <section style="display: flex; flex-direction: column; gap: 8px">
+    <h2 style="margin: 0; font-size: 16px; font-weight: 900">آخر الأوسمة</h2>
+    <div style="display: flex; gap: 10px">
+      <div style="flex: 1; border-radius: 16px; padding: 8px; background: linear-gradient(160deg,#D2566A,#8E2A4E); display: flex; flex-direction: column; align-items: center; gap: 2px"><img src="../../assets/ic-quote.png" alt="" style="width: 40px; height: 36px; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)"><span style="font-size: 11px; font-weight: 800">ملك الأمثال</span></div>
+      <div style="flex: 1; border-radius: 16px; padding: 8px; background: linear-gradient(160deg,#2F6E7A,#1B3F52); display: flex; flex-direction: column; align-items: center; gap: 2px"><img src="../../assets/ic-bulb.png" alt="" style="width: 40px; height: 36px; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)"><span style="font-size: 11px; font-weight: 800">العبقري</span></div>
+      <div style="flex: 1; border-radius: 16px; padding: 8px; background: linear-gradient(160deg,#B23A72,#6E1C4E); display: flex; flex-direction: column; align-items: center; gap: 2px"><img src="../../assets/ic-music.png" alt="" style="width: 40px; height: 36px; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)"><span style="font-size: 11px; font-weight: 800">سمّيع</span></div>
+      <div style="flex: 1; border-radius: 16px; padding: 8px; background: rgba(255,255,255,0.06); border: 1.5px dashed rgba(163,91,255,0.5); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px"><svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#A99BC8" stroke-width="2" stroke-linecap="round"><rect x="5" y="11" width="14" height="9" rx="2"></rect><path d="M8 11V8a4 4 0 0 1 8 0v3"></path></svg><span style="font-size: 11px; font-weight: 800; color: #A99BC8">+9</span></div>
+    </div>
+  </section>
+
+  <nav aria-label="خيارات الحساب" style="border-radius: 18px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; flex-direction: column">
+    <a href="Leaderboard.dc.html" style="text-decoration: none; height: 54px; padding: 0 16px; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700; border-bottom: 1px solid rgba(255,255,255,0.07)">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8" r="3.5"></circle><path d="M2.5 20c.8-3.5 3.4-5.5 6.5-5.5s5.7 2 6.5 5.5"></path><path d="M16 4.5a3.5 3.5 0 0 1 0 7"></path></svg>
+      <span style="flex: 1">أصحابي</span><span style="font-size: 13px; color: #CFC6E4">24</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+    <a href="Results.dc.html" style="text-decoration: none; height: 54px; padding: 0 16px; color: #FFFFFF; display: flex; align-items: center; gap: 12px; font-size: 15px; font-weight: 700">
+      <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#C9A2FF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"></circle><path d="M12 7v5l3 2"></path></svg>
+      <span style="flex: 1">سجل الألعاب</span>
+      <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#CFC6E4" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"></path></svg>
+    </a>
+  </nav>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

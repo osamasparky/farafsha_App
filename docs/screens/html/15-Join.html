@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لمّة — الانضمام برمز</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 45% at 50% 22%, #4A2290 0%, #241050 55%, #150A2E 100%); display: flex; flex-direction: column; overflow: hidden; position: relative; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 24px 34px">
+  <div aria-hidden="true" style="position: absolute; top: 90px; left: 100px; width: 180px; height: 180px; border-radius: 50%; background: #4FC3F7; filter: blur(70px); opacity: 0.25"></div>
+
+  <div style="display: flex; align-items: center; justify-content: space-between; position: relative">
+    <a href="Mode.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 900">انضم لغرفة</h1>
+    <span style="width: 44px"></span>
+  </div>
+
+  <img src="../../assets/online.png" alt="" style="width: 240px; height: 200px; object-fit: cover; align-self: center; margin-top: 10px; position: relative; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)">
+
+  <p style="margin: 8px 0 18px; font-size: 16px; color: #E4D9FA; text-align: center; position: relative">اكتب الرمز اللي صاحبك بعته</p>
+
+  <fieldset style="border: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; direction: ltr; position: relative">
+    <legend style="position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0)">رمز الغرفة</legend>
+    <input aria-label="الخانة 1" value="7" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الخانة 2" value="8" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الخانة 3" value="4" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الخانة 4" value="5" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 2px solid #B98AFF; background: rgba(163,91,255,0.18); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none">
+    <input aria-label="الخانة 5" value="" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 2.5px solid #FFC24B; background: rgba(0,0,0,0.25); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none; box-shadow: 0 0 0 4px rgba(255,194,75,0.2)">
+    <input aria-label="الخانة 6" value="" maxlength="1" inputmode="numeric" style="height: 62px; border-radius: 14px; border: 1.5px solid rgba(163,91,255,0.4); background: rgba(0,0,0,0.25); color: #FFC24B; font-size: 28px; font-weight: 900; text-align: center; outline: none">
+  </fieldset>
+
+  <div style="display: flex; align-items: center; gap: 12px; margin: 26px 0 16px; color: #A99BC8; font-size: 14px; font-weight: 600">
+    <span style="flex: 1; height: 1px; background: rgba(255,255,255,0.15)"></span>أو<span style="flex: 1; height: 1px; background: rgba(255,255,255,0.15)"></span>
+  </div>
+
+  <button style="height: 58px; border-radius: 18px; border: 1.5px solid rgba(163,91,255,0.45); background: rgba(163,91,255,0.12); color: #FFFFFF; display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 17px; font-weight: 800">
+    <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#FFC24B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8V5a1 1 0 0 1 1-1h3M16 4h3a1 1 0 0 1 1 1v3M20 16v3a1 1 0 0 1-1 1h-3M8 20H5a1 1 0 0 1-1-1v-3M4 12h16"></path></svg>
+    امسح كود QR
+  </button>
+
+  <div style="flex: 1"></div>
+  <a href="Room.dc.html" style="text-decoration: none; height: 62px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.45)">ادخل الغرفة</a>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

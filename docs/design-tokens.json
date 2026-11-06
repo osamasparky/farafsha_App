@@ -1,0 +1,48 @@
+{
+  "name": "Lamma (لمّة)",
+  "direction": "rtl",
+  "font": { "family": "Cairo", "display": "Cairo 900", "proverb": "Reem Kufi 700", "weights": [400, 600, 700, 800, 900] },
+  "color": {
+    "bg": { "deepest": "#150A2E", "deep": "#170B30", "base": "#241050", "raised": "#2A1458", "glow": "#4A2290", "glowStrong": "#5A2A9E" },
+    "surface": { "card": "#2A1850", "cardTranslucent": "rgba(0,0,0,0.25)", "border": "rgba(163,91,255,0.35)", "divider": "rgba(255,255,255,0.07)" },
+    "violet": { "300": "#C9A2FF", "400": "#B98AFF", "500": "#A35BFF", "600": "#8138E8", "700": "#7A2FE0", "800": "#6A24C9", "900": "#4A1690" },
+    "orange": { "300": "#FFB25E", "500": "#FF8A4C" },
+    "pink": { "500": "#F2569A", "700": "#B83A72" },
+    "gold": { "300": "#FFD27A", "500": "#FFC24B", "700": "#C98A12" },
+    "success": { "300": "#6FD9B5", "500": "#35B88E", "700": "#1A6B52" },
+    "warning": "#D98720",
+    "error": { "300": "#FF8FA0", "500": "#C8465B", "700": "#7A2236" },
+    "text": { "primary": "#FFFFFF", "secondary": "#EADFFF", "muted": "#CFC6E4", "faint": "#A99BC8", "onCta": "#2A0E35" },
+    "parchment": { "top": "#F6E3B8", "bottom": "#E8C98A", "border": "#B88746", "text": "#3E2410" }
+  },
+  "gradient": {
+    "ctaPrimary": ["#FFB25E", "#FF8A4C", "#F2569A"],
+    "ctaPrimaryEdge": "#B83A72",
+    "ctaSecondary": ["#B98AFF", "#7A2FE0"],
+    "ctaSecondaryEdge": "#4A1690",
+    "screenBg": "radial(at 50% 25%): #4E2590 → #2A1458 50% → #170B30",
+    "gameTiles": {
+      "proverbs": ["#D2566A", "#8E2A4E"],
+      "quotes": ["#8F3BD0", "#561C94"],
+      "guessWord": ["#4846BE", "#2B2580"],
+      "trivia": ["#2F6E7A", "#1B3F52"],
+      "song": ["#B23A72", "#6E1C4E"],
+      "picture": ["#4740B0", "#28226E"],
+      "whoAmI": ["#7A6A3A", "#3F3420"],
+      "random": ["#8C3468", "#531B44"]
+    },
+    "teams": { "violet": "#B98AFF", "orange": "#FF9E6A" }
+  },
+  "radius": { "chip": 999, "input": 16, "button": 999, "card": 20, "tile": 22, "sheet": 32, "modal": 30 },
+  "spacing": [4, 8, 10, 12, 14, 16, 20, 24, 32],
+  "screenPadding": 20,
+  "type": { "caption": 12, "small": 13, "body": 15, "bodyL": 16, "title": 20, "screenTitle": 22, "h1": 28, "hero": 34, "timer": 38, "wordmark": 128 },
+  "size": { "touchMin": 44, "ctaHeight": 62, "ctaEdge": 5, "inputHeight": 58, "avatarS": 36, "avatarM": 52, "avatarL": 116 },
+  "shadow": {
+    "ctaGlow": "0 12px 30px rgba(242,86,154,0.45)",
+    "violetGlow": "0 0 24px rgba(163,91,255,0.55)",
+    "goldGlow": "0 0 24px rgba(255,194,75,0.5)",
+    "innerHighlight": "inset 0 2px 0 rgba(255,255,255,0.5)"
+  },
+  "motion": { "nav": "180-260ms", "state": "100-160ms", "respectReduceMotion": true }
+}

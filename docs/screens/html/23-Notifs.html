@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لمّة — الإشعارات</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#FFD27A}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 35% at 50% 0%, #4A2290 0%, #241050 55%, #150A2E 100%); display: flex; flex-direction: column; overflow: hidden; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 24px; gap: 12px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Home.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 22px; font-weight: 900">الإشعارات</h1>
+    <button style="height: 44px; padding: 0 8px; border: none; background: transparent; color: #FFD27A; font-size: 13px; font-weight: 800">قراءة الكل</button>
+  </div>
+
+  <h2 style="margin: 0; font-size: 13px; font-weight: 800; color: #C9A2FF">النهارده</h2>
+
+  <article style="border-radius: 20px; padding: 14px; background: linear-gradient(160deg, rgba(143,59,208,0.5), rgba(74,30,154,0.4)); border: 1.5px solid #B98AFF; box-shadow: 0 0 20px rgba(163,91,255,0.3); display: flex; flex-direction: column; gap: 12px">
+    <div style="display: flex; gap: 12px; align-items: flex-start">
+      <img src="../../assets/av-ahmed.png" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; border: 2.5px solid #FFC24B; flex: none">
+      <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.5">
+        <span style="font-size: 15px; font-weight: 800"><span style="font-weight: 900">أحمد</span> بيعزمك على غرفة «ممنوع تقول»</span>
+        <span style="font-size: 12px; color: #CFC6E4">من دقيقتين · 3 لاعبين مستنيين</span>
+      </div>
+      <span aria-label="جديد" style="width: 10px; height: 10px; border-radius: 50%; background: #F2569A; margin-top: 6px; flex: none"></span>
+    </div>
+    <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px">
+      <a href="Room.dc.html" style="text-decoration: none; height: 44px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E, #F2569A); border-bottom: 3px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: 900">انضم</a>
+      <button style="height: 44px; border-radius: 999px; border: 1.5px solid rgba(255,255,255,0.25); background: transparent; color: #FFFFFF; font-size: 15px; font-weight: 800">بعدين</button>
+    </div>
+  </article>
+
+  <article style="border-radius: 20px; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; gap: 12px; align-items: center">
+    <span aria-hidden="true" style="width: 48px; height: 48px; flex: none; border-radius: 14px; background: linear-gradient(160deg,#D2566A,#8E2A4E); display: flex; align-items: center; justify-content: center"><img src="../../assets/ic-quote.png" alt="" style="width: 38px; height: 34px; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)"></span>
+    <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.5">
+      <span style="font-size: 15px; font-weight: 800">50 مثل جديد نزلوا في «أمثال شعبية»</span>
+      <span style="font-size: 12px; color: #CFC6E4">من ساعة</span>
+    </div>
+    <span aria-label="جديد" style="width: 10px; height: 10px; border-radius: 50%; background: #F2569A; flex: none"></span>
+  </article>
+
+  <article style="border-radius: 20px; padding: 14px; background: rgba(0,0,0,0.25); border: 1px solid rgba(163,91,255,0.3); display: flex; gap: 12px; align-items: center">
+    <span aria-hidden="true" style="width: 48px; height: 48px; flex: none; border-radius: 14px; background: linear-gradient(160deg, #E0A92E, #9C6A10); display: flex; align-items: center; justify-content: center"><svg width="26" height="26" viewBox="0 0 24 24" fill="#FFF1C7"><path d="M7 3h10v5a5 5 0 0 1-10 0zM5 4H3a3 3 0 0 0 3 4M19 4h2a3 3 0 0 1-3 4M10 14h4v3h-4zM7 18h10v3H7z"></path></svg></span>
+    <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.5">
+      <span style="font-size: 15px; font-weight: 800">مبروك! خدت وسام «ملك الأمثال»</span>
+      <span style="font-size: 12px; color: #CFC6E4">من 3 ساعات · +100 نقطة خبرة</span>
+    </div>
+  </article>
+
+  <h2 style="margin: 6px 0 0; font-size: 13px; font-weight: 800; color: #C9A2FF">الأسبوع ده</h2>
+
+  <article style="border-radius: 20px; padding: 14px; background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 12px; align-items: center; opacity: 0.85">
+    <img src="../../assets/av-sara.png" alt="" style="width: 48px; height: 48px; border-radius: 50%; object-fit: cover; flex: none">
+    <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.5">
+      <span style="font-size: 15px; font-weight: 700">سارة عدّتك في الترتيب الأسبوعي</span>
+      <span style="font-size: 12px; color: #CFC6E4">الثلاثاء</span>
+    </div>
+  </article>
+
+  <article style="border-radius: 20px; padding: 14px; background: rgba(0,0,0,0.18); border: 1px solid rgba(255,255,255,0.08); display: flex; gap: 12px; align-items: center; opacity: 0.85">
+    <span aria-hidden="true" style="width: 48px; height: 48px; flex: none; border-radius: 14px; background: linear-gradient(160deg,#8C3468,#531B44); display: flex; align-items: center; justify-content: center"><img src="../../assets/ic-dice.png" alt="" style="width: 38px; height: 36px; object-fit: contain; -webkit-mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%); mask-image: radial-gradient(ellipse 50% 50% at 50% 50%, #000 62%, transparent 100%)"></span>
+    <div style="flex: 1; display: flex; flex-direction: column; line-height: 1.5">
+      <span style="font-size: 15px; font-weight: 700">تحدي الويك إند بدأ!</span>
+      <span style="font-size: 12px; color: #CFC6E4">الخميس</span>
+    </div>
+  </article>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

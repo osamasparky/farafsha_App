@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لعبة الجماعة — غرفة أونلاين</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#D9C2FF}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 45% at 50% 20%, #4A2290 0%, #241050 55%, #150A2E 100%); display: flex; flex-direction: column; overflow: hidden; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 32px; gap: 18px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Mode.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 20px; font-weight: 800">غرفة اللعب</h1>
+    <button aria-label="إعدادات الغرفة" style="width: 44px; height: 44px; border: none; background: transparent; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"></path></svg>
+    </button>
+  </div>
+
+  <div style="display: flex; gap: 12px; align-items: stretch">
+    <div style="flex: 1; border-radius: 18px; background: #2A1850; border: 1.5px solid rgba(163,91,255,0.35); padding: 14px; display: flex; flex-direction: column; justify-content: center; gap: 4px">
+      <span style="font-size: 13px; color: #CFC6E4">رمز الغرفة</span>
+      <div style="display: flex; align-items: center; gap: 8px">
+        <span style="font-size: 30px; font-weight: 900; color: #FFC24B; letter-spacing: 3px; direction: ltr">784521</span>
+        <button aria-label="نسخ الرمز" style="width: 44px; height: 44px; border-radius: 12px; border: none; background: rgba(255,255,255,0.08); color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2"></rect><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path></svg>
+        </button>
+      </div>
+    </div>
+    <div role="img" aria-label="رمز QR للانضمام" style="width: 112px; height: 112px; flex: none; border-radius: 16px; background: #FFFFFF; padding: 10px">
+      <svg width="92" height="92" viewBox="0 0 21 21" shape-rendering="crispEdges" aria-hidden="true"><path fill="#21143F" d="M0 0h7v7H0zM1 1v5h5V1zM2 2h3v3H2zM14 0h7v7h-7zM15 1v5h5V1zM16 2h3v3h-3zM0 14h7v7H0zM1 15v5h5v-5zM2 16h3v3H2zM8 0h1v2H8zM10 1h2v1h-2zM9 3h3v1H9zM8 5h2v2H8zM11 6h1v2h-1zM0 8h2v1H0zM3 8h3v1H3zM8 8h2v1H8zM12 8h3v1h-3zM17 8h4v1h-4zM1 10h3v1H1zM6 9h2v3H6zM9 10h4v1H9zM15 10h2v2h-2zM19 10h2v1h-2zM0 12h2v1H0zM10 12h1v3h-1zM12 12h3v1h-3zM18 12h3v1h-3zM8 13h1v2H8zM13 14h2v2h-2zM16 14h1v1h-1zM19 14h2v3h-2zM8 16h4v1H8zM15 16h3v1h-3zM9 18h2v3H9zM12 18h1v2h-1zM14 18h3v1h-3zM18 18h1v3h-1zM14 20h3v1h-3z"></path></svg>
+    </div>
+  </div>
+  <p style="margin: -6px 0 0; font-size: 14px; color: #CFC6E4">شارك الرمز مع أصدقائك عشان ينضموا</p>
+
+  <section style="border-radius: 18px; background: #2A1850; border: 1.5px solid rgba(163,91,255,0.3); padding: 8px 14px">
+    <h2 style="margin: 6px 0 4px; font-size: 15px; font-weight: 700; color: #D9C2FF">اللاعبون (4/8)</h2>
+    <ul style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column">
+      <li style="display: flex; align-items: center; gap: 10px; height: 56px; border-bottom: 1px solid rgba(255,255,255,0.07)">
+        <img src="../../assets/av-karim.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid #FFC24B">
+        <span style="flex: 1; font-size: 16px; font-weight: 700">أنت <span style="font-size: 13px; color: #FFC24B; font-weight: 700">(المضيف)</span></span>
+        <svg role="img" aria-label="المضيف" width="22" height="16" viewBox="0 0 78 56"><path d="M6 18l16 14L39 4l17 28 16-14-8 32H14z" fill="#FFC24B"></path></svg>
+      </li>
+      <li style="display: flex; align-items: center; gap: 10px; height: 56px; border-bottom: 1px solid rgba(255,255,255,0.07)">
+        <img src="../../assets/av-ahmed.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid #B98AFF">
+        <span style="flex: 1; font-size: 16px; font-weight: 700">أحمد</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6FD9B5; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2E9D7B"></span>متصل</span>
+      </li>
+      <li style="display: flex; align-items: center; gap: 10px; height: 56px; border-bottom: 1px solid rgba(255,255,255,0.07)">
+        <img src="../../assets/av-sara.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid #B98AFF">
+        <span style="flex: 1; font-size: 16px; font-weight: 700">سارة</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #6FD9B5; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #2E9D7B"></span>متصل</span>
+      </li>
+      <li style="display: flex; align-items: center; gap: 10px; height: 56px">
+        <img src="../../assets/av-mahmoud.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2.5px solid #B98AFF">
+        <span style="flex: 1; font-size: 16px; font-weight: 700">محمود</span>
+        <span style="display: flex; align-items: center; gap: 6px; font-size: 13px; color: #F2B661; font-weight: 600"><span aria-hidden="true" style="width: 8px; height: 8px; border-radius: 50%; background: #D98720"></span>بيعيد الاتصال…</span>
+      </li>
+    </ul>
+  </section>
+
+  <div style="flex: 1"></div>
+  <button style="height: 52px; border-radius: 999px; border: 1.5px solid rgba(163,91,255,0.5); background: transparent; color: #FFFFFF; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px">
+    <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="5" r="3"></circle><circle cx="6" cy="12" r="3"></circle><circle cx="18" cy="19" r="3"></circle><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"></path></svg>
+    مشاركة رابط الدعوة
+  </button>
+  <a href="Play.dc.html" style="text-decoration: none; height: 60px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.45)">ابدأ اللعبة</a>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>

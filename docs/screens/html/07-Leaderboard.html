@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>لعبة الجماعة — الترتيب</title>
+<link rel="stylesheet" href="../../fonts/fonts.css">
+
+
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;color:#FFFFFF}
+*{box-sizing:border-box}
+button,input{font-family:inherit}
+a{color:#D9C2FF}a:hover{color:#FFFFFF}
+</style>
+
+<style>html,body{background:#0B0618}</style>
+</head>
+<body>
+<div id="root"></div>
+<template id="tpl">
+
+<div dir="rtl" style="width: 390px; height: 844px; background: radial-gradient(100% 50% at 50% 30%, #4A2490 0%, #21143F 60%, #1B0F38 100%); display: flex; flex-direction: column; overflow: hidden; font-family: 'Cairo', sans-serif; color: #FFFFFF; padding: 20px 20px 32px; gap: 18px">
+
+  <div style="display: flex; align-items: center; justify-content: space-between">
+    <a href="Home.dc.html" aria-label="رجوع" style="width: 44px; height: 44px; color: #FFFFFF; display: flex; align-items: center; justify-content: center">
+      <svg aria-hidden="true" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"></path></svg>
+    </a>
+    <h1 style="margin: 0; font-size: 20px; font-weight: 800">لوحة الترتيب</h1>
+    <span style="width: 44px"></span>
+  </div>
+
+  <div role="tablist" aria-label="الفترة" style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 999px; background: rgba(255,255,255,0.06); border: 1px solid rgba(163,91,255,0.25)">
+    <button role="tab" aria-selected="true" style="height: 40px; border-radius: 999px; border: none; background: linear-gradient(90deg, #8138E8, #A35BFF); color: #FFFFFF; font-size: 14px; font-weight: 700">هذا الأسبوع</button>
+    <button role="tab" aria-selected="false" style="height: 40px; border-radius: 999px; border: none; background: transparent; color: #CFC6E4; font-size: 14px; font-weight: 600">هذا الشهر</button>
+    <button role="tab" aria-selected="false" style="height: 40px; border-radius: 999px; border: none; background: transparent; color: #CFC6E4; font-size: 14px; font-weight: 600">كل الوقت</button>
+  </div>
+
+  <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; align-items: end; margin-top: 12px">
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <img src="../../assets/av-sara.png" alt="" style="width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 3px solid #C9D2E0">
+      <div style="width: 100%; height: 120px; border-radius: 16px 16px 8px 8px; background: linear-gradient(180deg, #5B6EC8, #34407E); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #C9D2E0; color: #21143F; font-weight: 900; display: flex; align-items: center; justify-content: center">2</span>
+        <span style="font-size: 15px; font-weight: 700">سارة</span>
+        <span style="font-size: 14px; font-weight: 800">2,120</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <svg aria-hidden="true" width="40" height="28" viewBox="0 0 78 56"><path d="M6 18l16 14L39 4l17 28 16-14-8 32H14z" fill="#FFC24B" stroke="#C98A12" stroke-width="3" stroke-linejoin="round"></path></svg>
+      <img src="../../assets/av-ahmed.png" alt="" style="width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 4px solid #FFC24B; margin-top: -8px; box-shadow: 0 0 28px rgba(255,194,75,0.6)">
+      <div style="width: 100%; height: 160px; border-radius: 16px 16px 8px 8px; background: linear-gradient(180deg, #E0A92E, #9C6A10); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; color: #21143F">
+        <span style="width: 34px; height: 34px; border-radius: 50%; background: #FFF1C7; font-weight: 900; display: flex; align-items: center; justify-content: center">1</span>
+        <span style="font-size: 16px; font-weight: 800">أحمد</span>
+        <span style="font-size: 15px; font-weight: 900">2,840</span>
+      </div>
+    </div>
+    <div style="display: flex; flex-direction: column; align-items: center; gap: 6px">
+      <img src="../../assets/av-mahmoud.png" alt="" style="width: 68px; height: 68px; border-radius: 50%; object-fit: cover; border: 3px solid #E0A47A">
+      <div style="width: 100%; height: 100px; border-radius: 16px 16px 8px 8px; background: linear-gradient(180deg, #D0603F, #8A3220); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px">
+        <span style="width: 30px; height: 30px; border-radius: 50%; background: #F3C3A5; color: #21143F; font-weight: 900; display: flex; align-items: center; justify-content: center">3</span>
+        <span style="font-size: 15px; font-weight: 700">محمود</span>
+        <span style="font-size: 14px; font-weight: 800">1,980</span>
+      </div>
+    </div>
+  </div>
+
+  <ol start="4" style="margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px">
+    <li style="display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; border-radius: 16px; background: #2A1850; border: 1px solid rgba(163,91,255,0.3)">
+      <span style="width: 20px; font-weight: 800; color: #CFC6E4">4</span>
+      <img src="../../assets/av-mena.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover">
+      <span style="flex: 1; font-size: 16px; font-weight: 700">منة</span>
+      <span style="font-size: 15px; font-weight: 800; color: #FFC24B">1,760</span>
+    </li>
+    <li style="display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; border-radius: 16px; background: #2A1850; border: 1px solid rgba(163,91,255,0.3)">
+      <span style="width: 20px; font-weight: 800; color: #CFC6E4">5</span>
+      <span aria-hidden="true" style="width: 40px; height: 40px; border-radius: 50%; background: #4FC3F7; display: flex; align-items: center; justify-content: center; font-weight: 800; color: #21143F">ك</span>
+      <span style="flex: 1; font-size: 16px; font-weight: 700">كريم</span>
+      <span style="font-size: 15px; font-weight: 800; color: #FFC24B">1,520</span>
+    </li>
+    <li style="display: flex; align-items: center; gap: 12px; height: 60px; padding: 0 14px; border-radius: 16px; background: linear-gradient(90deg, #4A2490, #6A24C9); border: 1.5px solid #C9A2FF; box-shadow: 0 0 16px rgba(163,91,255,0.4)">
+      <span style="width: 20px; font-weight: 800">12</span>
+      <img src="../../assets/av-karim.png" alt="" style="width: 42px; height: 42px; border-radius: 50%; object-fit: cover; border: 2px solid #FFC24B">
+      <span style="flex: 1; font-size: 16px; font-weight: 700">أنت</span>
+      <span style="font-size: 15px; font-weight: 800; color: #FFC24B">980</span>
+    </li>
+  </ol>
+
+  <div style="flex: 1"></div>
+  <a href="Home.dc.html" style="text-decoration: none; height: 60px; border-radius: 999px; background: linear-gradient(90deg, #FFB25E 0%, #FF8A4C 45%, #F2569A 100%); border-bottom: 5px solid #B83A72; color: #2A0E35; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 900; box-shadow: inset 0 2px 0 rgba(255,255,255,0.55), 0 12px 30px rgba(242,86,154,0.45)">العب تاني</a>
+</div>
+</template>
+<script>window.__props={};
+class DCLogic{constructor(p){this.props=p||{};this.state={};}setState(s){Object.assign(this.state,typeof s==='function'?s(this.state):s);}forceUpdate(){}}
+
+class Component extends DCLogic {
+renderVals() {
+return {};
+}
+}
+
+
+function look(scope,p){p=p.trim(); if(p==='true')return true; if(p==='false')return false; if(/^-?\d+(\.\d+)?$/.test(p))return +p; return p.split('.').reduce((o,k)=>o==null?undefined:o[k],scope);}
+function sub(str,scope){return str.replace(/\{\{\s*([^}]+?)\s*\}\}/g,(m,p)=>{const v=look(scope,p);return v==null?'':String(v);});}
+function proc(node,scope){
+  for(const ch of Array.from(node.childNodes)){
+    if(ch.nodeType===3){ if(ch.nodeValue.includes('{{')) ch.nodeValue=sub(ch.nodeValue,scope); continue; }
+    if(ch.nodeType!==1) continue;
+    const tag=ch.tagName.toLowerCase();
+    if(tag==='sc-for'){ const m=(ch.getAttribute('list')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const list=m?look(scope,m[1])||[]:[]; const as=ch.getAttribute('as')||'item';
+      list.forEach((it,i)=>{ const frag=document.createElement('div'); frag.innerHTML=ch.innerHTML; const s=Object.assign({},scope,{[as]:it,$index:i}); proc(frag,s); while(frag.firstChild) ch.parentNode.insertBefore(frag.firstChild,ch); });
+      ch.remove(); continue; }
+    if(tag==='sc-if'){ const m=(ch.getAttribute('value')||'').match(/\{\{\s*([^}]+?)\s*\}\}/); const v=m?look(scope,m[1]):false; if(v){ proc(ch,scope); while(ch.firstChild) ch.parentNode.insertBefore(ch.firstChild,ch);} ch.remove(); continue; }
+    for(const a of Array.from(ch.attributes)){ if(/^on[A-Z]/.test(a.name)||/^on/.test(a.name)&&a.value.includes('{{')){ch.removeAttribute(a.name);continue;} if(a.value.includes('{{')) ch.setAttribute(a.name,sub(a.value,scope)); }
+    proc(ch,scope);
+  }
+}
+const tpl=document.getElementById('tpl'); const root=document.getElementById('root'); root.innerHTML=tpl.innerHTML;
+const comp=new Component(window.__props||{}); proc(root,comp.renderVals()||{});
+</script>
+</body>
+</html>
