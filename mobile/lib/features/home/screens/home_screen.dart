@@ -14,7 +14,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: المفضلة
   int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب (الوسطى), 3: الترتيب, 4: الكل
 
-  final List<Map<String, dynamic>> _games = const [
+  final List<Map<String, dynamic>> _games = [
     {
       'id': 'amthal-shaabiya',
       'name': 'أمثال شعبية',
@@ -87,36 +87,33 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => context.push('/profile'),
-                      child: Container(
-                        padding: const EdgeInsets.all(2.5),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: LammaColors.gold500, width: 2.5),
-                          boxShadow: [
-                            BoxShadow(
-                              color: LammaColors.gold500.withValues(alpha: 0.45),
-                              blurRadius: 14,
-                            ),
-                          ],
-                        ),
-                        child: const CircleAvatar(
-                          radius: 22,
-                          backgroundImage: AssetImage('assets/images/av-ahmed.png'),
-                        ),
+                    Container(
+                      padding: const EdgeInsets.all(2.5),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(color: LammaColors.gold500, width: 2.5),
+                        boxShadow: [
+                          BoxShadow(
+                            color: LammaColors.gold500.withValues(alpha: 0.45),
+                            blurRadius: 14,
+                          ),
+                        ],
+                      ),
+                      child: const CircleAvatar(
+                        radius: 22,
+                        backgroundImage: AssetImage('assets/images/av-ahmed.png'),
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Column(
+                    Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
+                      children: const [
                         Text(
                           'مساء الخير',
                           style: TextStyle(fontSize: 13, color: Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
                         ),
                         Text(
-                          'أهلاً يا أسامة 👋',
+                          'أهلاً يا أسامة',
                           style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
                       ],
@@ -124,7 +121,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 GestureDetector(
-                  onTap: () => context.push('/notifications'),
+                  onTap: () => context.push('/notifs'),
                   child: Container(
                     width: 46,
                     height: 46,
@@ -215,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             _buildNavItem(0, 'الرئيسية', Icons.home_filled, onTap: () {}),
-            _buildNavItem(1, 'أونلاين', Icons.wifi_tethering_rounded, onTap: () => context.push('/mode-select')),
+            _buildNavItem(1, 'الأصدقاء', Icons.group_rounded, onTap: () => context.push('/friends')),
             // الزر الأوسط المرفوع (الألعاب)
             GestureDetector(
               onTap: () => setState(() => _currentNavIndex = 2),
@@ -235,11 +232,11 @@ class _HomeScreenState extends State<HomeScreen> {
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
-                        border: const Border(
-                          top: BorderSide(color: Colors.white54, width: 1.5),
-                          bottom: BorderSide(color: Color(0xFF4A1690), width: 4.5),
-                          left: BorderSide(color: Colors.white24, width: 1),
-                          right: BorderSide(color: Colors.white24, width: 1),
+                        border: Border(
+                          top: const BorderSide(color: Colors.white54, width: 1.5),
+                          bottom: const BorderSide(color: Color(0xFF4A1690), width: 4.5),
+                          left: const BorderSide(color: Colors.white24, width: 1),
+                          right: const BorderSide(color: Colors.white24, width: 1),
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -263,7 +260,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
             _buildNavItem(3, 'الترتيب', Icons.leaderboard_rounded, onTap: () => context.push('/leaderboard')),
-            _buildNavItem(4, 'الحزم', Icons.storefront_rounded, onTap: () => context.push('/store')),
+            _buildNavItem(4, 'الملف', Icons.person_rounded, onTap: () => context.push('/profile')),
           ],
         ),
       ),

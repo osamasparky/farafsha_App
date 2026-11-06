@@ -93,23 +93,6 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
               },
             ),
             const SizedBox(height: 8),
-
-            // خيار الانضمام برمز
-            Center(
-              child: TextButton(
-                onPressed: () => context.push('/join-room'),
-                child: const Text(
-                  'عندك كود غرفة؟ انضم هنا',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: LammaColors.gold300,
-                    decoration: TextDecoration.underline,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 4),
           ],
         ),
       ),

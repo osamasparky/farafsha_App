@@ -17,44 +17,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   int _roundsCount = 10;
   String _difficulty = 'متوسط';
 
-  Map<String, dynamic> get _gameMeta {
-    switch (widget.gameId) {
-      case 'famous-quotes':
-        return {
-          'title': 'جمل مشهورة',
-          'image': 'assets/images/popcorn.png',
-          'rules': 'خمّن إفيهات وحوارات الأفلام والمسلسلات الشهيرة قبل انتهاء الوقت!',
-          'route': '/game/quotes',
-        };
-      case 'forbidden-words':
-        return {
-          'title': 'ممنوع تقول',
-          'image': 'assets/images/ic-a.png',
-          'rules': 'اشرح الكلمة لفريقك من غير ما تنطق أي كلمة من الكلمات الـ 5 الممنوعة!',
-          'route': '/game/taboo',
-        };
-      case 'draw-guess':
-        return {
-          'title': 'ارسم وخمّن',
-          'image': 'assets/images/ic-photo.png',
-          'rules': 'ارسم الكلمة السرية باللمس على الشاشة ولازم فريقك يخمّنها قبل ما الوقت يخلص!',
-          'route': '/game/draw',
-        };
-      case 'amthal-shaabiya':
-      default:
-        return {
-          'title': 'أمثال شعبية',
-          'image': 'assets/images/proverb.png',
-          'rules': 'يظهر صدر المثل الشعبي وعليك اختيار التكملة الصحيحة من بين الخيارات.',
-          'route': '/game/amthal',
-        };
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
-    final meta = _gameMeta;
-
     return LammaScaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
@@ -69,27 +33,20 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
                   onPressed: () => context.pop(),
                 ),
-                Text(
-                  meta['title'] as String,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
-                ),
                 IconButton(
                   icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
-                  onPressed: () => _showRulesSheet(context, meta),
+                  onPressed: () => _showRulesSheet(context),
                 ),
               ],
             ),
 
-            const SizedBox(height: 10),
-
-            // صورة غلاف اللعبة
+            // صورة غلاف أمثال شعبية التراثية
             Center(
               child: Image.asset(
-                meta['image'] as String,
-                width: 320,
-                height: 220,
+                'assets/images/proverb.png',
+                width: 380,
+                height: 250,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(Icons.sports_esports_rounded, size: 100, color: Colors.white),
               ),
             ),
 
@@ -149,7 +106,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             GameButton(
               text: 'ابدأ اللعبة',
               onPressed: () {
-                context.push('/players', extra: meta['route']);
+                context.push('/players');
               },
             ),
             const SizedBox(height: 8),
@@ -185,7 +142,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     );
   }
 
-  void _showRulesSheet(BuildContext context, Map<String, dynamic> meta) {
+  void _showRulesSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -200,16 +157,19 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
+            const Center(
               child: Text(
-                'قواعد لعبة ${meta['title']}',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                'قواعد لعبة أمثال شعبية',
+                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
               ),
             ),
             const SizedBox(height: 16),
-            Text(
-              meta['rules'] as String,
-              style: const TextStyle(fontSize: 15, color: Color(0xFFEADFFF), height: 1.8),
+            const Text(
+              '1. يظهر صدر المثل الشعبي وتختار التكملة الصحيحة.\n'
+              '2. العداد التنازلي 20 ثانية لكل دور.\n'
+              '3. 3 نقاط للإجابة الصحيحة المباشرة، ونقطتان بعد التلميح.\n'
+              '4. الفائز هو الفريق صاحب أعلى رصيد نقاط في ختام الجولات.',
+              style: TextStyle(fontSize: 15, color: Color(0xFFEADFFF), height: 1.8),
             ),
             const SizedBox(height: 20),
             GameButton(

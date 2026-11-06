@@ -93,3 +93,4 @@ class AvatarCircle extends StatelessWidget {
     );
   }
 }
+
