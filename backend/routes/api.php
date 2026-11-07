@@ -53,3 +53,6 @@ Route::get('/badges', [AppContentController::class, 'badges']);
 Route::get('/levels', [AppContentController::class, 'levels']);
 Route::get('/profile', [AppContentController::class, 'profile']);
 Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
+
+// مسارات تكامل واتساب عبر WAHA (جلسات، رسائل، ويب هوك)
+require __DIR__ . '/waha.php';
