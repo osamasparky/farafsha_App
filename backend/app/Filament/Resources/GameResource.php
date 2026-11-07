@@ -173,9 +173,12 @@ class GameResource extends Resource
                                 Forms\Components\FileUpload::make('cover_image')
                                     ->label('صورة كارت اللعبة (Cover Image)')
                                     ->image()
+                                    ->imageEditor()
                                     ->disk('public')
                                     ->directory('games')
                                     ->visibility('public')
+                                    ->openable()
+                                    ->downloadable()
                                     ->maxSize(10240)
                                     ->columnSpanFull(),
 

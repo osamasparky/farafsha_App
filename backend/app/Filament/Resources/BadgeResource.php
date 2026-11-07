@@ -78,6 +78,10 @@ class BadgeResource extends Resource
                             ->directory('badges')
                             ->visibility('public')
                             ->image()
+                            ->imageEditor()
+                            ->openable()
+                            ->downloadable()
+                            ->maxSize(5120)
                             ->helperText('إذا تم رفع صورة ستظهر بدلاً من الأيقونة الافتراضية'),
 
                         Forms\Components\Toggle::make('is_active')
