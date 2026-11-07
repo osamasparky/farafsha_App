@@ -11,6 +11,27 @@ class Badge extends Model
 {
     use HasFactory;
 
+    /**
+     * قائمة الأيقونات المعتمدة للأوسمة والإنجازات
+     */
+    public const AVAILABLE_ICONS = [
+        'trophy' => '🏆 كأس البطولة والتفوق (Trophy)',
+        'star' => '⭐ نجمة التميز (Star)',
+        'quote' => '💬 اقتباس ومثل شعبي (Quote)',
+        'bulb' => '💡 عبقري وفكرة ذكية (Bulb)',
+        'music' => '🎵 موسيقى ونغمات (Music)',
+        'film' => '🎬 سينما وإفيهات (Film)',
+        'mask' => '🎭 شخصيات وأقنعة (Mask)',
+        'fire' => '🔥 شعلة حماس مستمرة (Fire)',
+        'gem' => '💎 جوهرة نادرة (Gem)',
+        'bolt' => '⚡ سرعة وبديهة خارقة (Bolt)',
+    ];
+
+    public static function getAvailableIcons(): array
+    {
+        return self::AVAILABLE_ICONS;
+    }
+
     protected $fillable = [
         'title',
         'description',

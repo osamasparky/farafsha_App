@@ -61,15 +61,9 @@ class BadgeResource extends Resource
 
                                 Forms\Components\Select::make('icon')
                                     ->label('الأيقونة الافتراضية')
-                                    ->options([
-                                        'quote' => 'اقتباس / مثل شعبي (Quote)',
-                                        'bulb' => 'فكرة / ذكاء (Bulb)',
-                                        'music' => 'موسيقى وأغاني (Music)',
-                                        'film' => 'سينما وأفلام (Film)',
-                                        'trophy' => 'كأس البطولة (Trophy)',
-                                        'star' => 'نجم مميز (Star)',
-                                        'mask' => 'شخصيات وأقنعة (Mask)',
-                                    ])
+                                    ->options(\App\Models\Badge::getAvailableIcons())
+                                    ->searchable()
+                                    ->preload()
                                     ->default('trophy'),
 
                                 Forms\Components\TextInput::make('sort_order')
@@ -84,7 +78,7 @@ class BadgeResource extends Resource
                             ->directory('badges')
                             ->visibility('public')
                             ->image()
-                            ->imageEditor()
+                            ->fetchFileInformation(false)
                             ->helperText('إذا تم رفع صورة ستظهر بدلاً من الأيقونة الافتراضية'),
 
                         Forms\Components\Toggle::make('is_active')

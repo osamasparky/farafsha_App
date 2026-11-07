@@ -17,19 +17,19 @@ class ProfileScreen extends StatefulWidget {
 
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
-  String _userName = 'أسامة صبري';
-  String _avatar = 'assets/images/av-ahmed.png';
-  int _totalPoints = 4320;
-  int _wins = 32;
-  int _gamesPlayed = 148;
+  String _userName = '';
+  String _avatar = 'assets/images/farfasha_logo.png';
+  int _totalPoints = 0;
+  int _wins = 0;
+  int _gamesPlayed = 0;
 
   // تفاصيل المستوى
-  int _levelNumber = 8;
-  String _levelTitle = 'زعيم القعدة';
+  int _levelNumber = 1;
+  String _levelTitle = 'مبتدئ الفرفشة';
   Color _levelColor = const Color(0xFFE879F9);
-  int _pointsInLevel = 120;
-  int _neededForNext = 1000;
-  double _progressPercent = 12.0;
+  int _pointsInLevel = 0;
+  int _neededForNext = 100;
+  double _progressPercent = 0.0;
 
   List<Map<String, dynamic>> _badges = [];
 
@@ -43,16 +43,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final auth = AuthService.instance;
     _userName = auth.userName;
     _avatar = auth.userAvatar;
+    _totalPoints = auth.totalPoints;
+    _wins = auth.wins;
+    _gamesPlayed = auth.gamesPlayed;
+
+    if (auth.isGuest) {
+      if (mounted) {
+        setState(() {
+          _userName = 'زائر فرفشة';
+          _avatar = 'assets/images/farfasha_logo.png';
+          _totalPoints = 0;
+          _wins = 0;
+          _gamesPlayed = 0;
+          _badges = [];
+          _isLoading = false;
+        });
+      }
+      return;
+    }
 
     try {
-      final data = await ApiService.instance.getProfile(isGuest: auth.isGuest);
+      final data = await ApiService.instance.getProfile(
+        isGuest: false,
+        token: auth.authToken,
+      );
       if (data != null && mounted) {
         setState(() {
-          _userName = auth.isGuest ? 'زائر فرفشة' : (data['name'] ?? _userName);
-          _avatar = auth.isGuest ? 'assets/images/farfasha_logo.png' : (data['avatar'] ?? _avatar);
-          _totalPoints = data['total_points'] ?? _totalPoints;
-          _wins = data['wins'] ?? _wins;
-          _gamesPlayed = data['games_played'] ?? _gamesPlayed;
+          _userName = data['name'] ?? _userName;
+          _avatar = data['avatar'] ?? _avatar;
+          _totalPoints = (data['total_points'] as num?)?.toInt() ?? _totalPoints;
+          _wins = (data['wins'] as num?)?.toInt() ?? _wins;
+          _gamesPlayed = (data['games_played'] as num?)?.toInt() ?? _gamesPlayed;
 
           if (data['level'] is Map) {
             final lvl = data['level'] as Map<String, dynamic>;

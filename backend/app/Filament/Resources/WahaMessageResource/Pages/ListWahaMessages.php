@@ -9,3 +9,4 @@ class ListWahaMessages extends ListRecords
 {
     protected static string $resource = WahaMessageResource::class;
 }
+

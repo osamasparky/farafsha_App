@@ -37,7 +37,7 @@ class BannerResource extends Resource
                             ->directory('banners')
                             ->visibility('public')
                             ->image()
-                            ->imageEditor()
+                            ->fetchFileInformation(false)
                             ->required(),
 
                         Forms\Components\TextInput::make('external_url')

@@ -57,9 +57,11 @@ class LevelResource extends Resource
 
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\TextInput::make('icon')
-                                    ->label('رمز أو أيقونة المستوى (اختياري)')
-                                    ->placeholder('star, crown, shield, fire, gem')
+                                Forms\Components\Select::make('icon')
+                                    ->label('رمز أو أيقونة المستوى')
+                                    ->options(\App\Models\Level::getAvailableIcons())
+                                    ->searchable()
+                                    ->preload()
                                     ->default('star'),
 
                                 Forms\Components\TextInput::make('sort_order')

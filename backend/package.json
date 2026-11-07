@@ -4,7 +4,8 @@
     "type": "module",
     "scripts": {
         "build": "vite build",
-        "dev": "vite"
+        "dev": "vite",
+        "waha": "node waha-server/server.js"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

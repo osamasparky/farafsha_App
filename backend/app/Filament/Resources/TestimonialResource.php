@@ -85,7 +85,8 @@ class TestimonialResource extends Resource
                             ->image()
                             ->disk('public')
                             ->directory('testimonials')
-                            ->visibility('public'),
+                            ->visibility('public')
+                            ->fetchFileInformation(false),
 
                         Forms\Components\Toggle::make('is_approved')
                             ->label('مراجعة معتمدة ومفعلة للعرض بالموقع')

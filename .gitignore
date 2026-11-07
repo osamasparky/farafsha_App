@@ -19,6 +19,8 @@ Thumbs.db
 # Laravel Backend ignore
 backend/vendor/
 backend/node_modules/
+backend/waha-server/node_modules/
+backend/storage/app/waha_sessions/
 backend/public/storage
 backend/storage/*.key
 backend/database/*.sqlite

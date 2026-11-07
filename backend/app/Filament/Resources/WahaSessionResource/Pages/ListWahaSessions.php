@@ -12,8 +12,22 @@ class ListWahaSessions extends ListRecords
 
     protected function getHeaderActions(): array
     {
+        $isOnline = false;
+        try {
+            $fp = @fsockopen('127.0.0.1', 3000, $errno, $errstr, 0.5);
+            if ($fp) {
+                $isOnline = true;
+                fclose($fp);
+            }
+        } catch (\Throwable $e) {}
+
         return [
-            Actions\CreateAction::make()->label('إنشاء جلسة واتساب جديدة'),
+            Actions\Action::make('status_info')
+                ->label($isOnline ? '🟢 خادم WAHA الداخلي يعمل (Port 3000)' : '⚠️ خادم WAHA غير مشغل (شغله بـ: php artisan waha:serve)')
+                ->color($isOnline ? 'success' : 'warning')
+                ->disabled(),
+            Actions\CreateAction::make()->label('إنشاء جلسة جديدة'),
         ];
     }
 }
+

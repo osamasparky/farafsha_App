@@ -18,6 +18,12 @@ class ApiService {
         'Accept': 'application/json',
       };
 
+  Map<String, String> _authHeaders(String? token) => {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
+      };
+
   /// تسجيل دخول سريع كضيف (Guest) والحصول على Token
   Future<String?> guestLogin({String name = 'لاعب لمّة'}) async {
     try {
@@ -241,7 +247,7 @@ class ApiService {
   }
 
   /// جلب الأوسمة النشطة مرتبة من لوحة التحكم مع حالة الفتح
-  Future<List<Map<String, dynamic>>> getBadges({int userPoints = 4320}) async {
+  Future<List<Map<String, dynamic>>> getBadges({int userPoints = 0}) async {
     try {
       final res = await http
           .get(Uri.parse('$baseUrl/badges?user_points=$userPoints'), headers: _headers)
@@ -330,10 +336,10 @@ class ApiService {
   }
 
   /// جلب بيانات البروفايل الكاملة وحساب المستوى تلقائياً
-  Future<Map<String, dynamic>?> getProfile({bool isGuest = false}) async {
+  Future<Map<String, dynamic>?> getProfile({bool isGuest = false, String? token}) async {
     try {
       final url = isGuest ? '$baseUrl/profile?guest=true' : '$baseUrl/profile';
-      final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 4));
+      final res = await http.get(Uri.parse(url), headers: _authHeaders(token)).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is Map && data['data'] is Map) {
@@ -460,12 +466,10 @@ class ApiService {
   }
 
   /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
-  Future<Map<String, dynamic>?> socialLogin({
+  /// لا يسمح بالدخول إلا للحسابات المصرح لها والمسجلة مسبقاً
+  Future<Map<String, dynamic>> socialLogin({
     required String provider,
-    required String name,
     required String email,
-    String? phone,
-    String? avatar,
     String? providerId,
   }) async {
     try {
@@ -475,21 +479,93 @@ class ApiService {
             headers: _headers,
             body: jsonEncode({
               'provider': provider,
-              'name': name.trim(),
               'email': email.trim(),
-              if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
+              if (providerId != null) 'provider_id': providerId,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'token': data['token'],
+          'user': data['user'],
+          'message': data['message'] ?? 'تم تسجيل الدخول بنجاح',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'تعذر تسجيل الدخول عبر وسيلة التواصل المحددة.',
+          'requires_registration': data['requires_registration'] == true,
+        };
+      }
+    } catch (e) {
+      debugPrint('⚠️ Social login error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر.',
+      };
+    }
+  }
+
+  /// إنشاء حساب جديد عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
+  /// يفرض إدخال الاسم ورقم الهاتف والبريد وكلمة المرور
+  Future<Map<String, dynamic>> socialRegister({
+    required String provider,
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    String? avatar,
+    String? providerId,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/social-register'),
+            headers: _headers,
+            body: jsonEncode({
+              'provider': provider,
+              'name': name.trim(),
+              'phone': phone.trim(),
+              'email': email.trim(),
+              'password': password,
               if (avatar != null) 'avatar': avatar,
               if (providerId != null) 'provider_id': providerId,
             }),
           )
           .timeout(const Duration(seconds: 8));
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body);
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'token': data['token'],
+          'user': data['user'],
+          'message': data['message'] ?? 'تم إنشاء الحساب بنجاح',
+        };
+      } else {
+        String msg = data['message'] ?? 'فشل إنشاء الحساب.';
+        if (data['errors'] is Map) {
+          final errMap = data['errors'] as Map<String, dynamic>;
+          final firstKey = errMap.keys.firstOrNull;
+          if (firstKey != null && errMap[firstKey] is List && errMap[firstKey].isNotEmpty) {
+            msg = errMap[firstKey][0].toString();
+          }
+        }
+        return {
+          'success': false,
+          'message': msg,
+        };
       }
     } catch (e) {
-      debugPrint('⚠️ Social login error: $e');
+      debugPrint('⚠️ Social register error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر أثناء التسجيل.',
+      };
     }
-    return null;
   }
 
   /// تسجيل الخروج من السيرفر
@@ -537,12 +613,13 @@ class ApiService {
     String? avatar,
     String? phone,
     String? email,
+    String? token,
   }) async {
     try {
       final res = await http
           .post(
             Uri.parse('$baseUrl/profile/update'),
-            headers: _headers,
+            headers: _authHeaders(token),
             body: jsonEncode({
               if (name != null) 'name': name,
               if (avatar != null) 'avatar': avatar,

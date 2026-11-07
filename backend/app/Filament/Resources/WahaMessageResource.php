@@ -93,3 +93,4 @@ class WahaMessageResource extends Resource
         ];
     }
 }
+

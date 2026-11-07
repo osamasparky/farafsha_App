@@ -14,6 +14,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
     Route::post('/social-login', [AuthController::class, 'socialLogin']);
+    Route::post('/social-register', [AuthController::class, 'socialRegister']);
     Route::post('/guest', [AuthController::class, 'guestLogin']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);

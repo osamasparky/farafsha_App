@@ -179,26 +179,31 @@ class AppContentController extends Controller
             'photo' => 'nullable|image|max:10240', // يدعم حتى 10 ميجا
         ]);
 
-        $user = $request->user() ?? User::find(1);
-        if ($user) {
-            if (!empty($validated['name'])) {
-                $user->name = $validated['name'];
-            }
-            if (!empty($validated['avatar'])) {
-                $user->avatar = $validated['avatar'];
-            }
-            if (!empty($validated['phone'])) {
-                $user->phone = $validated['phone'];
-            }
-            if (!empty($validated['email'])) {
-                $user->email = $validated['email'];
-            }
-            if ($request->hasFile('photo')) {
-                $path = $request->file('photo')->store('avatars', 'public');
-                $user->avatar = '/storage/' . $path;
-            }
-            $user->save();
+        $user = $request->user('sanctum') ?? auth('sanctum')->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح بتعديل الملف الشخصي، يرجى تسجيل الدخول أولاً.',
+            ], 401);
         }
+
+        if (!empty($validated['name'])) {
+            $user->name = $validated['name'];
+        }
+        if (!empty($validated['avatar'])) {
+            $user->avatar = $validated['avatar'];
+        }
+        if (!empty($validated['phone'])) {
+            $user->phone = $validated['phone'];
+        }
+        if (!empty($validated['email'])) {
+            $user->email = $validated['email'];
+        }
+        if ($request->hasFile('photo')) {
+            $path = $request->file('photo')->store('avatars', 'public');
+            $user->avatar = '/storage/' . $path;
+        }
+        $user->save();
 
         return $this->profile($request);
     }
@@ -209,12 +214,17 @@ class AppContentController extends Controller
     public function profile(Request $request): JsonResponse
     {
         $isGuest = $request->query('guest') === 'true' || $request->query('guest') === '1';
-        if ($isGuest) {
+        $user = $request->user('sanctum') ?? auth('sanctum')->user();
+
+        // في حال كان زائراً
+        if ($isGuest || (!$user && $request->has('guest'))) {
             return response()->json([
                 'status' => 'success',
                 'data' => [
                     'name' => 'زائر فرفشة',
                     'avatar' => 'assets/images/farfasha_logo.png',
+                    'email' => '',
+                    'phone' => '',
                     'is_guest' => true,
                     'total_points' => 0,
                     'wins' => 0,
@@ -235,14 +245,20 @@ class AppContentController extends Controller
             ]);
         }
 
-        $user = $request->user() ?? User::find(1);
-        $userName = $user?->name ?? 'أسامة صبري';
-        $userAvatar = !empty($user?->avatar) ? $user->avatar : 'assets/images/av-ahmed.png';
-        $userPhone = $user?->phone ?? '01012345678';
-        $userEmail = $user?->email ?? 'osama@farfasha.app';
-        $userPoints = $user?->total_score ?? 4320;
-        $wins = $user?->wins_count ?? 32;
-        $gamesPlayed = $user?->games_played ?? 148;
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح بالدخول، يرجى تسجيل الدخول أولاً.',
+            ], 401);
+        }
+
+        $userName = $user->name;
+        $userAvatar = !empty($user->avatar) ? $user->avatar : 'assets/images/av-ahmed.png';
+        $userPhone = $user->phone ?? '';
+        $userEmail = $user->email ?? '';
+        $userPoints = (int) ($user->total_score ?? 0);
+        $wins = (int) ($user->wins_count ?? 0);
+        $gamesPlayed = (int) ($user->games_played ?? 0);
 
         // حساب المستوى بناءً على جدول المستويات في قاعدة البيانات
         $levels = Level::orderBy('level_number', 'asc')->get();

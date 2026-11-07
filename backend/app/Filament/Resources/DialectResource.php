@@ -39,10 +39,12 @@ class DialectResource extends Resource
                             ->unique(ignoreRecord: true)
                             ->maxLength(40),
 
-                        Forms\Components\TextInput::make('icon')
+                        Forms\Components\Select::make('icon')
                             ->label('رمز / علم اللهجة')
-                            ->placeholder('مثال: 🇪🇬 أو 🇸🇦')
-                            ->maxLength(20),
+                            ->options(\App\Models\Dialect::getAvailableIcons())
+                            ->searchable()
+                            ->preload()
+                            ->default('🇪🇬'),
 
                         Forms\Components\Grid::make(2)
                             ->schema([

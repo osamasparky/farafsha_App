@@ -7,15 +7,17 @@ class AuthService extends ChangeNotifier {
   static final AuthService instance = AuthService._internal();
   AuthService._internal();
 
-  bool _isLoggedIn = true;
+  bool _isLoggedIn = false;
   bool _isGuest = false;
-  String _userName = 'أسامة صبري';
-  String _userAvatar = 'assets/images/av-ahmed.png';
-  String _userPhone = '01012345678';
-  String _userEmail = 'osama@farfasha.app';
+  String _userName = '';
+  String _userAvatar = 'assets/images/farfasha_logo.png';
+  String _userPhone = '';
+  String _userEmail = '';
   String _userDialect = 'مصري';
   String? _authToken;
-  int _totalPoints = 4320;
+  int _totalPoints = 0;
+  int _wins = 0;
+  int _gamesPlayed = 0;
 
   // اللعبتان المتاحتان للزائر فقط (وفق طلب المستخدم)
   static const List<String> kGuestUnlockedSlugs = [
@@ -32,6 +34,8 @@ class AuthService extends ChangeNotifier {
   String get userDialect => _userDialect;
   String? get authToken => _authToken;
   int get totalPoints => _totalPoints;
+  int get wins => _wins;
+  int get gamesPlayed => _gamesPlayed;
 
   /// تهيئة الخدمة وقراءة الحالة المحفوظة
   Future<void> init() async {
@@ -45,6 +49,9 @@ class AuthService extends ChangeNotifier {
       _userEmail = prefs.getString('auth_user_email') ?? '';
       _userDialect = prefs.getString('auth_user_dialect') ?? 'مصري';
       _authToken = prefs.getString('auth_token');
+      _totalPoints = prefs.getInt('auth_total_points') ?? 0;
+      _wins = prefs.getInt('auth_wins') ?? 0;
+      _gamesPlayed = prefs.getInt('auth_games_played') ?? 0;
       notifyListeners();
     } catch (e) {
       debugPrint('⚠️ Error initializing AuthService: $e');
@@ -85,10 +92,14 @@ class AuthService extends ChangeNotifier {
     String? email,
     String? avatar,
     String? dialect,
+    int? totalPoints,
+    int? wins,
+    int? gamesPlayed,
+    String? token,
   }) async {
     _isLoggedIn = true;
     _isGuest = false;
-    _userName = name.trim().isEmpty ? 'أسامة صبري' : name.trim();
+    _userName = name.trim();
     if (phone != null && phone.trim().isNotEmpty) {
       _userPhone = phone.trim();
     }
@@ -101,7 +112,18 @@ class AuthService extends ChangeNotifier {
     if (dialect != null && dialect.isNotEmpty) {
       _userDialect = dialect;
     }
-    _totalPoints = 4320;
+    if (totalPoints != null) {
+      _totalPoints = totalPoints;
+    }
+    if (wins != null) {
+      _wins = wins;
+    }
+    if (gamesPlayed != null) {
+      _gamesPlayed = gamesPlayed;
+    }
+    if (token != null) {
+      _authToken = token;
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auth_is_logged_in', true);
@@ -111,6 +133,12 @@ class AuthService extends ChangeNotifier {
     await prefs.setString('auth_user_email', _userEmail);
     await prefs.setString('auth_user_avatar', _userAvatar);
     await prefs.setString('auth_user_dialect', _userDialect);
+    await prefs.setInt('auth_total_points', _totalPoints);
+    await prefs.setInt('auth_wins', _wins);
+    await prefs.setInt('auth_games_played', _gamesPlayed);
+    if (_authToken != null) {
+      await prefs.setString('auth_token', _authToken!);
+    }
 
     // مزامنة التحديث مع الـ Backend
     try {
@@ -119,6 +147,7 @@ class AuthService extends ChangeNotifier {
         avatar: _userAvatar,
         phone: _userPhone,
         email: _userEmail,
+        token: _authToken,
       );
     } catch (_) {}
 
@@ -140,11 +169,13 @@ class AuthService extends ChangeNotifier {
       _authToken = res['token']?.toString();
       _isLoggedIn = true;
       _isGuest = false;
-      _userName = user?['name'] ?? 'لاعب فرفشة';
+      _userName = user?['name'] ?? '';
       _userEmail = user?['email'] ?? '';
       _userPhone = user?['phone'] ?? '';
       _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.png';
-      _totalPoints = user?['total_points'] ?? 100;
+      _totalPoints = (user?['total_points'] ?? user?['total_score'] ?? 0) as int;
+      _wins = (user?['wins'] ?? user?['wins_count'] ?? 0) as int;
+      _gamesPlayed = (user?['games_played'] ?? 0) as int;
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('auth_is_logged_in', true);
@@ -153,6 +184,9 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_user_email', _userEmail);
       await prefs.setString('auth_user_phone', _userPhone);
       await prefs.setString('auth_user_avatar', _userAvatar);
+      await prefs.setInt('auth_total_points', _totalPoints);
+      await prefs.setInt('auth_wins', _wins);
+      await prefs.setInt('auth_games_played', _gamesPlayed);
       if (_authToken != null) {
         await prefs.setString('auth_token', _authToken!);
       }
@@ -189,7 +223,9 @@ class AuthService extends ChangeNotifier {
       _userEmail = user?['email'] ?? email;
       _userPhone = user?['phone'] ?? phone;
       _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
-      _totalPoints = user?['total_points'] ?? 100;
+      _totalPoints = 0;
+      _wins = 0;
+      _gamesPlayed = 0;
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('auth_is_logged_in', true);
@@ -198,6 +234,9 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_user_email', _userEmail);
       await prefs.setString('auth_user_phone', _userPhone);
       await prefs.setString('auth_user_avatar', _userAvatar);
+      await prefs.setInt('auth_total_points', 0);
+      await prefs.setInt('auth_wins', 0);
+      await prefs.setInt('auth_games_played', 0);
       if (_authToken != null) {
         await prefs.setString('auth_token', _authToken!);
       }
@@ -209,32 +248,31 @@ class AuthService extends ChangeNotifier {
     return {'success': false, 'message': res['message']};
   }
 
-  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook) مع التحقق من الاسم والهاتف والإيميل
+  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
+  /// لا يسمح بالدخول إلا للحسابات المصرح لها والمسجلة مسبقاً
   Future<Map<String, dynamic>> loginWithSocial(
     String provider, {
-    required String name,
     required String email,
-    String? phone,
-    String? avatar,
+    String? providerId,
   }) async {
     final res = await ApiService.instance.socialLogin(
       provider: provider,
-      name: name,
       email: email,
-      phone: phone,
-      avatar: avatar,
+      providerId: providerId,
     );
 
-    if (res != null && res['status'] == 'success') {
+    if (res['success'] == true) {
       final user = res['user'] as Map<String, dynamic>?;
       _authToken = res['token']?.toString();
       _isLoggedIn = true;
       _isGuest = false;
-      _userName = user?['name'] ?? name;
+      _userName = user?['name'] ?? '';
       _userEmail = user?['email'] ?? email;
-      _userPhone = user?['phone'] ?? (phone ?? '');
-      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
-      _totalPoints = user?['total_points'] ?? 100;
+      _userPhone = user?['phone'] ?? '';
+      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.png';
+      _totalPoints = (user?['total_points'] ?? 0) as int;
+      _wins = (user?['wins'] ?? 0) as int;
+      _gamesPlayed = (user?['games_played'] ?? 0) as int;
 
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('auth_is_logged_in', true);
@@ -243,6 +281,9 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_user_email', _userEmail);
       await prefs.setString('auth_user_phone', _userPhone);
       await prefs.setString('auth_user_avatar', _userAvatar);
+      await prefs.setInt('auth_total_points', _totalPoints);
+      await prefs.setInt('auth_wins', _wins);
+      await prefs.setInt('auth_games_played', _gamesPlayed);
       if (_authToken != null) {
         await prefs.setString('auth_token', _authToken!);
       }
@@ -253,7 +294,65 @@ class AuthService extends ChangeNotifier {
 
     return {
       'success': false,
-      'message': res?['message'] ?? 'فشل تسجيل الدخول عبر وسيلة التواصل المحددة.',
+      'message': res['message'] ?? 'تعذر تسجيل الدخول عبر وسيلة التواصل المحددة.',
+      'requires_registration': res['requires_registration'] == true,
+    };
+  }
+
+  /// إنشاء حساب جديد مع وسيلة تواصل اجتماعي (Google, Apple) مع إلزام الاسم ورقم الهاتف
+  Future<Map<String, dynamic>> registerWithSocial(
+    String provider, {
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    String? avatar,
+    String? providerId,
+  }) async {
+    final res = await ApiService.instance.socialRegister(
+      provider: provider,
+      name: name,
+      phone: phone,
+      email: email,
+      password: password,
+      avatar: avatar,
+      providerId: providerId,
+    );
+
+    if (res['success'] == true) {
+      final user = res['user'] as Map<String, dynamic>?;
+      _authToken = res['token']?.toString();
+      _isLoggedIn = true;
+      _isGuest = false;
+      _userName = user?['name'] ?? name;
+      _userEmail = user?['email'] ?? email;
+      _userPhone = user?['phone'] ?? phone;
+      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
+      _totalPoints = 0;
+      _wins = 0;
+      _gamesPlayed = 0;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auth_is_logged_in', true);
+      await prefs.setBool('auth_is_guest', false);
+      await prefs.setString('auth_user_name', _userName);
+      await prefs.setString('auth_user_email', _userEmail);
+      await prefs.setString('auth_user_phone', _userPhone);
+      await prefs.setString('auth_user_avatar', _userAvatar);
+      await prefs.setInt('auth_total_points', 0);
+      await prefs.setInt('auth_wins', 0);
+      await prefs.setInt('auth_games_played', 0);
+      if (_authToken != null) {
+        await prefs.setString('auth_token', _authToken!);
+      }
+
+      notifyListeners();
+      return {'success': true, 'message': res['message'] ?? 'تم إنشاء الحساب بنجاح'};
+    }
+
+    return {
+      'success': false,
+      'message': res['message'] ?? 'فشل إنشاء الحساب عبر وسيلة التواصل.',
     };
   }
 
@@ -308,6 +407,7 @@ class AuthService extends ChangeNotifier {
         avatar: _userAvatar,
         phone: _userPhone,
         email: _userEmail,
+        token: _authToken,
       );
     } catch (_) {}
 
@@ -317,7 +417,9 @@ class AuthService extends ChangeNotifier {
   /// تسجيل الخروج (بدون تحويل كـ زائر، خروج كلي إلى شاشة تسجيل الدخول)
   Future<void> logout() async {
     try {
-      await ApiService.instance.logout(_authToken);
+      if (_authToken != null) {
+        await ApiService.instance.logout(_authToken);
+      }
     } catch (_) {}
 
     _isLoggedIn = false;
@@ -327,6 +429,8 @@ class AuthService extends ChangeNotifier {
     _userPhone = '';
     _userAvatar = 'assets/images/farfasha_logo.png';
     _totalPoints = 0;
+    _wins = 0;
+    _gamesPlayed = 0;
     _authToken = null;
 
     final prefs = await SharedPreferences.getInstance();
@@ -337,6 +441,9 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_user_email');
     await prefs.remove('auth_user_avatar');
     await prefs.remove('auth_token');
+    await prefs.remove('auth_total_points');
+    await prefs.remove('auth_wins');
+    await prefs.remove('auth_games_played');
 
     notifyListeners();
   }

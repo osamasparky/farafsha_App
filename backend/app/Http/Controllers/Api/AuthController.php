@@ -421,17 +421,15 @@ class AuthController extends Controller
     }
 
     /**
-     * تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook) مع التحقق من الاسم والهاتف والإيميل
+     * تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
+     * لا يتم تسجيل الدخول إلا إذا كان الحساب مسجلاً ومصرحاً له مسبقاً
      */
     public function socialLogin(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'provider' => 'required|string|in:google,apple,facebook',
             'provider_id' => 'nullable|string',
-            'name' => 'required|string|max:100',
             'email' => 'required|email',
-            'phone' => 'nullable|string|max:20',
-            'avatar' => 'nullable|string',
         ]);
 
         $provider = SocialProvider::where('provider', $validated['provider'])->first();
@@ -444,26 +442,12 @@ class AuthController extends Controller
 
         $user = User::where('email', $validated['email'])->first();
 
-        if ($user) {
-            if (!empty($validated['phone']) && empty($user->phone)) {
-                $user->phone = $validated['phone'];
-            }
-            if (!empty($validated['name'])) {
-                $user->name = $validated['name'];
-            }
-            $user->save();
-        } else {
-            $user = User::create([
-                'name' => $validated['name'],
-                'email' => $validated['email'],
-                'phone' => $validated['phone'] ?? null,
-                'avatar' => $validated['avatar'] ?? 'assets/images/av-ahmed.png',
-                'password' => Hash::make(Str::random(24)),
-                'level' => 1,
-                'total_score' => 100,
-                'wins_count' => 0,
-                'games_played' => 0,
-            ]);
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'لم يتم العثور على حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولاً برقم هاتفك واسمك.',
+                'requires_registration' => true,
+            ], 404);
         }
 
         $token = $user->createToken('social_user_token')->plainTextToken;
@@ -478,9 +462,73 @@ class AuthController extends Controller
                 'email' => $user->email,
                 'phone' => $user->phone,
                 'avatar' => $user->avatar,
-                'total_points' => $user->total_score ?? 100,
+                'total_points' => $user->total_score ?? 0,
                 'wins' => $user->wins_count ?? 0,
                 'games_played' => $user->games_played ?? 0,
+            ],
+        ]);
+    }
+
+    /**
+     * إنشاء حساب جديد عبر وسائل التواصل الاجتماعي مع إلزامه بالاسم ورقم الهاتف والبريد
+     */
+    public function socialRegister(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider' => 'required|string|in:google,apple,facebook',
+            'provider_id' => 'nullable|string',
+            'name' => 'required|string|min:2|max:100',
+            'phone' => 'required|string|min:10|max:20',
+            'email' => 'required|email',
+            'password' => 'required|string|min:6',
+            'avatar' => 'nullable|string',
+        ]);
+
+        $normalizedPhone = $this->normalizePhone($validated['phone']);
+        $normalizedEmail = strtolower(trim($validated['email']));
+
+        // التحقق من عدم التكرار
+        if (User::where('email', $normalizedEmail)->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'البريد الإلكتروني مسجل بالفعل لمستخدم آخر.',
+            ], 422);
+        }
+
+        if (User::where('phone', $normalizedPhone)->orWhere('phone', $validated['phone'])->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'رقم الهاتف مسجل بالفعل لمستخدم آخر.',
+            ], 422);
+        }
+
+        $user = User::create([
+            'name' => trim($validated['name']),
+            'email' => $normalizedEmail,
+            'phone' => $normalizedPhone,
+            'password' => Hash::make($validated['password']),
+            'avatar' => $validated['avatar'] ?? 'assets/images/av-ahmed.png',
+            'level' => 1,
+            'total_score' => 0,
+            'wins_count' => 0,
+            'games_played' => 0,
+        ]);
+
+        $token = $user->createToken('social_user_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم إنشاء حسابك بنجاح والربط مع ' . ucfirst($validated['provider']),
+            'token' => $token,
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'phone' => $user->phone,
+                'avatar' => $user->avatar,
+                'total_points' => 0,
+                'wins' => 0,
+                'games_played' => 0,
             ],
         ]);
     }
