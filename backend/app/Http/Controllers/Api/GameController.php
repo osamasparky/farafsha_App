@@ -68,9 +68,15 @@ class GameController extends Controller
      */
     public function getCards(Request $request, string $slug): JsonResponse
     {
-        $game = Game::where('slug', $slug)->firstOrFail();
+        $normalizedSlug = match ($slug) {
+            'taboo' => 'forbidden-words',
+            'quotes' => 'famous-quotes',
+            'amthal' => 'amthal-shaabiya',
+            default => $slug,
+        };
+        $game = Game::where('slug', $normalizedSlug)->firstOrFail();
         
-        $limit = $request->integer('limit', 15);
+        $limit = $request->integer('limit', 50);
         $difficulty = $request->query('difficulty');
         $packId = $request->query('pack_id');
 

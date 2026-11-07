@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\ContentItemResource;
 use App\Filament\Resources\GameResource\Pages;
+use App\Filament\Resources\GameResource\RelationManagers\ContentItemsRelationManager;
 use App\Models\Game;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -297,6 +299,22 @@ class GameResource extends Resource
                     ->badge()
                     ->color('primary'),
 
+                Tables\Columns\TextColumn::make('content_items_count')
+                    ->counts('contentItems')
+                    ->label('الأسئلة والبطاقات')
+                    ->badge()
+                    ->color(fn (int $state): string => match (true) {
+                        $state >= 50 => 'success',
+                        $state >= 10 => 'warning',
+                        $state > 0 => 'info',
+                        default => 'danger',
+                    })
+                    ->icon('heroicon-o-queue-list')
+                    ->formatStateUsing(fn ($state) => "{$state} سؤال 🃏")
+                    ->url(fn ($record) => ContentItemResource::getUrl('index', ['tableFilters[game_id][value]' => $record->id]))
+                    ->tooltip('انقر للانتقال المباشر لبنك أسئلة هذه اللعبة')
+                    ->sortable(),
+
                 Tables\Columns\BadgeColumn::make('game_mode')
                     ->label('نمط اللعب')
                     ->colors([
@@ -337,6 +355,12 @@ class GameResource extends Resource
             ])
             ->defaultSort('sort_order', 'asc')
             ->actions([
+                Tables\Actions\Action::make('manage_questions')
+                    ->label('بنك الأسئلة')
+                    ->icon('heroicon-o-queue-list')
+                    ->color('warning')
+                    ->url(fn ($record) => ContentItemResource::getUrl('index', ['tableFilters[game_id][value]' => $record->id]))
+                    ->tooltip('استعراض وإضافة أسئلة لهذه اللعبة'),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -348,7 +372,9 @@ class GameResource extends Resource
 
     public static function getRelations(): array
     {
-        return [];
+        return [
+            ContentItemsRelationManager::class,
+        ];
     }
 
     public static function getPages(): array

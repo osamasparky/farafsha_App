@@ -152,7 +152,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game/taboo',
-      builder: (context, state) => const TabooGameScreen(),
+      builder: (context, state) {
+        final session = state.extra as GameSession?;
+        return TabooGameScreen(session: session);
+      },
     ),
     GoRoute(
       path: '/game/draw',
