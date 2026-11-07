@@ -1125,6 +1125,21 @@ class ApiService {
     return data as Map<String, dynamic>;
   }
 
+  /// جلب توكن LiveKit WebRTC للغرفة الصوتية
+  Future<Map<String, dynamic>> getVoiceToken(String code, {String? token}) async {
+    final uri = Uri.parse('$baseUrl/rooms/$code/voice-token').replace(
+      queryParameters: token != null ? {'token': token} : null,
+    );
+
+    final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 8));
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل استخراج توكن الصوت');
+    }
+  }
+
   /// مغادرة الغرفة
   Future<void> leaveRoom(String code, {String? token}) async {
     try {

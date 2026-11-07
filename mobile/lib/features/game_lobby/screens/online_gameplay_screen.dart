@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/voice_room_bar.dart';
 
 class OnlineGameplayScreen extends StatefulWidget {
   final String roomCode;
@@ -372,7 +373,12 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                   ),
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 10),
+
+                // شريط الدردشة الصوتية المباشرة LiveKit WebRTC
+                VoiceRoomBar(roomCode: _code, playerToken: _playerToken),
+
+                const SizedBox(height: 10),
 
                 // بطاقة السؤال الرئيسية
                 Container(

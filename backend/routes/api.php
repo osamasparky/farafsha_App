@@ -51,6 +51,7 @@ Route::prefix('rooms')->group(function () {
     Route::post('/{code}/join', [RoomController::class, 'join']);
     Route::post('/{code}/start', [RoomController::class, 'start']);
     Route::post('/{code}/answer', [RoomController::class, 'answer']);
+    Route::get('/{code}/voice-token', [RoomController::class, 'getVoiceToken']);
     Route::post('/{code}/next-round', [RoomController::class, 'nextRound']);
     Route::post('/{code}/timeout', [RoomController::class, 'timeout']);
     Route::post('/{code}/finish', [RoomController::class, 'finish']);

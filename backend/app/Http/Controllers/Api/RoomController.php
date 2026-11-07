@@ -549,6 +549,60 @@ class RoomController extends Controller
     }
 
     /**
+     * توليد توكن LiveKit WebRTC للغرفة الصوتية
+     */
+    public function getVoiceToken(Request $request, string $code): JsonResponse
+    {
+        $room = Room::where('code', $code)->firstOrFail();
+        $playerToken = $request->query('token') ?: $request->header('X-Player-Token');
+
+        $player = null;
+        if ($playerToken) {
+            $player = RoomPlayer::where('room_id', $room->id)
+                ->where('session_token', $playerToken)
+                ->first();
+        }
+
+        $identity = $player ? ('player_' . $player->id) : ('guest_' . random_int(1000, 9999));
+        $name = $player ? $player->player_name : 'لاعب فرفشة';
+
+        $apiKey = 'LK_80f58bd391822d64';
+        $apiSecret = 'OXtljvd4ni1nWlXUaieMm0vFcgcaKdfzxk5Rh94gW3ThfvIp';
+
+        $header = ['alg' => 'HS256', 'typ' => 'JWT'];
+        $now = time();
+        $payload = [
+            'exp' => $now + (4 * 3600), // صالح لمدة 4 ساعات
+            'iss' => $apiKey,
+            'nbf' => $now - 5,
+            'sub' => $identity,
+            'name' => $name,
+            'video' => [
+                'room' => 'room_' . $room->code,
+                'roomJoin' => true,
+                'canPublish' => true,
+                'canSubscribe' => true,
+                'canPublishData' => true,
+            ],
+        ];
+
+        $b64Header = rtrim(strtr(base64_encode(json_encode($header)), '+/', '-_'), '=');
+        $b64Payload = rtrim(strtr(base64_encode(json_encode($payload)), '+/', '-_'), '=');
+        $signature = rtrim(strtr(base64_encode(hash_hmac('sha256', "$b64Header.$b64Payload", $apiSecret, true)), '+/', '-_'), '=');
+
+        $jwt = "$b64Header.$b64Payload.$signature";
+
+        return response()->json([
+            'status' => 'success',
+            'server_url' => 'wss://farafsha.com/livekit',
+            'token' => $jwt,
+            'room' => 'room_' . $room->code,
+            'identity' => $identity,
+            'name' => $name,
+        ]);
+    }
+
+    /**
      * مغادرة الغرفة
      */
     public function leave(Request $request, string $code): JsonResponse

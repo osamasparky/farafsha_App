@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/voice_room_bar.dart';
 
 class OnlineRoomScreen extends StatefulWidget {
   final String roomCode;
@@ -287,7 +288,12 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 14),
+                const SizedBox(height: 10),
+
+                // شريط الدردشة الصوتية المباشرة عبر LiveKit WebRTC
+                VoiceRoomBar(roomCode: _code, playerToken: _playerToken),
+
+                const SizedBox(height: 10),
 
                 // بطاقة رمز الغرفة الفعلي مع زر النسخ والمشاركة
                 Container(
