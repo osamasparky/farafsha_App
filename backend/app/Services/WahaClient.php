@@ -44,4 +44,14 @@ class WahaClient
     {
         return $this->request('POST', '/api/sendText', ['session' => $session, 'chatId' => $chatId, 'text' => $text]);
     }
+
+    public function deleteMessage(string $session, string $chatId, string $messageId, bool $fromMe = true): array
+    {
+        return $this->request('POST', '/api/deleteMessage', [
+            'session' => $session,
+            'chatId' => $chatId,
+            'messageId' => $messageId,
+            'fromMe' => $fromMe,
+        ]);
+    }
 }

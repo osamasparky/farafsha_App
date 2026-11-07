@@ -74,6 +74,13 @@ class WahaSessionResource extends Resource
                     ->icon('heroicon-m-phone')
                     ->default('غير متصل بعد (اضغط مسح QR)'),
 
+                Tables\Columns\TextColumn::make('messages_count')
+                    ->counts('messages')
+                    ->label('الرسائل المسجلة')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('last_seen_at')
                     ->label('آخر اتصال')
                     ->dateTime('d/m/Y H:i'),
@@ -98,6 +105,24 @@ class WahaSessionResource extends Resource
                         } catch (\Throwable $e) {
                             Notification::make()->title('تعذر الاتصال بخادم WAHA')->body($e->getMessage())->danger()->send();
                         }
+                    }),
+
+                Tables\Actions\Action::make('clear_all_system_messages')
+                    ->label('تفريغ كافة الرسائل 🗑️')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('تفريغ كافة رسائل الواتساب')
+                    ->modalDescription('هل أنت متأكد من حذف جميع رسائل الواتساب الصادرة والواردة لجميع الجلسات نهائياً من قاعدة البيانات؟')
+                    ->modalSubmitActionLabel('نعم، تفريغ كافة الرسائل 🗑️')
+                    ->action(function () {
+                        $count = \App\Models\WahaMessage::count();
+                        \App\Models\WahaMessage::truncate();
+                        Notification::make()
+                            ->title('تم تفريغ كافة الرسائل بنجاح')
+                            ->body("تم حذف {$count} رسالة من قاعدة البيانات.")
+                            ->success()
+                            ->send();
                     }),
             ])
             ->actions([
@@ -163,6 +188,24 @@ class WahaSessionResource extends Resource
                         }
                     }),
 
+                Tables\Actions\Action::make('clear_messages')
+                    ->label('مسح الرسائل')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn (WahaSession $record) => "مسح رسائل جلسة: {$record->name}")
+                    ->modalDescription(fn (WahaSession $record) => "هل أنت متأكد من مسح جميع الرسائل المسجلة لجلسة '{$record->name}'؟ سيتم حذف " . $record->messages()->count() . " رسالة من السجل نهائياً.")
+                    ->modalSubmitActionLabel('نعم، مسح الرسائل 🗑️')
+                    ->action(function (WahaSession $record) {
+                        $count = $record->messages()->count();
+                        $record->messages()->delete();
+                        Notification::make()
+                            ->title('تم مسح الرسائل بنجاح')
+                            ->body("تم حذف {$count} رسالة تابعة لجلسة '{$record->name}'.")
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\Action::make('stop')
                     ->label('إيقاف')
                     ->icon('heroicon-o-stop')
@@ -176,6 +219,24 @@ class WahaSessionResource extends Resource
                         } catch (\Throwable $e) {
                             Notification::make()->title('خطأ أثناء إيقاف الجلسة')->body($e->getMessage())->danger()->send();
                         }
+                    }),
+
+                Tables\Actions\Action::make('clear_all_system_messages')
+                    ->label('تفريغ كافة الرسائل 🗑️')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('تفريغ كافة رسائل الواتساب')
+                    ->modalDescription('هل أنت متأكد من حذف جميع رسائل الواتساب الصادرة والواردة لجميع الجلسات نهائياً من قاعدة البيانات؟')
+                    ->modalSubmitActionLabel('نعم، تفريغ كافة الرسائل 🗑️')
+                    ->action(function () {
+                        $count = \App\Models\WahaMessage::count();
+                        \App\Models\WahaMessage::truncate();
+                        Notification::make()
+                            ->title('تم تفريغ كافة الرسائل بنجاح')
+                            ->body("تم حذف {$count} رسالة من قاعدة البيانات.")
+                            ->success()
+                            ->send();
                     }),
             ]);
     }

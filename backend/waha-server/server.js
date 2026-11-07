@@ -337,6 +337,38 @@ app.post('/api/sendText', async (req, res) => {
     }
 });
 
+// POST /api/deleteMessage (Delete / unsend message from WhatsApp)
+app.post('/api/deleteMessage', async (req, res) => {
+    const { session, chatId, messageId, fromMe = true } = req.body;
+    const sessionName = session || 'default';
+    const s = activeSessions.get(sessionName);
+
+    if (!s || s.status !== 'WORKING' || !s.sock) {
+        return res.status(503).json({
+            error: `WhatsApp session '${sessionName}' is not connected.`,
+        });
+    }
+
+    try {
+        const digits = (chatId || '').replace(/\D+/g, '');
+        const jid = digits ? `${digits}@s.whatsapp.net` : chatId;
+
+        await s.sock.sendMessage(jid, {
+            delete: {
+                remoteJid: jid,
+                fromMe: fromMe !== false,
+                id: messageId,
+            },
+        });
+
+        console.log(`[WAHA] Deleted message ${messageId} in ${jid}`);
+        res.json({ success: true, messageId });
+    } catch (err) {
+        console.error(`[WAHA] Error deleting message ${messageId}:`, err);
+        res.status(500).json({ error: 'Failed to delete WhatsApp message: ' + err.message });
+    }
+});
+
 // Health check
 app.get('/health', (req, res) => {
     res.json({

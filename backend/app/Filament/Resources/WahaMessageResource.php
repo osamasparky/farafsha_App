@@ -71,6 +71,25 @@ class WahaMessageResource extends Resource
                     ->sortable(),
             ])
             ->defaultSort('created_at', 'desc')
+            ->headerActions([
+                Tables\Actions\Action::make('purge_messages')
+                    ->label('تفريغ كافة الرسائل 🗑️')
+                    ->icon('heroicon-o-trash')
+                    ->color('danger')
+                    ->requiresConfirmation()
+                    ->modalHeading('تفريغ كافة رسائل الواتساب')
+                    ->modalDescription('هل أنت متأكد من رغبتك في حذف جميع رسائل الواتساب نهائياً من قاعدة البيانات؟')
+                    ->modalSubmitActionLabel('نعم، تفريغ كافة الرسائل 🗑️')
+                    ->action(function () {
+                        $count = WahaMessage::count();
+                        WahaMessage::truncate();
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم تفريغ سجل الرسائل بنجاح')
+                            ->body("تم حذف {$count} رسالة من قاعدة البيانات.")
+                            ->success()
+                            ->send();
+                    }),
+            ])
             ->actions([
                 Tables\Actions\Action::make('view_details')
                     ->label('عرض التفاصيل')
@@ -87,6 +106,20 @@ class WahaMessageResource extends Resource
                             <div class='p-3 bg-white/5 rounded-xl border border-white/10 whitespace-pre-wrap'>" . e($record->body) . "</div>
                         </div>
                     ")),
+
+                Tables\Actions\DeleteAction::make()
+                    ->label('حذف')
+                    ->modalHeading('حذف هذه الرسالة')
+                    ->modalDescription('هل أنت متأكد من حذف هذه الرسالة من السجل؟')
+                    ->modalSubmitActionLabel('نعم، احذف 🗑️'),
+            ])
+            ->bulkActions([
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->label('حذف الرسائل المحددة 🗑️')
+                        ->modalHeading('حذف الرسائل المحددة')
+                        ->modalSubmitActionLabel('نعم، احذف المحدد'),
+                ]),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('direction')
