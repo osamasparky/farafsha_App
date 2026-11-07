@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class Game extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'name',
@@ -22,12 +24,22 @@ class Game extends Model
         'category',
         'template_type',
         'game_mode',
+        'is_offline_capable',
+        'age_group',
         'min_players',
         'max_players',
         'default_rounds',
         'default_duration_seconds',
         'difficulty_levels',
         'rules_config',
+        'how_to_play_steps',
+        'scoring_guide',
+        'example_round',
+        'faqs',
+        'seo_title',
+        'seo_description',
+        'og_image',
+        'trailer_video_url',
         'is_active',
         'is_featured',
         'sort_order',
@@ -36,6 +48,11 @@ class Game extends Model
     protected $casts = [
         'difficulty_levels' => 'array',
         'rules_config' => 'array',
+        'how_to_play_steps' => 'array',
+        'scoring_guide' => 'array',
+        'example_round' => 'array',
+        'faqs' => 'array',
+        'is_offline_capable' => 'boolean',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
         'min_players' => 'integer',
@@ -48,6 +65,13 @@ class Game extends Model
     protected $appends = [
         'cover_image_url',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'slug', 'is_active', 'is_featured', 'sort_order'])
+            ->logOnlyDirty();
+    }
 
     public function getCoverImageUrlAttribute(): ?string
     {

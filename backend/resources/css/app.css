@@ -1,9 +1,195 @@
 @import 'tailwindcss';
+@import '../../public/fonts/fonts.css';
 
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
+@source '../views/**/*.blade.php';
 
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-cairo: 'Cairo', system-ui, -apple-system, sans-serif;
+    --font-kufi: 'Reem Kufi', 'Cairo', serif;
+    
+    --color-farfasha-deepest: #150A2E;
+    --color-farfasha-deep: #170B30;
+    --color-farfasha-base: #241050;
+    --color-farfasha-raised: #2A1458;
+    --color-farfasha-glow: #4E2590;
+    --color-farfasha-glow-strong: #5A2A9E;
+
+    --color-farfasha-violet: #A35BFF;
+    --color-farfasha-violet-light: #B98AFF;
+    --color-farfasha-violet-dark: #7A2FE0;
+    --color-farfasha-violet-deep: #4A1690;
+
+    --color-farfasha-fuchsia: #F2569A;
+    --color-farfasha-fuchsia-dark: #B83A72;
+
+    --color-farfasha-orange: #FF8A4C;
+    --color-farfasha-orange-light: #FFB25E;
+
+    --color-farfasha-gold: #FFC24B;
+    --color-farfasha-gold-light: #FFD27A;
+}
+
+:root {
+    font-family: 'Cairo', system-ui, sans-serif;
+    color-scheme: dark;
+}
+
+body {
+    background-color: #170B30;
+    color: #FFFFFF;
+    background-image: 
+        radial-gradient(circle at 50% 15%, rgba(78, 37, 144, 0.45) 0%, transparent 60%),
+        radial-gradient(circle at 10% 40%, rgba(242, 86, 154, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 90% 70%, rgba(163, 91, 255, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 90%, rgba(255, 138, 76, 0.1) 0%, transparent 60%);
+    background-attachment: fixed;
+    min-height: 100vh;
+}
+
+/* بطاقات زجاجية داكنة بحواف متوهجة */
+.glass-card {
+    background: rgba(42, 24, 80, 0.65);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(163, 91, 255, 0.35);
+    border-radius: 20px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    transition: all 250ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card:hover {
+    border-color: rgba(185, 138, 255, 0.7);
+    box-shadow: 0 14px 40px rgba(163, 91, 255, 0.25);
+}
+
+/* زرار اللعبة البارز ثلاثي الأبعاد (Primary 3D Game Button) */
+.btn-game-primary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #FFB25E 0%, #FF8A4C 50%, #F2569A 100%);
+    color: #2A0E35;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 900;
+    font-size: 1.15rem;
+    padding: 0.85rem 2rem;
+    border-radius: 9999px;
+    border-bottom: 5px solid #B83A72;
+    box-shadow: 0 10px 25px rgba(242, 86, 154, 0.4), inset 0 2px 0 rgba(255, 255, 255, 0.6);
+    transition: transform 120ms ease, border-bottom-width 120ms ease, box-shadow 120ms ease;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+    min-height: 52px;
+}
+
+.btn-game-primary:hover {
+    filter: brightness(1.05);
+    box-shadow: 0 12px 32px rgba(242, 86, 154, 0.55), inset 0 2px 0 rgba(255, 255, 255, 0.7);
+}
+
+.btn-game-primary:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+    box-shadow: 0 4px 12px rgba(242, 86, 154, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* زر ثانوي ثلاثي الأبعاد (Secondary 3D Game Button) */
+.btn-game-secondary {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    background: linear-gradient(135deg, #B98AFF 0%, #7A2FE0 100%);
+    color: #FFFFFF;
+    font-family: 'Cairo', sans-serif;
+    font-weight: 800;
+    font-size: 1.05rem;
+    padding: 0.85rem 1.85rem;
+    border-radius: 9999px;
+    border-bottom: 5px solid #4A1690;
+    box-shadow: 0 10px 25px rgba(122, 47, 224, 0.35), inset 0 2px 0 rgba(255, 255, 255, 0.4);
+    transition: transform 120ms ease, border-bottom-width 120ms ease, box-shadow 120ms ease;
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+    min-height: 52px;
+}
+
+.btn-game-secondary:hover {
+    filter: brightness(1.08);
+    box-shadow: 0 12px 30px rgba(163, 91, 255, 0.45);
+}
+
+.btn-game-secondary:active {
+    transform: translateY(3px);
+    border-bottom-width: 2px;
+    box-shadow: 0 4px 12px rgba(74, 22, 144, 0.3);
+}
+
+/* بطاقة الورق البردي للعبة الأمثال */
+.parchment-card {
+    background: linear-gradient(180deg, #F6E3B8 0%, #E8C98A 100%);
+    border: 3px solid #B88746;
+    border-radius: 24px;
+    color: #3E2410;
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.45), inset 0 2px 8px rgba(255, 255, 255, 0.6);
+}
+
+/* فقاعة كلام فرفوش التفاعلية */
+.speech-bubble {
+    position: relative;
+    background: #FFFFFF;
+    color: #241050;
+    border-radius: 18px;
+    padding: 12px 18px;
+    font-weight: 700;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -10px;
+    left: 24px;
+    border-width: 10px 10px 0;
+    border-style: solid;
+    border-color: #FFFFFF transparent;
+    display: block;
+    width: 0;
+}
+
+[dir="rtl"] .speech-bubble::after {
+    left: auto;
+    right: 24px;
+}
+
+/* دعم تقليل الحركة */
+@media (prefers-reduced-motion: reduce) {
+    *, ::before, ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+.reduce-motion *, .reduce-motion ::before, .reduce-motion ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+}
+
+/* حركة التمايل اللطيفة لفرفوش */
+@keyframes farfoush-float {
+    0%, 100% { transform: translateY(0px) rotate(0deg); }
+    50% { transform: translateY(-8px) rotate(1.5deg); }
+}
+
+.animate-farfoush {
+    animation: farfoush-float 3.5s ease-in-out infinite;
 }

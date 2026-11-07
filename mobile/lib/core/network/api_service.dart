@@ -245,6 +245,111 @@ class ApiService {
     return null;
   }
 
+  /// جلب الأوسمة النشطة مرتبة من لوحة التحكم مع حالة الفتح
+  Future<List<Map<String, dynamic>>> getBadges({int userPoints = 4320}) async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/badges?user_points=$userPoints'), headers: _headers)
+          .timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching badges failed: $e');
+    }
+    return [
+      {
+        'id': 1,
+        'title': 'ملك الأمثال',
+        'description': 'أجب على 10 أمثال شعبية بنجاح دون ارتكاب أي خطأ.',
+        'required_points': 300,
+        'icon': 'quote',
+        'color': '#D2566A',
+        'is_unlocked': true,
+      },
+      {
+        'id': 2,
+        'title': 'العبقري',
+        'description': 'أجب بسرعة فائقة في أول 5 ثوانٍ من السؤال.',
+        'required_points': 600,
+        'icon': 'bulb',
+        'color': '#2F6E7A',
+        'is_unlocked': true,
+      },
+      {
+        'id': 3,
+        'title': 'سمّيع',
+        'description': 'تفوّق في جولات التحديات الموسيقية والغنائية.',
+        'required_points': 900,
+        'icon': 'music',
+        'color': '#B23A72',
+        'is_unlocked': true,
+      },
+      {
+        'id': 4,
+        'title': 'عاشق السينما',
+        'description': 'خمّن أكثر من 15 إيفيه سينمائي بدقة تامة.',
+        'required_points': 1200,
+        'icon': 'film',
+        'color': '#F59E0B',
+        'is_unlocked': true,
+      },
+      {
+        'id': 5,
+        'title': 'حاوي اللمّة',
+        'description': 'حقّق المركز الأول في 10 ألعاب جماعية مختلفة.',
+        'required_points': 2000,
+        'icon': 'trophy',
+        'color': '#A35BFF',
+        'is_unlocked': true,
+      },
+      {
+        'id': 6,
+        'title': 'أسطورة التحدي',
+        'description': 'تجاوز حاجز 3,000 نقطة واعتلِ صدارة لوحة الترتيب.',
+        'required_points': 3500,
+        'icon': 'star',
+        'color': '#FFD27A',
+        'is_unlocked': true,
+      },
+    ];
+  }
+
+  /// جلب المستويات والرتب من لوحة التحكم
+  Future<List<Map<String, dynamic>>> getLevels() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/levels'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching levels failed: $e');
+    }
+    return [];
+  }
+
+  /// جلب بيانات البروفايل الكاملة وحساب المستوى تلقائياً
+  Future<Map<String, dynamic>?> getProfile() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/profile'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching profile failed: $e');
+    }
+    return null;
+  }
+
   /// إنشاء غرفة ألعاب أونلاين جديدة
   Future<Map<String, dynamic>?> createRoom(String gameSlug) async {
     try {

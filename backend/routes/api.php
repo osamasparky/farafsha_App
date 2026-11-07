@@ -43,3 +43,6 @@ Route::get('/leaderboard', [AppContentController::class, 'leaderboard']);
 Route::get('/notifications', [AppContentController::class, 'notifications']);
 Route::get('/pages/{slug}', [AppContentController::class, 'page']);
 Route::get('/contact-info', [AppContentController::class, 'contactInfo']);
+Route::get('/badges', [AppContentController::class, 'badges']);
+Route::get('/levels', [AppContentController::class, 'levels']);
+Route::get('/profile', [AppContentController::class, 'profile']);

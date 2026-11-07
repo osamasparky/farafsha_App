@@ -8,6 +8,35 @@ import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
+class DefaultPlayerInfo {
+  final String name;
+  final bool isMale;
+  final String avatar;
+
+  const DefaultPlayerInfo({
+    required this.name,
+    required this.isMale,
+    required this.avatar,
+  });
+}
+
+const List<DefaultPlayerInfo> kDefaultPlayers = [
+  DefaultPlayerInfo(name: 'ياسين', isMale: true, avatar: 'assets/images/av-ahmed.png'),
+  DefaultPlayerInfo(name: 'رانيا', isMale: false, avatar: 'assets/images/av-sara.png'),
+  DefaultPlayerInfo(name: 'ياسمين', isMale: false, avatar: 'assets/images/av-mena.png'),
+  DefaultPlayerInfo(name: 'سيلين', isMale: false, avatar: 'assets/images/av-sara.png'),
+  DefaultPlayerInfo(name: 'أسامة', isMale: true, avatar: 'assets/images/av-karim.png'),
+  DefaultPlayerInfo(name: 'إيناس', isMale: false, avatar: 'assets/images/av-mena.png'),
+  DefaultPlayerInfo(name: 'آيسن', isMale: false, avatar: 'assets/images/av-sara.png'),
+  DefaultPlayerInfo(name: 'شدن', isMale: false, avatar: 'assets/images/av-mena.png'),
+  DefaultPlayerInfo(name: 'محمد', isMale: true, avatar: 'assets/images/av-mahmoud.png'),
+  DefaultPlayerInfo(name: 'أماني', isMale: false, avatar: 'assets/images/av-sara.png'),
+  DefaultPlayerInfo(name: 'عمر', isMale: true, avatar: 'assets/images/av-ahmed.png'),
+  DefaultPlayerInfo(name: 'ليان', isMale: false, avatar: 'assets/images/av-mena.png'),
+  DefaultPlayerInfo(name: 'أميرة', isMale: false, avatar: 'assets/images/av-sara.png'),
+  DefaultPlayerInfo(name: 'مليكة', isMale: false, avatar: 'assets/images/av-mena.png'),
+];
+
 class TeamModel {
   String name;
   Color color;
@@ -25,6 +54,7 @@ class PlayersScreen extends StatefulWidget {
   final String gameSlug;
   final String gameTitle;
   final int totalRounds;
+  final int playersCount;
 
   const PlayersScreen({
     super.key,
@@ -32,6 +62,7 @@ class PlayersScreen extends StatefulWidget {
     this.gameSlug = 'amthal-shaabiya',
     this.gameTitle = 'أمثال شعبية',
     this.totalRounds = 10,
+    this.playersCount = 4,
   });
 
   @override
@@ -62,19 +93,27 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   void _resetToDefaults() {
+    final count = widget.playersCount.clamp(2, kDefaultPlayers.length);
+    final selected = kDefaultPlayers.take(count).map((p) => p.name).toList();
+
+    // توزيع اللاعبين على الفريقين بالتساوي
+    final half = (selected.length / 2).ceil();
+    final team1Players = selected.take(half).toList();
+    final team2Players = selected.skip(half).toList();
+
     _teams = [
       TeamModel(
         name: 'فريق البنفسج',
         color: _presetColors[0],
-        players: ['أحمد', 'سارة'],
+        players: team1Players,
       ),
       TeamModel(
         name: 'فريق البرتقان',
         color: _presetColors[1],
-        players: ['منة', 'محمود'],
+        players: team2Players,
       ),
     ];
-    _soloPlayers = ['أحمد', 'سارة', 'منة', 'محمود'];
+    _soloPlayers = List<String>.from(selected);
   }
 
   void _clearAll() {
@@ -419,18 +458,53 @@ class _PlayersScreenState extends State<PlayersScreen> {
     );
   }
 
-  void _startGame() async {
-    // 1. جمع اللاعبين الفعليين
-    final List<GamePlayer> gamePlayers = [];
-    final avatarPool = [
+  String _getAvatarForPlayer(String name, int index) {
+    final matched = kDefaultPlayers.where((p) => p.name.trim() == name.trim()).firstOrNull;
+    if (matched != null) {
+      return matched.avatar;
+    }
+    final maleAvatars = [
       'assets/images/av-ahmed.png',
-      'assets/images/av-sara.png',
-      'assets/images/av-mahmoud.png',
       'assets/images/av-karim.png',
+      'assets/images/av-mahmoud.png',
+    ];
+    final femaleAvatars = [
+      'assets/images/av-sara.png',
       'assets/images/av-mena.png',
     ];
 
-    int avatarIndex = 0;
+    final isMale = _isMaleName(name);
+    return isMale
+        ? maleAvatars[index % maleAvatars.length]
+        : femaleAvatars[index % femaleAvatars.length];
+  }
+
+  bool _isMaleName(String name) {
+    const males = {
+      'ياسين',
+      'أسامة',
+      'محمد',
+      'عمر',
+      'أحمد',
+      'كريم',
+      'محمود',
+      'علي',
+      'حازم',
+      'مصطفى',
+      'إبراهيم',
+      'طارق',
+      'يوسف',
+      'خالد',
+      'حسن',
+      'حسين'
+    };
+    return males.contains(name.trim());
+  }
+
+  void _startGame() async {
+    // 1. جمع اللاعبين الفعليين
+    final List<GamePlayer> gamePlayers = [];
+    int playerIndex = 0;
 
     if (_isTeamsMode) {
       for (final team in _teams) {
@@ -440,11 +514,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
               id: UniqueKey().toString(),
               name: pName,
               teamName: team.name,
-              avatar: avatarPool[avatarIndex % avatarPool.length],
+              avatar: _getAvatarForPlayer(pName, playerIndex),
               teamColor: team.color,
             ),
           );
-          avatarIndex++;
+          playerIndex++;
         }
       }
     } else {
@@ -454,11 +528,11 @@ class _PlayersScreenState extends State<PlayersScreen> {
             id: UniqueKey().toString(),
             name: pName,
             teamName: 'المتنافسين',
-            avatar: avatarPool[avatarIndex % avatarPool.length],
+            avatar: _getAvatarForPlayer(pName, playerIndex),
             teamColor: const Color(0xFFA35BFF),
           ),
         );
-        avatarIndex++;
+        playerIndex++;
       }
     }
 
@@ -466,14 +540,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
       gamePlayers.addAll([
         GamePlayer(
           id: '1',
-          name: 'أحمد',
+          name: 'ياسين',
           teamName: 'فريق البنفسج',
           avatar: 'assets/images/av-ahmed.png',
           teamColor: const Color(0xFFA35BFF),
         ),
         GamePlayer(
           id: '2',
-          name: 'سارة',
+          name: 'رانيا',
           teamName: 'فريق البرتقان',
           avatar: 'assets/images/av-sara.png',
           teamColor: const Color(0xFFFF8A4C),

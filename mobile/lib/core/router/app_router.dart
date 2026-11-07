@@ -88,6 +88,7 @@ final appRouter = GoRouter(
             gameSlug: data['gameSlug']?.toString() ?? 'amthal-shaabiya',
             gameTitle: data['gameTitle']?.toString() ?? 'أمثال شعبية',
             totalRounds: data['totalRounds'] as int? ?? 10,
+            playersCount: data['playersCount'] as int? ?? 4,
           );
         }
         final target = state.extra as String? ?? '/game/amthal';

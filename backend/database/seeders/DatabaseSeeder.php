@@ -321,5 +321,11 @@ class DatabaseSeeder extends Seeder
                 ])
             );
         }
+
+        // بذر ميزات الإنتاج وبيانات موقع فرفشة الجديد
+        $this->call([
+            ProductionFeaturesSeeder::class,
+            FarfashaWebSeeder::class,
+        ]);
     }
 }

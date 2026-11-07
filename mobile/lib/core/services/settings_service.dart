@@ -24,7 +24,7 @@ class SettingsService extends ChangeNotifier {
     if (_isInitialized) return;
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isDarkMode = prefs.getBool('pref_dark_mode') ?? true;
+      _isDarkMode = true;
       _soundEffects = prefs.getBool('pref_sound_effects') ?? true;
       _vibration = prefs.getBool('pref_vibration') ?? true;
       _dialect = prefs.getString('pref_dialect') ?? 'لهجة مصرية';

@@ -8,6 +8,8 @@ use App\Models\Dialect;
 use App\Models\LeaderboardEntry;
 use App\Models\AppNotification;
 use App\Models\AppPage;
+use App\Models\Badge;
+use App\Models\Level;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -117,27 +119,97 @@ class AppContentController extends Controller
     }
 
     /**
-     * معلومات التواصل والدعم الفني
+     * قائمة الأوسمة والإنجازات النشطة مرتبة
      */
-    public function contactInfo(): JsonResponse
+    public function badges(Request $request): JsonResponse
     {
-        $contactPage = AppPage::where('slug', 'contact-us')->first();
+        $badges = Badge::with('game:id,name,slug')
+            ->where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->get();
 
-        $meta = $contactPage?->meta ?? [
-            'email' => 'support@lammah.app',
-            'whatsapp' => '+201000000000',
-            'phone' => '+201200000000',
-            'website' => 'https://lammah.app',
-        ];
+        $userPoints = (int) $request->query('user_points', 4320);
+
+        $mapped = $badges->map(function ($badge) use ($userPoints) {
+            $data = $badge->toArray();
+            $data['is_unlocked'] = $userPoints >= $badge->required_points;
+            $data['progress'] = min(1.0, $badge->required_points > 0 ? ($userPoints / $badge->required_points) : 1.0);
+            return $data;
+        });
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $mapped,
+        ]);
+    }
+
+    /**
+     * قائمة المستويات والرتب
+     */
+    public function levels(): JsonResponse
+    {
+        $levels = Level::orderBy('level_number', 'asc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $levels,
+        ]);
+    }
+
+    /**
+     * بيانات البروفايل وحساب المستوى والأوسمة بناءً على نقاط التحكم
+     */
+    public function profile(Request $request): JsonResponse
+    {
+        $userPoints = 4320;
+        $wins = 32;
+        $gamesPlayed = 148;
+
+        // حساب المستوى بناءً على جدول المستويات في قاعدة البيانات
+        $levels = Level::orderBy('level_number', 'asc')->get();
+        $currentLevel = $levels->where('min_points', '<=', $userPoints)->last() ?? $levels->first();
+        $nextLevel = $levels->where('level_number', '>', $currentLevel?->level_number ?? 1)->first();
+
+        $currentMin = $currentLevel?->min_points ?? 0;
+        $nextMin = $nextLevel?->min_points ?? ($currentMin + 1000);
+        $pointsInLevel = max(0, $userPoints - $currentMin);
+        $neededForNext = max(1, $nextMin - $currentMin);
+        $progress = min(1.0, $pointsInLevel / $neededForNext);
+
+        // جلب الأوسمة مع حالة الفتح
+        $badges = Badge::with('game:id,name,slug')
+            ->where('is_active', true)
+            ->orderBy('sort_order', 'asc')
+            ->get()
+            ->map(function ($b) use ($userPoints) {
+                $arr = $b->toArray();
+                $arr['is_unlocked'] = $userPoints >= $b->required_points;
+                return $arr;
+            });
 
         return response()->json([
             'status' => 'success',
             'data' => [
-                'title' => $contactPage?->title ?? 'التواصل والدعم الفني',
-                'description' => $contactPage?->content ?? 'فريق الدعم الفني متاح لمساعدتك على مدار الساعة.',
-                'meta' => $meta,
+                'name' => 'أسامة صبري',
+                'avatar' => 'assets/images/av-ahmed.png',
+                'total_points' => $userPoints,
+                'wins' => $wins,
+                'games_played' => $gamesPlayed,
+                'level' => [
+                    'level_number' => $currentLevel?->level_number ?? 1,
+                    'title' => $currentLevel?->title ?? 'مبتدئ اللمّة',
+                    'color' => $currentLevel?->color ?? '#FFD27A',
+                    'icon' => $currentLevel?->icon ?? 'star',
+                    'current_points' => $userPoints,
+                    'points_in_level' => $pointsInLevel,
+                    'needed_for_next' => $neededForNext,
+                    'next_level_min' => $nextMin,
+                    'progress_percent' => round($progress * 100, 1),
+                ],
+                'badges' => $badges,
             ],
         ]);
     }
 }
+
 

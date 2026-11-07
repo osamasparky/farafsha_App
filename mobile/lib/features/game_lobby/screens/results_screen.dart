@@ -5,6 +5,7 @@ import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
 class ResultsScreen extends StatelessWidget {
+  final GameSession? session;
   final String winnerTeam;
   final int winnerScore;
   final String runnerUpTeam;
@@ -15,6 +16,7 @@ class ResultsScreen extends StatelessWidget {
 
   const ResultsScreen({
     super.key,
+    this.session,
     this.winnerTeam = 'فريق البنفسج',
     this.winnerScore = 24,
     this.runnerUpTeam = 'فريق البرتقان',
@@ -33,6 +35,7 @@ class ResultsScreen extends StatelessWidget {
     final mvp = session.mvp;
 
     return ResultsScreen(
+      session: session,
       winnerTeam: winner.key,
       winnerScore: winner.value,
       runnerUpTeam: runnerUp.key,
@@ -278,7 +281,16 @@ class ResultsScreen extends StatelessWidget {
                   showArrow: false,
                   height: 62,
                   onPressed: () {
-                    context.push('/handoff');
+                    if (session != null) {
+                      for (final p in session!.players) {
+                        p.score = 0;
+                        p.correctAnswers = 0;
+                      }
+                      session!.currentRoundIndex = 0;
+                      context.go(session!.gameRoute, extra: session);
+                    } else {
+                      context.go('/home');
+                    }
                   },
                 ),
 

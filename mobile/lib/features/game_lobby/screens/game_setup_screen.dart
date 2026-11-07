@@ -161,11 +161,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     icon: Icons.group_rounded,
                     title: 'عدد اللاعبين',
                     value: '$_playersCount لاعبين',
-                    onTap: () {
-                      setState(() {
-                        _playersCount = _playersCount >= 10 ? 2 : _playersCount + 2;
-                      });
-                    },
+                    onTap: () => _showPlayersCountPicker(context),
                   ),
                   const Divider(color: LammaColors.cardBorder, height: 1),
                   _buildSettingRow(
@@ -236,6 +232,76 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             Text(value, style: const TextStyle(color: LammaColors.gold500, fontWeight: FontWeight.w700, fontSize: 15)),
             const SizedBox(width: 8),
             const Icon(Icons.arrow_forward_ios_rounded, color: Color(0xFFCFC6E4), size: 14),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showPlayersCountPicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.all(22),
+        decoration: const BoxDecoration(
+          color: Color(0xFF1C0D38),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: Color(0xFFB98AFF), width: 2)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 44,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'اختر عدد اللاعبين (حتى 14 لاعب)',
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
+            ),
+            const SizedBox(height: 18),
+            Wrap(
+              spacing: 10,
+              runSpacing: 10,
+              alignment: WrapAlignment.center,
+              children: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14].map((count) {
+                final isSelected = _playersCount == count;
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _playersCount = count);
+                    Navigator.pop(ctx);
+                  },
+                  child: Container(
+                    width: 54,
+                    height: 54,
+                    decoration: BoxDecoration(
+                      color: isSelected ? LammaColors.gold500 : Colors.white.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSelected ? LammaColors.gold300 : Colors.white12,
+                        width: isSelected ? 2 : 1,
+                      ),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '$count',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: isSelected ? const Color(0xFF2A0E35) : Colors.white,
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+            const SizedBox(height: 16),
           ],
         ),
       ),

@@ -415,24 +415,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 14),
 
                   // 1. قسم التفضيلات
-                  _buildSectionHeader('التفضيلات والمظهر', secondaryTextColor),
+                  _buildSectionHeader('التفضيلات والمحتوى', secondaryTextColor),
                   _buildCardContainer([
                     _buildActionRow(
                       icon: Icons.chat_bubble_outline_rounded,
                       title: 'لهجة المحتوى',
                       trailingText: _settings.dialect,
                       onTap: _showDialectSheet,
-                      hasDivider: true,
-                      isDark: isDark,
-                    ),
-                    _buildSwitchRow(
-                      icon: Icons.dark_mode_outlined,
-                      title: 'الوضع الليلي',
-                      value: _settings.isDarkMode,
-                      onChanged: (v) {
-                        _settings.setDarkMode(v);
-                        _settings.triggerHaptic();
-                      },
+                      hasDivider: false,
                       isDark: isDark,
                     ),
                   ], isDark),

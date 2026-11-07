@@ -17,135 +17,222 @@ class GameResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
     protected static ?string $navigationGroup = 'إدارة المحتوى والألعاب';
     protected static ?string $modelLabel = 'لعبة';
-    protected static ?string $pluralModelLabel = 'الألعاب';
+    protected static ?string $pluralModelLabel = 'الألعاب (Games)';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('المعلومات الأساسية')
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label('اسم اللعبة')
-                            ->placeholder('مثال: أمثال شعبية')
-                            ->required()
-                            ->maxLength(100),
+                Forms\Components\Tabs::make('تفاصيل اللعبة')
+                    ->tabs([
+                        Forms\Components\Tabs\Tab::make('المعلومات الأساسية')
+                            ->icon('heroicon-o-information-circle')
+                            ->schema([
+                                Forms\Components\Grid::make(2)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('name')
+                                            ->label('اسم اللعبة')
+                                            ->placeholder('مثال: أمثال شعبية')
+                                            ->required()
+                                            ->maxLength(100),
 
-                        Forms\Components\TextInput::make('slug')
-                            ->label('المعرّف اللطيف (Slug)')
-                            ->placeholder('amthal-shaabiya')
-                            ->required()
-                            ->unique(ignoreRecord: true),
+                                        Forms\Components\TextInput::make('slug')
+                                            ->label('المعرّف اللطيف (Slug)')
+                                            ->placeholder('amthal-shaabiya')
+                                            ->required()
+                                            ->unique(ignoreRecord: true),
 
-                        Forms\Components\TextInput::make('subtitle')
-                            ->label('عنوان فرعي')
-                            ->placeholder('مثال: كمّل المثل الشعبي')
-                            ->maxLength(150),
+                                        Forms\Components\TextInput::make('subtitle')
+                                            ->label('عنوان فرعي')
+                                            ->placeholder('مثال: كمّل المثل الشعبي')
+                                            ->maxLength(150),
 
-                        Forms\Components\Select::make('category')
-                            ->label('التصنيف')
-                            ->options([
-                                'أمثال' => 'أمثال شعبية',
-                                'إفيهات' => 'أفلام ومسلسلات',
-                                'تخمين' => 'تخمين وشخصيات',
-                                'ذكاء وسرعة' => 'ذكاء وسرعة',
-                                'معلومات عامة' => 'معلومات وثقافة',
-                                'تواصل وضحك' => 'تواصل وضحك',
-                            ])
-                            ->required(),
+                                        Forms\Components\Select::make('category')
+                                            ->label('التصنيف')
+                                            ->options([
+                                                'أمثال' => 'أمثال شعبية',
+                                                'إفيهات' => 'أفلام ومسلسلات',
+                                                'تخمين' => 'تخمين وشخصيات',
+                                                'ذكاء وسرعة' => 'ذكاء وسرعة',
+                                                'معلومات عامة' => 'معلومات وثقافة',
+                                                'تواصل وضحك' => 'تواصل وضحك',
+                                            ])
+                                            ->required(),
 
-                        Forms\Components\TextInput::make('badge_text')
-                            ->label('شارة مميزة (Badge)')
-                            ->placeholder('الأكثر طلباً / جديد'),
+                                        Forms\Components\TextInput::make('badge_text')
+                                            ->label('شارة مميزة (Badge)')
+                                            ->placeholder('الأكثر طلباً / جديد'),
 
-                        Forms\Components\Select::make('template_type')
-                            ->label('نوع قالب اللعبة')
-                            ->options([
-                                'choice' => 'اختيار من متعدد (أمثال / إفيهات / ثقافة)',
-                                'who_am_i' => 'تخمين شخصيات (أسئلة نعم/لا)',
-                                'forbidden_words' => 'كلمات ممنوعة (Taboo)',
-                                'two_truths_one_lie' => 'حقيقتان وكذبة',
-                                'acting_drawing' => 'تمثيل ورسم صامت',
-                            ])
-                            ->default('choice')
-                            ->required(),
+                                        Forms\Components\Select::make('template_type')
+                                            ->label('نوع قالب اللعبة')
+                                            ->options([
+                                                'choice' => 'اختيار من متعدد (أمثال / إفيهات / ثقافة)',
+                                                'who_am_i' => 'تخمين شخصيات (أسئلة نعم/لا)',
+                                                'forbidden_words' => 'كلمات ممنوعة (Taboo)',
+                                                'two_truths_one_lie' => 'حقيقتان وكذبة',
+                                                'speed_trivia' => 'سؤال على السريع',
+                                                'acting_drawing' => 'تمثيل ورسم صامت',
+                                            ])
+                                            ->default('choice')
+                                            ->required(),
 
-                        Forms\Components\Select::make('game_mode')
-                            ->label('نمط اللعب المتاح')
-                            ->options([
-                                'local_only' => 'لعب محلي فقط (جهاز واحد)',
-                                'online_only' => 'أونلاين فقط (غرف متعددة الأجهزة)',
-                                'hybrid' => 'هجين (يدعم المحلي والأونلاين)',
-                            ])
-                            ->default('hybrid')
-                            ->required(),
-                    ])->columns(2),
+                                        Forms\Components\Select::make('game_mode')
+                                            ->label('نمط اللعب المتاح')
+                                            ->options([
+                                                'local_only' => 'لعب محلي فقط (جهاز واحد)',
+                                                'online_only' => 'أونلاين فقط (غرف متعددة الأجهزة)',
+                                                'hybrid' => 'هجين (يدعم المحلي والأونلاين)',
+                                            ])
+                                            ->default('hybrid')
+                                            ->required(),
 
-                Forms\Components\Section::make('صورة وهوية كارت اللعبة')
-                    ->schema([
-                        Forms\Components\FileUpload::make('cover_image')
-                            ->label('صورة كارت اللعبة في تطبيق الموبايل (Cover / Card Image)')
-                            ->image()
-                            ->directory('games')
-                            ->visibility('public')
-                            ->imageEditor()
-                            ->helperText('هذه هي الصورة التي تظهر أعلى كارت اللعبة في شاشة تفاصيل وإعداد اللعبة، ويمكنك تغييرها في أي وقت.')
-                            ->columnSpanFull(),
-                    ]),
+                                        Forms\Components\TextInput::make('age_group')
+                                            ->label('الفئة العمرية')
+                                            ->default('جميع الأعمار')
+                                            ->placeholder('مثال: جميع الأعمار، +12، +16'),
+                                    ]),
 
-                Forms\Components\Section::make('شرح وقواعد الجولة')
-                    ->schema([
-                        Forms\Components\Textarea::make('description')
-                            ->label('نبذة عن اللعبة')
-                            ->rows(3)
-                            ->columnSpanFull(),
+                                Forms\Components\Grid::make(4)
+                                    ->schema([
+                                        Forms\Components\TextInput::make('min_players')
+                                            ->label('الحد الأدنى للاعبين')
+                                            ->numeric()
+                                            ->default(2)
+                                            ->required(),
 
-                        Forms\Components\Textarea::make('instructions')
-                            ->label('تعليمات وقواعد اللعب')
-                            ->rows(3)
-                            ->columnSpanFull(),
+                                        Forms\Components\TextInput::make('max_players')
+                                            ->label('الحد الأقصى للاعبين')
+                                            ->numeric()
+                                            ->default(12)
+                                            ->required(),
 
-                        Forms\Components\TextInput::make('min_players')
-                            ->label('الحد الأدنى للاعبين')
-                            ->numeric()
-                            ->default(2)
-                            ->required(),
+                                        Forms\Components\TextInput::make('default_rounds')
+                                            ->label('عدد الجولات الافتراضي')
+                                            ->numeric()
+                                            ->default(10)
+                                            ->required(),
 
-                        Forms\Components\TextInput::make('max_players')
-                            ->label('الحد الأقصى للاعبين')
-                            ->numeric()
-                            ->default(12)
-                            ->required(),
+                                        Forms\Components\TextInput::make('default_duration_seconds')
+                                            ->label('مدة الدور (بالثواني)')
+                                            ->numeric()
+                                            ->default(20)
+                                            ->required(),
+                                    ]),
 
-                        Forms\Components\TextInput::make('default_rounds')
-                            ->label('عدد الجولات الافتراضي')
-                            ->numeric()
-                            ->default(10)
-                            ->required(),
+                                Forms\Components\Grid::make(3)
+                                    ->schema([
+                                        Forms\Components\Toggle::make('is_offline_capable')
+                                            ->label('تعمل بدون إنترنت (Offline)')
+                                            ->default(true),
 
-                        Forms\Components\TextInput::make('default_duration_seconds')
-                            ->label('مدة الدور (بالثواني)')
-                            ->numeric()
-                            ->default(20)
-                            ->required(),
-                    ])->columns(2),
+                                        Forms\Components\Toggle::make('is_active')
+                                            ->label('مفعلة وتظهر بالمنصة')
+                                            ->default(true),
 
-                Forms\Components\Section::make('الحالة والظهور')
-                    ->schema([
-                        Forms\Components\Toggle::make('is_active')
-                            ->label('مفعلة وتظهر في التطبيق')
-                            ->default(true),
+                                        Forms\Components\Toggle::make('is_featured')
+                                            ->label('لعبة مميزة بالرئيسية')
+                                            ->default(false),
+                                    ]),
 
-                        Forms\Components\Toggle::make('is_featured')
-                            ->label('لعبة مميزة في الصفحة الأولى')
-                            ->default(false),
+                                Forms\Components\TextInput::make('sort_order')
+                                    ->label('ترتيب الظهور')
+                                    ->numeric()
+                                    ->default(0),
 
-                        Forms\Components\TextInput::make('sort_order')
-                            ->label('ترتيب الظهور')
-                            ->numeric()
-                            ->default(0),
-                    ])->columns(3),
+                                Forms\Components\Textarea::make('description')
+                                    ->label('نبذة عن اللعبة (تظهر بالبطاقات وصفحة اللعبة)')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Textarea::make('instructions')
+                                    ->label('تعليمات وقواعد اللعب السريعة')
+                                    ->rows(3)
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('الهوية والصور')
+                            ->icon('heroicon-o-photo')
+                            ->schema([
+                                Forms\Components\FileUpload::make('cover_image')
+                                    ->label('صورة كارت اللعبة (Cover Image)')
+                                    ->image()
+                                    ->directory('games')
+                                    ->visibility('public')
+                                    ->imageEditor()
+                                    ->columnSpanFull(),
+
+                                Forms\Components\TextInput::make('icon')
+                                    ->label('الأيقونة أو رمز الأيقونة')
+                                    ->placeholder('format_quote_rounded, block_rounded, psychology_rounded'),
+
+                                Forms\Components\TextInput::make('trailer_video_url')
+                                    ->label('رابط فيديو توضيحي (YouTube / Vimeo / MP4)')
+                                    ->url()
+                                    ->placeholder('https://www.youtube.com/watch?v=...'),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('خطوات اللعب وقواعد النقاط')
+                            ->icon('heroicon-o-list-bullet')
+                            ->schema([
+                                Forms\Components\Repeater::make('how_to_play_steps')
+                                    ->label('خطوات اللعب بالتفصيل (Step-by-Step)')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('step_number')->label('رقم الخطوة')->numeric()->required(),
+                                        Forms\Components\TextInput::make('title')->label('عنوان الخطوة')->required(),
+                                        Forms\Components\Textarea::make('description')->label('شرح الخطوة')->required(),
+                                    ])
+                                    ->columns(3)
+                                    ->collapsible()
+                                    ->defaultItems(3),
+
+                                Forms\Components\Repeater::make('scoring_guide')
+                                    ->label('دليل احتساب النقاط (Scoring System)')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('condition')->label('الحالة / الإنجاز')->required(),
+                                        Forms\Components\TextInput::make('points')->label('النقاط (+/-)')->required(),
+                                        Forms\Components\TextInput::make('note')->label('ملاحظة إضافية'),
+                                    ])
+                                    ->columns(3)
+                                    ->collapsible()
+                                    ->defaultItems(2),
+
+                                Forms\Components\Section::make('مثال توضيحي لجولة حية')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('example_round.prompt')->label('نص السؤال أو البداية'),
+                                        Forms\Components\TagsInput::make('example_round.options')->label('الخيارات المتاحة'),
+                                        Forms\Components\TextInput::make('example_round.correct')->label('الإجابة الصحيحة'),
+                                        Forms\Components\TextInput::make('example_round.hint')->label('التلميح التوضيحي'),
+                                    ]),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('الأسئلة الشائعة والـ SEO')
+                            ->icon('heroicon-o-magnifying-glass')
+                            ->schema([
+                                Forms\Components\Repeater::make('faqs')
+                                    ->label('الأسئلة الشائعة الخاصة باللعبة')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('question')->label('السؤال')->required(),
+                                        Forms\Components\Textarea::make('answer')->label('الإجابة')->required(),
+                                    ])
+                                    ->collapsible(),
+
+                                Forms\Components\TextInput::make('seo_title')
+                                    ->label('عنوان الـ SEO (Meta Title)')
+                                    ->maxLength(70),
+
+                                Forms\Components\Textarea::make('seo_description')
+                                    ->label('وصف الـ SEO (Meta Description)')
+                                    ->maxLength(160),
+
+                                Forms\Components\FileUpload::make('og_image')
+                                    ->label('صورة المشاركة بشبكات التواصل (OG Image)')
+                                    ->image()
+                                    ->directory('seo')
+                                    ->visibility('public'),
+                            ]),
+                    ])
+                    ->columnSpanFull(),
             ]);
     }
 
@@ -169,15 +256,13 @@ class GameResource extends Resource
                     ->badge()
                     ->color('primary'),
 
-                Tables\Columns\TextColumn::make('template_type')
-                    ->label('القالب البرمجي')
-                    ->badge()
-                    ->color('gray'),
+                Tables\Columns\TextColumn::make('min_players')
+                    ->label('اللاعبين')
+                    ->formatStateUsing(fn ($record) => "{$record->min_players} - {$record->max_players}"),
 
-                Tables\Columns\TextColumn::make('content_items_count')
-                    ->label('عدد البطاقات')
-                    ->counts('contentItems')
-                    ->sortable(),
+                Tables\Columns\IconColumn::make('is_offline_capable')
+                    ->label('بدون نت')
+                    ->boolean(),
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('مفعلة')
