@@ -108,7 +108,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                   } else if (_selectedMode == 'lammah') {
                     _showLammahOptionsSheet(context);
                   } else {
-                    context.push('/online-room');
+                    _showOnlineOptionsSheet(context);
                   }
                 },
               ),
@@ -255,6 +255,16 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (_) => const _LammahSetupSheet(),
+    );
+  }
+
+  /// القائمة المنبثقة لاختيار نمط اللعب أونلاين (إنشاء غرفة كمضيف VS انضمام لغرفة)
+  void _showOnlineOptionsSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _OnlineSetupSheet(),
     );
   }
 }
@@ -717,3 +727,531 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
     );
   }
 }
+
+/// شيت إعداد اللعب أونلاين: الاختيار بين المضيف (إنشاء غرفة) أو الضيف (انضمام بكود)
+class _OnlineSetupSheet extends StatefulWidget {
+  const _OnlineSetupSheet();
+
+  @override
+  State<_OnlineSetupSheet> createState() => _OnlineSetupSheetState();
+}
+
+class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
+  int _activeTab = 0; // 0: إنشاء غرفة (Host), 1: انضمام (Join)
+
+  // Host state
+  String _selectedGameSlug = 'amthal-shaabiya';
+  int _totalRounds = 10;
+  int _roundDuration = 20;
+  bool _isLoadingHost = false;
+
+  // Join state
+  final TextEditingController _joinCodeController = TextEditingController();
+  late TextEditingController _joinNameController;
+  bool _isLoadingJoin = false;
+
+  List<Map<String, dynamic>> _availableGames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    final name = ApiService.instance.currentUser?['name']?.toString() ?? '';
+    _joinNameController = TextEditingController(text: name);
+    _loadGames();
+  }
+
+  @override
+  void dispose() {
+    _joinCodeController.dispose();
+    _joinNameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadGames() async {
+    try {
+      final games = await ApiService.instance.getGames();
+      if (mounted) {
+        setState(() {
+          _availableGames = games.where((g) => g['is_active'] != false).toList();
+        });
+      }
+    } catch (_) {}
+  }
+
+  List<Map<String, dynamic>> get _displayGames {
+    if (_availableGames.isNotEmpty) return _availableGames;
+    return const [
+      {'name': 'أمثال شعبية', 'slug': 'amthal-shaabiya', 'category': 'أمثال'},
+      {'name': 'جمل مشهورة', 'slug': 'famous-quotes', 'category': 'إفيهات'},
+      {'name': 'سؤال على السريع', 'slug': 'speed-trivia', 'category': 'معلومات عامة'},
+      {'name': 'مين أنا؟', 'slug': 'who-am-i', 'category': 'تخمين'},
+      {'name': 'ممنوع تقول', 'slug': 'forbidden-words', 'category': 'ذكاء وسرعة'},
+      {'name': 'حقيقتان وكذبة', 'slug': 'two-truths-and-lie', 'category': 'تواصل وضحك'},
+      {'name': 'أتوبيس كومبليت', 'slug': 'autobus-complete', 'category': 'ذكاء وسرعة'},
+    ];
+  }
+
+  Future<void> _handleCreateRoom() async {
+    setState(() => _isLoadingHost = true);
+    HapticFeedback.heavyImpact();
+
+    try {
+      final res = await ApiService.instance.createRoom(
+        gameSlug: _selectedGameSlug,
+        totalRounds: _totalRounds,
+        roundDurationSeconds: _roundDuration,
+      );
+
+      final code = res['room']?['code']?.toString() ?? '';
+      final token = res['token']?.toString();
+
+      if (mounted) {
+        Navigator.pop(context);
+        context.push('/online-room', extra: {
+          'code': code,
+          'token': token,
+          'isHost': true,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingHost = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _handleJoinRoom() async {
+    final code = _joinCodeController.text.trim();
+    if (code.length != 6) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('رمز الغرفة يجب أن يتكون من 6 أرقام', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    final name = _joinNameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('الرجاء كتابة اسمك للدخول', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoadingJoin = true);
+    HapticFeedback.heavyImpact();
+
+    try {
+      final res = await ApiService.instance.joinRoom(
+        code: code,
+        playerName: name,
+      );
+
+      final token = res['token']?.toString();
+
+      if (mounted) {
+        Navigator.pop(context);
+        context.push('/online-room', extra: {
+          'code': code,
+          'token': token,
+          'isHost': false,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoadingJoin = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.88,
+      ),
+      padding: EdgeInsets.only(
+        left: 20,
+        right: 20,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF1B0E38),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+        border: Border(top: BorderSide(color: Color(0xFFA35BFF), width: 1.5)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // مقبض السحب
+          Container(
+            width: 44,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          const SizedBox(height: 16),
+
+          Text(
+            'اللعب أونلاين 🌐',
+            style: GoogleFonts.cairo(
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              color: Colors.white,
+            ),
+          ),
+          Text(
+            'اختر دورك في اللعبة للبدء مع أصحابك',
+            style: GoogleFonts.cairo(
+              fontSize: 13,
+              color: const Color(0xFFCFC6E4),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // شريط التبديل بين المضيف والضيف
+          Container(
+            padding: const EdgeInsets.all(4),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.35),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.3)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _activeTab = 0);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: _activeTab == 0
+                            ? const LinearGradient(colors: [Color(0xFF6A24C9), Color(0xFFA35BFF)])
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.workspace_premium_rounded, color: LammaColors.gold500, size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'إنشاء غرفة (مضيف 👑)',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _activeTab == 0 ? Colors.white : Colors.white60,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      setState(() => _activeTab = 1);
+                    },
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 200),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      decoration: BoxDecoration(
+                        gradient: _activeTab == 1
+                            ? const LinearGradient(colors: [Color(0xFF6A24C9), Color(0xFFA35BFF)])
+                            : null,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.login_rounded, color: Color(0xFF6FD9B5), size: 18),
+                          const SizedBox(width: 6),
+                          Text(
+                            'انضمام بكود (لاعب 🚀)',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: _activeTab == 1 ? Colors.white : Colors.white60,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 18),
+
+          // المحتوى بناءً على التبويب النشط
+          Flexible(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: _activeTab == 0 ? _buildHostContent() : _buildJoinContent(),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHostContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '1. اختر اللعبة للتحدي:',
+          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+        ),
+        const SizedBox(height: 8),
+
+        // قائمة الألعاب
+        SizedBox(
+          height: 110,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: _displayGames.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 10),
+            itemBuilder: (context, index) {
+              final game = _displayGames[index];
+              final slug = game['slug'] as String;
+              final isSel = _selectedGameSlug == slug;
+
+              return GestureDetector(
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _selectedGameSlug = slug);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  width: 110,
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: isSel ? const Color(0xFF4A2090) : const Color(0xFF26144D),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSel ? LammaColors.gold500 : const Color(0xFFA35BFF).withValues(alpha: 0.3),
+                      width: isSel ? 2 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.videogame_asset_rounded, color: LammaColors.gold500, size: 28),
+                      const SizedBox(height: 6),
+                      Text(
+                        game['name'] as String,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: Colors.white,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+
+        const SizedBox(height: 16),
+
+        // عدد الجولات
+        Text(
+          '2. عدد الجولات:',
+          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [5, 10, 15].map((rounds) {
+            final isSel = _totalRounds == rounds;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _totalRounds = rounds),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSel ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isSel ? Colors.white : Colors.white24),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$rounds جولات',
+                      style: GoogleFonts.cairo(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 16),
+
+        // مدة السؤال
+        Text(
+          '3. وقت كل سؤال:',
+          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          children: [15, 20, 30].map((sec) {
+            final isSel = _roundDuration == sec;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _roundDuration = sec),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  decoration: BoxDecoration(
+                    color: isSel ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: isSel ? Colors.white : Colors.white24),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$sec ثانية',
+                      style: GoogleFonts.cairo(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+
+        const SizedBox(height: 22),
+
+        GameButton(
+          text: _isLoadingHost ? 'جاري تجهيز الغرفة...' : 'إنشاء الغرفة واستلام الرمز 🚀',
+          showArrow: false,
+          height: 56,
+          onPressed: _isLoadingHost ? () {} : _handleCreateRoom,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJoinContent() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'رمز الغرفة (6 أرقام):',
+          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF26144D),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: TextField(
+            controller: _joinCodeController,
+            textAlign: TextAlign.center,
+            keyboardType: TextInputType.number,
+            maxLength: 6,
+            style: GoogleFonts.cairo(
+              fontSize: 26,
+              fontWeight: FontWeight.w900,
+              color: LammaColors.gold500,
+              letterSpacing: 6,
+            ),
+            decoration: InputDecoration(
+              hintText: '784521',
+              hintStyle: GoogleFonts.cairo(color: Colors.white24, letterSpacing: 6),
+              border: InputBorder.none,
+              counterText: '',
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 14),
+
+        Text(
+          'اسمك في اللعبة:',
+          style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+        ),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF26144D),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.4), width: 1.5),
+          ),
+          child: TextField(
+            controller: _joinNameController,
+            style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
+            decoration: InputDecoration(
+              hintText: 'اكتب اسمك أو لقبك...',
+              hintStyle: GoogleFonts.cairo(color: Colors.white30, fontSize: 13),
+              border: InputBorder.none,
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 24),
+
+        GameButton(
+          text: _isLoadingJoin ? 'جاري التحقق والدخول...' : 'دخول الغرفة والتحدي 🚀',
+          showArrow: false,
+          height: 56,
+          onPressed: _isLoadingJoin ? () {} : _handleJoinRoom,
+        ),
+      ],
+    );
+  }
+}
+

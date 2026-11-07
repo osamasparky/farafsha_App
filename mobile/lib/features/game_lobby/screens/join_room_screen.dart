@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
@@ -13,15 +16,15 @@ class JoinRoomScreen extends StatefulWidget {
 class _JoinRoomScreenState extends State<JoinRoomScreen> {
   final List<TextEditingController> _controllers = List.generate(6, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  late TextEditingController _nameController;
+
+  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    // Default preset from design (7 8 4 5)
-    _controllers[0].text = '7';
-    _controllers[1].text = '8';
-    _controllers[2].text = '4';
-    _controllers[3].text = '5';
+    final currentUserName = ApiService.instance.currentUser?['name']?.toString() ?? '';
+    _nameController = TextEditingController(text: currentUserName);
   }
 
   @override
@@ -32,19 +35,76 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     for (var f in _focusNodes) {
       f.dispose();
     }
+    _nameController.dispose();
     super.dispose();
   }
 
   String get _roomCode => _controllers.map((c) => c.text).join();
 
-  void _onJoin() {
-    final code = _roomCode;
-    if (code.length == 6) {
-      context.push('/online-room');
-    } else {
+  void _pasteFromClipboard() async {
+    final data = await Clipboard.getData(Clipboard.kTextPlain);
+    final text = data?.text?.replaceAll(RegExp(r'\D'), '') ?? '';
+    if (text.length >= 6) {
+      for (int i = 0; i < 6; i++) {
+        _controllers[i].text = text[i];
+      }
+      HapticFeedback.selectionClick();
+      setState(() {});
+    }
+  }
+
+  Future<void> _onJoin() async {
+    final code = _roomCode.trim();
+    if (code.length != 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('الرجاء كتابة رمز الغرفة المكون من 6 أرقام')),
+        SnackBar(
+          content: Text('الرجاء إدخال رمز الغرفة كاملاً (6 أرقام)', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          backgroundColor: Colors.redAccent,
+        ),
       );
+      return;
+    }
+
+    final name = _nameController.text.trim();
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('الرجاء كتابة اسمك أو لقبك لدخول التحدي', style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    HapticFeedback.heavyImpact();
+
+    try {
+      final res = await ApiService.instance.joinRoom(
+        code: code,
+        playerName: name,
+      );
+
+      if (mounted) {
+        context.pushReplacement('/online-room', extra: {
+          'code': code,
+          'token': res['token']?.toString(),
+          'isHost': false,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -67,7 +127,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
           ),
         ),
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
             child: Column(
               children: [
@@ -79,9 +140,9 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                       icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
                       onPressed: () => context.pop(),
                     ),
-                    const Text(
-                      'انضم لغرفة',
-                      style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                    Text(
+                      'انضم لغرفة لعب',
+                      style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
                     const SizedBox(width: 48),
                   ],
@@ -92,22 +153,22 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                 // صورة أونلاين الجذابة
                 Image.asset(
                   'assets/images/online.png',
-                  width: 240,
-                  height: 190,
+                  width: 200,
+                  height: 160,
                   fit: BoxFit.contain,
                   errorBuilder: (_, __, ___) => const Icon(Icons.wifi_tethering_rounded, size: 100, color: Colors.white),
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 6),
 
-                const Text(
-                  'اكتب الرمز اللي صاحبك بعته',
-                  style: TextStyle(fontSize: 16, color: Color(0xFFE4D9FA), fontWeight: FontWeight.w600),
+                Text(
+                  'اكتب الرمز المكون من 6 أرقام للدخول',
+                  style: GoogleFonts.cairo(fontSize: 16, color: const Color(0xFFE4D9FA), fontWeight: FontWeight.w700),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 18),
 
-                // مربعات الرمز الستة (اتجاه LTR)
+                // مربعات الرمز الستة
                 Directionality(
                   textDirection: TextDirection.ltr,
                   child: Row(
@@ -115,16 +176,16 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                     children: List.generate(6, (index) {
                       final hasValue = _controllers[index].text.isNotEmpty;
                       return Container(
-                        width: 48,
-                        height: 62,
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 46,
+                        height: 58,
+                        margin: const EdgeInsets.symmetric(horizontal: 3),
                         decoration: BoxDecoration(
                           color: hasValue
-                              ? const Color(0xFFA35BFF).withValues(alpha: 0.18)
-                              : Colors.black.withValues(alpha: 0.25),
+                              ? const Color(0xFFA35BFF).withValues(alpha: 0.22)
+                              : Colors.black.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(14),
                           border: Border.all(
-                            color: hasValue ? const Color(0xFFB98AFF) : const Color(0xFFA35BFF).withValues(alpha: 0.4),
+                            color: hasValue ? LammaColors.gold500 : const Color(0xFFA35BFF).withValues(alpha: 0.4),
                             width: hasValue ? 2 : 1.5,
                           ),
                         ),
@@ -134,14 +195,15 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                           textAlign: TextAlign.center,
                           keyboardType: TextInputType.number,
                           maxLength: 1,
-                          style: const TextStyle(
-                            fontSize: 28,
+                          style: GoogleFonts.cairo(
+                            fontSize: 26,
                             fontWeight: FontWeight.w900,
                             color: LammaColors.gold500,
                           ),
                           decoration: const InputDecoration(
-                            counterText: '',
                             border: InputBorder.none,
+                            counterText: '',
+                            contentPadding: EdgeInsets.zero,
                           ),
                           onChanged: (val) {
                             if (val.isNotEmpty && index < 5) {
@@ -157,60 +219,51 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
                   ),
                 ),
 
-                const SizedBox(height: 24),
+                const SizedBox(height: 10),
 
-                // فاصل "أو"
-                Row(
-                  children: [
-                    Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.15))),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 14),
-                      child: Text('أو', style: TextStyle(color: Color(0xFFA99BC8), fontSize: 14, fontWeight: FontWeight.w600)),
-                    ),
-                    Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.15))),
-                  ],
+                // زر لصق الرمز من الحافظة
+                TextButton.icon(
+                  onPressed: _pasteFromClipboard,
+                  icon: const Icon(Icons.paste_rounded, color: Color(0xFFC0A4FF), size: 18),
+                  label: Text(
+                    'لصق الرمز من الحافظة',
+                    style: GoogleFonts.cairo(color: const Color(0xFFC0A4FF), fontSize: 13, fontWeight: FontWeight.w700),
+                  ),
                 ),
 
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
 
-                // زر مسح كود QR
-                GestureDetector(
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('فتح الكاميرا لمسح كود QR...')),
-                    );
-                  },
-                  child: Container(
-                    height: 58,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFA35BFF).withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.45), width: 1.5),
-                    ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.qr_code_scanner_rounded, color: LammaColors.gold500, size: 24),
-                        SizedBox(width: 10),
-                        Text(
-                          'امسح كود QR',
-                          style: TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white),
-                        ),
-                      ],
+                // حقل اسم اللاعب
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF241050),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.35), width: 1.5),
+                  ),
+                  child: TextField(
+                    controller: _nameController,
+                    style: GoogleFonts.cairo(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                    decoration: InputDecoration(
+                      labelText: 'اسمك في اللعبة',
+                      labelStyle: GoogleFonts.cairo(color: const Color(0xFFB5A8D6), fontSize: 13),
+                      hintText: 'اكتب اسمك الذي سيظهر للاعبين...',
+                      hintStyle: GoogleFonts.cairo(color: Colors.white30, fontSize: 13),
+                      border: InputBorder.none,
+                      prefixIcon: const Icon(Icons.badge_rounded, color: LammaColors.gold500),
                     ),
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 28),
 
-                // زر ادخل الغرفة
+                // زر الدخول
                 GameButton(
-                  text: 'ادخل الغرفة',
+                  text: _isLoading ? 'جاري التحقق والدخول...' : 'دخول الغرفة والتحدي 🚀',
                   showArrow: false,
-                  height: 62,
-                  onPressed: _onJoin,
+                  height: 60,
+                  onPressed: _isLoading ? () {} : _onJoin,
                 ),
-                const SizedBox(height: 10),
               ],
             ),
           ),
@@ -219,4 +272,3 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     );
   }
 }
-

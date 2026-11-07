@@ -1,12 +1,23 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
 class OnlineRoomScreen extends StatefulWidget {
   final String roomCode;
-  const OnlineRoomScreen({super.key, this.roomCode = '784521'});
+  final String? playerToken;
+  final bool isHost;
+
+  const OnlineRoomScreen({
+    super.key,
+    this.roomCode = '784521',
+    this.playerToken,
+    this.isHost = false,
+  });
 
   @override
   State<OnlineRoomScreen> createState() => _OnlineRoomScreenState();
@@ -14,64 +25,189 @@ class OnlineRoomScreen extends StatefulWidget {
 
 class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
   late String _code;
+  late String? _playerToken;
+  late bool _isHost;
 
-  final List<Map<String, dynamic>> _players = [
-    {
-      'name': 'أنت',
-      'role': '(المضيف)',
-      'avatar': 'assets/images/av-karim.png',
-      'isHost': true,
-      'status': 'متصل',
-      'statusColor': const Color(0xFF6FD9B5),
-    },
-    {
-      'name': 'أحمد',
-      'role': '',
-      'avatar': 'assets/images/av-ahmed.png',
-      'isHost': false,
-      'status': 'متصل',
-      'statusColor': const Color(0xFF6FD9B5),
-    },
-    {
-      'name': 'سارة',
-      'role': '',
-      'avatar': 'assets/images/av-sara.png',
-      'isHost': false,
-      'status': 'متصل',
-      'statusColor': const Color(0xFF6FD9B5),
-    },
-    {
-      'name': 'محمود',
-      'role': '',
-      'avatar': 'assets/images/av-mahmoud.png',
-      'isHost': false,
-      'status': 'بيعيد الاتصال…',
-      'statusColor': const Color(0xFFF2B661),
-    },
-  ];
+  Timer? _syncTimer;
+  bool _isLoading = true;
+  bool _isStarting = false;
+  bool _hasNavigated = false;
+
+  String _gameTitle = 'لعبة أونلاين';
+  int _totalRounds = 10;
+  int _roundDuration = 20;
+  int _maxPlayers = 8;
+  List<Map<String, dynamic>> _players = [];
 
   @override
   void initState() {
     super.initState();
     _code = widget.roomCode;
+    _playerToken = widget.playerToken;
+    _isHost = widget.isHost;
+
+    _fetchRoomState();
+    // بدء مزامنة حالة الغرفة الذكية كل 1.5 ثانية لجلب اللاعبين فور انضمامهم
+    _syncTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+      _fetchRoomState();
+    });
+  }
+
+  @override
+  void dispose() {
+    _syncTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _fetchRoomState() async {
+    if (!mounted || _hasNavigated) return;
+
+    try {
+      final res = await ApiService.instance.getRoomState(_code, token: _playerToken);
+      if (!mounted) return;
+
+      final room = res['room'] as Map<String, dynamic>? ?? {};
+      final status = room['status'] as String? ?? 'waiting';
+      final game = room['game'] as Map<String, dynamic>?;
+      final leaderboard = res['leaderboard'] as List<dynamic>? ?? [];
+
+      setState(() {
+        _isLoading = false;
+        _gameTitle = game?['name']?.toString() ?? 'فرفشة أونلاين';
+        _totalRounds = (room['total_rounds'] as int?) ?? 10;
+        _roundDuration = (room['round_duration_seconds'] as int?) ?? 20;
+        _maxPlayers = (room['total_players'] as int?) ?? 8;
+
+        _players = leaderboard.map((p) {
+          final isH = p['is_host'] == true || p['is_host'] == 1;
+          return {
+            'name': p['player_name']?.toString() ?? 'لاعب',
+            'avatar': p['avatar']?.toString() ?? 'assets/images/av-ahmed.png',
+            'isHost': isH,
+            'score': p['score'] ?? 0,
+            'status': 'متصل 🟢',
+            'statusColor': const Color(0xFF6FD9B5),
+          };
+        }).toList();
+
+        // تحديث صلاحية المضيف إذا تغيرت
+        final myPlayer = res['my_player'] as Map<String, dynamic>?;
+        if (myPlayer != null) {
+          _isHost = myPlayer['is_host'] == true || myPlayer['is_host'] == 1;
+        }
+      });
+
+      // إذا بدأت اللعبة، ننتقل فوراً لشاشة اللعب المتزامن
+      if (status == 'playing' && !_hasNavigated) {
+        _hasNavigated = true;
+        _syncTimer?.cancel();
+        context.pushReplacement('/online-gameplay', extra: {
+          'code': _code,
+          'token': _playerToken,
+          'isHost': _isHost,
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   void _copyCode() {
     Clipboard.setData(ClipboardData(text: _code));
+    HapticFeedback.lightImpact();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('تم نسخ رمز الغرفة! شاركه مع أصحابك'),
-        backgroundColor: Color(0xFF6A24C9),
-        duration: Duration(seconds: 2),
+      SnackBar(
+        content: Text(
+          'تم نسخ رمز الغرفة ($_code)! شاركه مع أصحابك 🎉',
+          style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: const Color(0xFF6A24C9),
+        duration: const Duration(seconds: 2),
       ),
     );
   }
 
-  void _shareLink() {
+  void _shareInvite() {
+    final text = 'يلا نلعب سوا في فرفشة! 🎉\nرمز الغرفة: $_code\nادخل التطبيق واضغط "انضمام لغرفة" واكتب الرمز!';
+    Clipboard.setData(ClipboardData(text: text));
+    HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('تم نسخ رابط الغرفة: https://lammah.app/join/$_code'),
-        backgroundColor: const Color(0xFF6A24C9),
+        content: Text(
+          'تم نسخ نص الدعوة مع الرمز بنجاح! شاركه على واتساب 📲',
+          style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: const Color(0xFF25D366),
+      ),
+    );
+  }
+
+  Future<void> _onStartGame() async {
+    if (_isStarting) return;
+    setState(() => _isStarting = true);
+    HapticFeedback.heavyImpact();
+
+    try {
+      await ApiService.instance.startRoom(_code);
+      _hasNavigated = true;
+      _syncTimer?.cancel();
+      if (mounted) {
+        context.pushReplacement('/online-gameplay', extra: {
+          'code': _code,
+          'token': _playerToken,
+          'isHost': _isHost,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isStarting = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              e.toString().replaceAll('Exception: ', ''),
+              style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  void _confirmLeave() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF241050),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Text(
+          'مغادرة الغرفة',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900),
+        ),
+        content: Text(
+          _isHost
+              ? 'أنت مضيف الغرفة، خروجك قد يسلّم القيادة للاعب آخر. هل أنت متأكد؟'
+              : 'هل تريد الخروج من غرفة اللعب الحالية؟',
+          textAlign: TextAlign.center,
+          style: GoogleFonts.cairo(color: const Color(0xFFD6C8F5)),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إلغاء', style: GoogleFonts.cairo(color: Colors.white70)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              _syncTimer?.cancel();
+              await ApiService.instance.leaveRoom(_code, token: _playerToken);
+              if (mounted) context.go('/home');
+            },
+            child: Text('مغادرة', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
       ),
     );
   }
@@ -96,71 +232,109 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
             child: Column(
               children: [
-                // الشريط العلوي (رجوع + عنوان + إعدادات الغرفة)
+                // الشريط العلوي (رجوع + عنوان + أيقونة المضيف)
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
-                      onPressed: () => context.pop(),
+                      onPressed: _confirmLeave,
                     ),
-                    const Text(
-                      'غرفة اللعب',
-                      style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                    Column(
+                      children: [
+                        Text(
+                          'غرفة اللعب أونلاين',
+                          style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                        ),
+                        Text(
+                          _gameTitle,
+                          style: GoogleFonts.cairo(fontSize: 13, color: LammaColors.gold500, fontWeight: FontWeight.w700),
+                        ),
+                      ],
                     ),
-                    IconButton(
-                      icon: const Icon(Icons.settings_outlined, color: Colors.white, size: 22),
-                      onPressed: () {},
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: _isHost ? LammaColors.gold500.withValues(alpha: 0.2) : Colors.white10,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: _isHost ? LammaColors.gold500 : Colors.white24,
+                          width: 1,
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _isHost ? Icons.workspace_premium_rounded : Icons.person_rounded,
+                            color: _isHost ? LammaColors.gold500 : Colors.white70,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            _isHost ? 'مضيف' : 'لاعب',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: _isHost ? LammaColors.gold500 : Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ],
                 ),
 
-                const SizedBox(height: 16),
+                const SizedBox(height: 14),
 
-                // بطاقة الرمز مع كود QR
-                Row(
-                  children: [
-                    // رمز الغرفة والنسخ
-                    Expanded(
-                      child: Container(
-                        height: 112,
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF2A1850),
-                          borderRadius: BorderRadius.circular(18),
-                          border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.35), width: 1.5),
-                        ),
+                // بطاقة رمز الغرفة الفعلي مع زر النسخ والمشاركة
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2A1850),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.4), width: 1.5),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFA35BFF).withValues(alpha: 0.2),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text(
-                              'رمز الغرفة',
-                              style: TextStyle(fontSize: 13, color: Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
+                            Text(
+                              'رمز الغرفة للمشاركة',
+                              style: GoogleFonts.cairo(fontSize: 13, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
                             ),
                             const SizedBox(height: 4),
                             Row(
                               children: [
                                 Text(
                                   _code,
-                                  style: const TextStyle(
-                                    fontSize: 28,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 32,
                                     fontWeight: FontWeight.w900,
                                     color: LammaColors.gold500,
-                                    letterSpacing: 3,
+                                    letterSpacing: 4,
                                   ),
                                 ),
-                                const Spacer(),
+                                const SizedBox(width: 12),
                                 GestureDetector(
                                   onTap: _copyCode,
                                   child: Container(
-                                    width: 40,
-                                    height: 40,
+                                    width: 42,
+                                    height: 42,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha: 0.08),
+                                      color: Colors.white.withValues(alpha: 0.12),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: const Icon(Icons.copy_rounded, color: Colors.white, size: 20),
@@ -168,177 +342,227 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
                                 ),
                               ],
                             ),
+                            const SizedBox(height: 4),
+                            Text(
+                              '$_totalRounds جولات • $_roundDuration ثانية لكل سؤال',
+                              style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFFB5A8D6)),
+                            ),
                           ],
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 12),
-
-                    // صندوق كود QR
-                    Container(
-                      width: 112,
-                      height: 112,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      padding: const EdgeInsets.all(10),
-                      child: const Center(
-                        child: Icon(
-                          Icons.qr_code_2_rounded,
-                          size: 92,
-                          color: Color(0xFF21143F),
+                      Container(
+                        width: 80,
+                        height: 80,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        child: const Center(
+                          child: Icon(
+                            Icons.qr_code_2_rounded,
+                            size: 68,
+                            color: Color(0xFF21143F),
+                          ),
                         ),
                       ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 10),
-                const Align(
-                  alignment: Alignment.centerRight,
-                  child: Text(
-                    'شارك الرمز مع أصدقائك عشان ينضموا',
-                    style: TextStyle(fontSize: 14, color: Color(0xFFCFC6E4)),
-                  ),
-                ),
-
-                const SizedBox(height: 18),
-
-                // قائمة اللاعبين المنضمين
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF2A1850),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.3), width: 1.5),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'اللاعبون (4/8)',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Color(0xFFD9C2FF)),
-                      ),
-                      const SizedBox(height: 6),
-                      ..._players.map((p) {
-                        final isHost = p['isHost'] == true;
-                        return Container(
-                          padding: const EdgeInsets.symmetric(vertical: 10),
-                          decoration: BoxDecoration(
-                            border: Border(
-                              bottom: BorderSide(color: Colors.white.withValues(alpha: 0.07)),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 42,
-                                height: 42,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: isHost ? LammaColors.gold500 : const Color(0xFFB98AFF),
-                                    width: 2.5,
-                                  ),
-                                ),
-                                child: ClipOval(
-                                  child: Image.asset(
-                                    p['avatar'] as String,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Text(
-                                      p['name'] as String,
-                                      style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
-                                    ),
-                                    if (isHost) ...[
-                                      const SizedBox(width: 6),
-                                      const Text(
-                                        '(المضيف)',
-                                        style: TextStyle(fontSize: 13, color: LammaColors.gold500, fontWeight: FontWeight.w700),
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                              ),
-                              if (isHost)
-                                const Icon(Icons.workspace_premium_rounded, color: LammaColors.gold500, size: 22)
-                              else
-                                Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Container(
-                                      width: 8,
-                                      height: 8,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: p['statusColor'] as Color,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 6),
-                                    Text(
-                                      p['status'] as String,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: p['statusColor'] as Color,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                            ],
-                          ),
-                        );
-                      }),
                     ],
                   ),
                 ),
 
-                const Spacer(),
+                const SizedBox(height: 16),
 
-                // زر مشاركة رابط الدعوة
-                GestureDetector(
-                  onTap: _shareLink,
+                // بطاقة قائمة اللاعبين المتصلين
+                Expanded(
                   child: Container(
-                    height: 52,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.5), width: 1.5),
+                      color: const Color(0xFF2A1850).withValues(alpha: 0.9),
+                      borderRadius: BorderRadius.circular(22),
+                      border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.3), width: 1.5),
                     ),
-                    child: const Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.share_rounded, color: Colors.white, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'مشاركة رابط الدعوة',
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'اللاعبون المتصلون (${_players.length}/$_maxPlayers)',
+                              style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w800, color: const Color(0xFFE8DDFF)),
+                            ),
+                            if (_isLoading)
+                              const SizedBox(
+                                width: 16,
+                                height: 16,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: LammaColors.gold500),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Expanded(
+                          child: _players.isEmpty
+                              ? Center(
+                                  child: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.people_outline_rounded, color: Colors.white38, size: 48),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'في انتظار انضمام اللاعبين...',
+                                        style: GoogleFonts.cairo(color: Colors.white60, fontSize: 14),
+                                      ),
+                                    ],
+                                  ),
+                                )
+                              : ListView.separated(
+                                  physics: const BouncingScrollPhysics(),
+                                  itemCount: _players.length,
+                                  separatorBuilder: (_, __) => Divider(color: Colors.white.withValues(alpha: 0.08), height: 14),
+                                  itemBuilder: (context, index) {
+                                    final p = _players[index];
+                                    final isH = p['isHost'] == true;
+
+                                    return Row(
+                                      children: [
+                                        Container(
+                                          width: 44,
+                                          height: 44,
+                                          decoration: BoxDecoration(
+                                            shape: BoxShape.circle,
+                                            border: Border.all(
+                                              color: isH ? LammaColors.gold500 : const Color(0xFFB98AFF),
+                                              width: 2.2,
+                                            ),
+                                          ),
+                                          child: ClipOval(
+                                            child: Image.asset(
+                                              p['avatar'] as String,
+                                              fit: BoxFit.cover,
+                                              errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Row(
+                                            children: [
+                                              Text(
+                                                p['name'] as String,
+                                                style: GoogleFonts.cairo(fontSize: 16, fontWeight: FontWeight.w700, color: Colors.white),
+                                              ),
+                                              if (isH) ...[
+                                                const SizedBox(width: 8),
+                                                Container(
+                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                                                  decoration: BoxDecoration(
+                                                    color: LammaColors.gold500.withValues(alpha: 0.25),
+                                                    borderRadius: BorderRadius.circular(6),
+                                                  ),
+                                                  child: Text(
+                                                    'المضيف 👑',
+                                                    style: GoogleFonts.cairo(fontSize: 11, color: LammaColors.gold500, fontWeight: FontWeight.w800),
+                                                  ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Container(
+                                              width: 8,
+                                              height: 8,
+                                              decoration: BoxDecoration(
+                                                shape: BoxShape.circle,
+                                                color: p['statusColor'] as Color? ?? const Color(0xFF6FD9B5),
+                                              ),
+                                            ),
+                                            const SizedBox(width: 6),
+                                            Text(
+                                              p['status'] as String? ?? 'متصل',
+                                              style: GoogleFonts.cairo(
+                                                fontSize: 13,
+                                                color: p['statusColor'] as Color? ?? const Color(0xFF6FD9B5),
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    );
+                                  },
+                                ),
                         ),
                       ],
                     ),
                   ),
                 ),
 
-                const SizedBox(height: 12),
+                const SizedBox(height: 14),
 
-                // زر ابدأ اللعبة
-                GameButton(
-                  text: 'ابدأ اللعبة',
-                  showArrow: false,
-                  height: 60,
-                  onPressed: () {
-                    context.push('/game/amthal');
-                  },
+                // زر مشاركة رابط الدعوة عبر واتساب
+                GestureDetector(
+                  onTap: _shareInvite,
+                  child: Container(
+                    height: 52,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      color: const Color(0xFF25D366).withValues(alpha: 0.15),
+                      border: Border.all(color: const Color(0xFF25D366).withValues(alpha: 0.6), width: 1.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.share_rounded, color: Color(0xFF25D366), size: 20),
+                        const SizedBox(width: 8),
+                        Text(
+                          'مشاركة الدعوة مع الأصدقاء (واتساب)',
+                          style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
-                const SizedBox(height: 8),
+
+                const SizedBox(height: 10),
+
+                // زر ابدأ اللعبة (للمضيف فقط) أو شريط الانتظار (للضيوف)
+                if (_isHost)
+                  GameButton(
+                    text: _isStarting ? 'جاري بدء اللعبة...' : 'ابدأ اللعبة الآن 🚀',
+                    showArrow: false,
+                    height: 58,
+                    onPressed: _isStarting ? () {} : _onStartGame,
+                  )
+                else
+                  Container(
+                    height: 58,
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF1B0E38).withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.4), width: 1.5),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2.5, color: LammaColors.gold500),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'في انتظار المضيف لبدء اللعبة... ⏳',
+                          style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+                        ),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 6),
               ],
             ),
           ),

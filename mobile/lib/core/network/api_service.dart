@@ -8,6 +8,10 @@ class ApiService {
   ApiService._internal();
 
   static String? _workingBaseUrl;
+  Map<String, dynamic>? _currentUser;
+
+  Map<String, dynamic>? get currentUser => _currentUser;
+  void setCurrentUser(Map<String, dynamic>? user) => _currentUser = user;
 
   // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على USB يتم استخدام 127.0.0.1، على الواي فاي 192.168.100.3
   String get baseUrl {
@@ -731,52 +735,6 @@ class ApiService {
     return null;
   }
 
-  /// إنشاء غرفة ألعاب أونلاين جديدة
-  Future<Map<String, dynamic>?> createRoom(String gameSlug) async {
-    try {
-      final res = await http
-          .post(
-            Uri.parse('$baseUrl/rooms'),
-            headers: _headers,
-            body: jsonEncode({'game_slug': gameSlug}),
-          )
-          .timeout(const Duration(seconds: 4));
-
-      if (res.statusCode == 200 || res.statusCode == 201) {
-        final decoded = jsonDecode(res.body);
-        if (decoded is Map<String, dynamic>) {
-          if (decoded['data'] is Map<String, dynamic>) {
-            return decoded['data'] as Map<String, dynamic>;
-          }
-          return decoded;
-        }
-      }
-    } catch (e) {
-      debugPrint('⚠️ Create room failed: $e');
-    }
-    return null;
-  }
-
-  /// الانضمام إلى غرفة موجودة برمزها
-  Future<Map<String, dynamic>?> joinRoom(String roomCode, String playerName) async {
-    try {
-      final res = await http
-          .post(
-            Uri.parse('$baseUrl/rooms/$roomCode/join'),
-            headers: _headers,
-            body: jsonEncode({'player_name': playerName}),
-          )
-          .timeout(const Duration(seconds: 4));
-
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body) as Map<String, dynamic>;
-      }
-    } catch (e) {
-      debugPrint('⚠️ Join room failed: $e');
-    }
-    return null;
-  }
-
   /// طلب استعادة كلمة المرور عبر البريد أو الهاتف
   Future<Map<String, dynamic>> forgotPassword(String identifier) async {
     try {
@@ -997,5 +955,184 @@ class ApiService {
       debugPrint('⚠️ Error loading offline seed cards: $e');
     }
     return [];
+  }
+
+  // ==========================================
+  // غرف اللعب أونلاين (Online Multiplayer Rooms)
+  // ==========================================
+
+  /// إنشاء غرفة لعب جديدة (Host)
+  Future<Map<String, dynamic>> createRoom({
+    required String gameSlug,
+    String? hostName,
+    int totalRounds = 10,
+    int roundDurationSeconds = 20,
+    int maxPlayers = 8,
+  }) async {
+    final body = {
+      'game_slug': gameSlug,
+      'host_name': hostName ?? _currentUser?['name'] ?? 'لاعب فرفشة',
+      'total_rounds': totalRounds,
+      'round_duration_seconds': roundDurationSeconds,
+      'max_players': maxPlayers,
+    };
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms'),
+      headers: _headers,
+      body: jsonEncode(body),
+    ).timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل إنشاء الغرفة');
+    }
+  }
+
+  /// انضمام لغرفة عبر الكود المكون من 6 أرقام (Client)
+  Future<Map<String, dynamic>> joinRoom({
+    required String code,
+    String? playerName,
+    String? avatar,
+  }) async {
+    final body = {
+      'player_name': playerName ?? _currentUser?['name'] ?? 'ضيف فرفشة',
+      'avatar': avatar ?? _currentUser?['avatar'],
+    };
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/join'),
+      headers: _headers,
+      body: jsonEncode(body),
+    ).timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل الانضمام للغرفة');
+    }
+  }
+
+  /// جلب تفاصيل الغرفة
+  Future<Map<String, dynamic>> getRoom(String code) async {
+    final res = await http.get(
+      Uri.parse('$baseUrl/rooms/$code'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 8));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'الغرفة غير موجودة');
+    }
+  }
+
+  /// المزامنة اللحظية لحالة الغرفة (Smart Polling & State)
+  Future<Map<String, dynamic>> getRoomState(String code, {String? token}) async {
+    final uri = Uri.parse('$baseUrl/rooms/$code/state').replace(
+      queryParameters: token != null ? {'token': token} : null,
+    );
+
+    final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 6));
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل جلب حالة الغرفة');
+    }
+  }
+
+  /// بدء اللعبة من المضيف
+  Future<Map<String, dynamic>> startRoom(String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/start'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل بدء اللعبة');
+    }
+  }
+
+  /// إرسال إجابة لاعب مع احتساب نقاط السرعة
+  Future<Map<String, dynamic>> submitRoomAnswer({
+    required String code,
+    required String playerToken,
+    required String answer,
+    double? timeTakenSeconds,
+  }) async {
+    final body = {
+      'player_token': playerToken,
+      'answer': answer,
+      'time_taken_seconds': timeTakenSeconds ?? 5.0,
+    };
+
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/answer'),
+      headers: _headers,
+      body: jsonEncode(body),
+    ).timeout(const Duration(seconds: 8));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل إرسال الإجابة');
+    }
+  }
+
+  /// انتهاء وقت السؤال (Timeout)
+  Future<Map<String, dynamic>> timeoutRoom(String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/timeout'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 8));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    return data as Map<String, dynamic>;
+  }
+
+  /// الانتقال للجولة التالية (Next Question)
+  Future<Map<String, dynamic>> nextRoomRound(String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/next-round'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    if (res.statusCode == 200) {
+      return data as Map<String, dynamic>;
+    } else {
+      throw Exception(data['message'] ?? 'فشل الانتقال للجولة التالية');
+    }
+  }
+
+  /// إنهاء اللعبة بالكامل وحفظ إحصائيات اللاعبين
+  Future<Map<String, dynamic>> finishRoom(String code) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/rooms/$code/finish'),
+      headers: _headers,
+    ).timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes));
+    return data as Map<String, dynamic>;
+  }
+
+  /// مغادرة الغرفة
+  Future<void> leaveRoom(String code, {String? token}) async {
+    try {
+      await http.post(
+        Uri.parse('$baseUrl/rooms/$code/leave'),
+        headers: _headers,
+        body: jsonEncode({'player_token': token}),
+      ).timeout(const Duration(seconds: 4));
+    } catch (_) {}
   }
 }

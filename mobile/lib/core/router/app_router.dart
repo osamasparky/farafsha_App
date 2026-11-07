@@ -12,6 +12,7 @@ import '../../features/game_lobby/screens/game_setup_screen.dart';
 import '../../features/game_lobby/screens/players_screen.dart';
 import '../../features/game_lobby/screens/handoff_screen.dart';
 import '../../features/game_lobby/screens/online_room_screen.dart';
+import '../../features/game_lobby/screens/online_gameplay_screen.dart';
 import '../../features/game_lobby/screens/join_room_screen.dart';
 import '../../features/game_lobby/screens/results_screen.dart';
 import '../../features/games/screens/amthal_game_screen.dart';
@@ -204,11 +205,29 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/online-room',
-      builder: (context, state) => const OnlineRoomScreen(),
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>?;
+        return OnlineRoomScreen(
+          roomCode: extra?['code']?.toString() ?? '784521',
+          playerToken: extra?['token']?.toString(),
+          isHost: extra?['isHost'] as bool? ?? false,
+        );
+      },
     ),
     GoRoute(
       path: '/join-room',
       builder: (context, state) => const JoinRoomScreen(),
+    ),
+    GoRoute(
+      path: '/online-gameplay',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return OnlineGameplayScreen(
+          roomCode: extra['code']?.toString() ?? '',
+          playerToken: extra['token']?.toString(),
+          isHost: extra['isHost'] as bool? ?? false,
+        );
+      },
     ),
     GoRoute(
       path: '/leaderboard',

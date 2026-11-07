@@ -47,9 +47,14 @@ Route::prefix('games')->group(function () {
 Route::prefix('rooms')->group(function () {
     Route::post('/', [RoomController::class, 'store']);
     Route::get('/{code}', [RoomController::class, 'show']);
+    Route::get('/{code}/state', [RoomController::class, 'state']);
     Route::post('/{code}/join', [RoomController::class, 'join']);
     Route::post('/{code}/start', [RoomController::class, 'start']);
     Route::post('/{code}/answer', [RoomController::class, 'answer']);
+    Route::post('/{code}/next-round', [RoomController::class, 'nextRound']);
+    Route::post('/{code}/timeout', [RoomController::class, 'timeout']);
+    Route::post('/{code}/finish', [RoomController::class, 'finish']);
+    Route::post('/{code}/leave', [RoomController::class, 'leave']);
 });
 
 // مسارات المحتوى والإنتاجية الجديدة
