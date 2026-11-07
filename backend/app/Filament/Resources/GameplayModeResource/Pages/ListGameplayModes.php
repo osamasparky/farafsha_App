@@ -17,3 +17,4 @@ class ListGameplayModes extends ListRecords
         ];
     }
 }
+

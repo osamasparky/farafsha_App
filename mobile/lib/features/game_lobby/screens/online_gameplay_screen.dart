@@ -401,8 +401,11 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                     child: Text(
                       _card?['prompt']?.toString() ?? 'جاري تجهيز السؤال...',
                       textAlign: TextAlign.center,
+                      softWrap: true,
                       style: GoogleFonts.cairo(
-                        fontSize: 22,
+                        fontSize: ((_card?['prompt']?.toString() ?? '').length > 60)
+                            ? 17.0
+                            : (((_card?['prompt']?.toString() ?? '').length > 30) ? 19.0 : 22.0),
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
                         height: 1.45,

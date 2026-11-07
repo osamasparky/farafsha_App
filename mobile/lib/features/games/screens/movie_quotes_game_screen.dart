@@ -471,8 +471,11 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                             Text(
                               question.prompt,
                               textAlign: TextAlign.center,
+                              softWrap: true,
                               style: GoogleFonts.cairo(
-                                fontSize: 26,
+                                fontSize: question.prompt.length > 60
+                                    ? 19.0
+                                    : (question.prompt.length > 30 ? 22.0 : 26.0),
                                 fontWeight: FontWeight.w900,
                                 color: Colors.white,
                                 height: 1.35,

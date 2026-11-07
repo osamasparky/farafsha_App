@@ -506,11 +506,14 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                             children: [
                               Text(
                                 '« ${question.prompt} »',
+                                softWrap: true,
                                 style: GoogleFonts.cairo(
-                                  fontSize: 26,
+                                  fontSize: question.prompt.length > 60
+                                      ? 18.0
+                                      : (question.prompt.length > 30 ? 21.0 : 25.0),
                                   fontWeight: FontWeight.w900,
                                   color: const Color(0xFF381D05),
-                                  height: 1.3,
+                                  height: 1.35,
                                 ),
                                 textAlign: TextAlign.center,
                               ),

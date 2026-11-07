@@ -70,7 +70,9 @@ class GameplayModeResource extends Resource
                             ->directory('modes')
                             ->visibility('public')
                             ->image()
+                            ->imagePreviewHeight('240')
                             ->imageEditor()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
                             ->openable()
                             ->downloadable()
                             ->maxSize(10240)
@@ -155,3 +157,4 @@ class GameplayModeResource extends Resource
         ];
     }
 }
+

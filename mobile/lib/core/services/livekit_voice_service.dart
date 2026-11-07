@@ -95,6 +95,9 @@ class LiveKitVoiceService extends ChangeNotifier {
       // 4. الاتصال بالسيرفر
       await _room!.connect(serverUrl, token);
 
+      _isConnected = true;
+      _isConnecting = false;
+
       // 5. تفعيل الميكروفون افتراضياً مع معالجة استثناءات إذن المايك
       try {
         await _room!.localParticipant?.setMicrophoneEnabled(true);
@@ -106,6 +109,7 @@ class LiveKitVoiceService extends ChangeNotifier {
       _isSpeakerMuted = false;
       _currentRoomCode = roomCode;
       _updateCounts();
+      notifyListeners();
 
       debugPrint('🎙️ LiveKit Voice Room Connected: room_$roomCode');
       return true;

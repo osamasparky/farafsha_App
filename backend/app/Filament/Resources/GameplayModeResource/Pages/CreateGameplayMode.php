@@ -9,3 +9,4 @@ class CreateGameplayMode extends CreateRecord
 {
     protected static string $resource = GameplayModeResource::class;
 }
+

@@ -42,3 +42,4 @@ class GameplayMode extends Model
         return url('storage/' . ltrim($this->image, '/'));
     }
 }
+

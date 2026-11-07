@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
@@ -206,7 +207,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
         // بادج نمط اللمّة
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
             color: const Color(0xFF2A1458),
             borderRadius: BorderRadius.circular(999),
@@ -215,12 +216,12 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.mic_rounded, color: LammaColors.gold500, size: 18),
+              const Icon(Icons.record_voice_over_rounded, color: LammaColors.gold500, size: 16),
               const SizedBox(width: 6),
               Text(
                 widget.subMode == 'all_in_one' ? 'اللمّة · كلنا واحد' : 'اللمّة · فرق وتحدي',
                 style: GoogleFonts.cairo(
-                  fontSize: 13,
+                  fontSize: 12,
                   fontWeight: FontWeight.w800,
                   color: Colors.white,
                 ),
@@ -229,9 +230,51 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
           ),
         ),
 
+        // زر كتم أو تشغيل المؤثرات الصوتية
+        GestureDetector(
+          onTap: () {
+            HapticFeedback.lightImpact();
+            final sound = SoundService.instance;
+            sound.setEnabled(!sound.isEnabled);
+            setState(() {});
+          },
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: SoundService.instance.isEnabled
+                  ? const Color(0xFF25D366).withValues(alpha: 0.18)
+                  : Colors.redAccent.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: SoundService.instance.isEnabled ? const Color(0xFF25D366) : Colors.redAccent,
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  SoundService.instance.isEnabled ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                  color: SoundService.instance.isEnabled ? const Color(0xFF25D366) : Colors.redAccent,
+                  size: 15,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  SoundService.instance.isEnabled ? 'الصوت' : 'مكتوم',
+                  style: GoogleFonts.cairo(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: SoundService.instance.isEnabled ? const Color(0xFF25D366) : Colors.redAccent,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+
         // عداد الأسئلة
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: Colors.white.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(12),
@@ -239,7 +282,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
           child: Text(
             '${_currentIndex + 1} / ${widget.totalQuestions}',
             style: GoogleFonts.cairo(
-              fontSize: 14,
+              fontSize: 13,
               fontWeight: FontWeight.w900,
               color: LammaColors.gold500,
             ),
@@ -251,9 +294,13 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
   Widget _buildHostCard() {
     final q = _questions[_currentIndex];
-    final prompt = q['prompt'] ?? q['question'] ?? 'سؤال اللمّة';
-    final answer = q['answer'] ?? '';
-    final explanation = q['explanation'] ?? q['notes'] ?? '';
+    final prompt = (q['prompt'] ?? q['question'] ?? 'سؤال اللمّة').toString();
+    final answer = (q['answer'] ?? '').toString();
+    final explanation = (q['explanation'] ?? q['notes'] ?? '').toString();
+
+    final double promptFontSize = prompt.length > 70
+        ? 18.0
+        : (prompt.length > 35 ? 20.0 : 23.0);
 
     return Container(
       width: double.infinity,
@@ -298,7 +345,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.mic_rounded, color: Color(0xFFFFD166), size: 16),
+                    const Icon(Icons.campaign_rounded, color: Color(0xFFFFD166), size: 16),
                     const SizedBox(width: 6),
                     Text(
                       'اقرأ السؤال بصوت عالي للقعدة 📢',
@@ -332,9 +379,10 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
           const SizedBox(height: 14),
 
-          // نص السؤال في كارت عريض
+          // نص السؤال في كارت عريض مع احتواء تلقائي كامل
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 20),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.25),
               borderRadius: BorderRadius.circular(20),
@@ -343,21 +391,22 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
             child: Text(
               prompt,
               textAlign: TextAlign.center,
+              softWrap: true,
               style: GoogleFonts.cairo(
-                fontSize: 24,
+                fontSize: promptFontSize,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
-                height: 1.4,
+                height: 1.45,
               ),
             ),
           ),
 
           const SizedBox(height: 14),
 
-          // صندوق الإجابة الخاص بالمذيع
+          // صندوق الإجابة الخاص بالمذيع مع احتواء هندسي كامل يمنع أي overflow
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: _isAnswerRevealed
                   ? const Color(0xFF064E3B).withOpacity(0.85)
@@ -379,55 +428,114 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
             ),
             child: _isAnswerRevealed
                 ? Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
+                      // شارة توضيحية للإجابة
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: const BoxDecoration(
-                              color: Color(0xFF10B981),
-                              shape: BoxShape.circle,
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.25),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.6)),
                             ),
-                            child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'الإجابة الصحيحة:',
-                            style: GoogleFonts.cairo(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: const Color(0xFFA7F3D0),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.check_circle_rounded, color: Color(0xFF34D399), size: 15),
+                                const SizedBox(width: 6),
+                                Text(
+                                  'الإجابة المعتمدة للتحكيم',
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w800,
+                                    color: const Color(0xFFA7F3D0),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const Spacer(),
                           Text(
-                            answer,
+                            'للمذيع فقط 👁️',
                             style: GoogleFonts.cairo(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w900,
-                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFF6EE7B7),
                             ),
                           ),
                         ],
                       ),
-                      if (explanation.isNotEmpty) ...[
-                        const SizedBox(height: 6),
-                        Text(
-                          explanation,
+
+                      const SizedBox(height: 10),
+
+                      // نص الإجابة في كارت مستقل يلتف بسلاسة مهما بلغ طوله
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.28),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+                        ),
+                        child: Text(
+                          answer,
+                          textAlign: TextAlign.start,
+                          softWrap: true,
                           style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            color: const Color(0xFFD6C8F5),
-                            height: 1.4,
+                            fontSize: answer.length > 60 ? 15.0 : (answer.length > 30 ? 17.0 : 20.0),
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.45,
+                          ),
+                        ),
+                      ),
+
+                      // شرح أو كواليس الإجابة إذا توفرت
+                      if (explanation.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF1B0C38).withValues(alpha: 0.7),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.25)),
+                          ),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Padding(
+                                padding: EdgeInsets.only(top: 2),
+                                child: Icon(Icons.info_outline_rounded, color: Color(0xFFFFD27A), size: 16),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  explanation,
+                                  softWrap: true,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFE4DCF9),
+                                    height: 1.45,
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
                     ],
                   )
                 : Center(
-                    child: Text(
-                      'الإجابة مخفية (اضغط أيقونة العين بالأعلى للكشف)',
-                      style: GoogleFonts.cairo(fontSize: 12, color: Colors.white60),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8.0),
+                      child: Text(
+                        'الإجابة مخفية (اضغط أيقونة العين بالأعلى للكشف)',
+                        style: GoogleFonts.cairo(fontSize: 12, color: Colors.white60),
+                      ),
                     ),
                   ),
           ),
@@ -443,14 +551,17 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'مين جاوب صح في القعدة؟ (اضغط لاحتساب النقطة)',
-              style: GoogleFonts.cairo(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: LammaColors.gold500,
+            Expanded(
+              child: Text(
+                'مين جاوب صح في القعدة؟ (اضغط لاحتساب النقطة)',
+                style: GoogleFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: LammaColors.gold500,
+                ),
               ),
             ),
+            const SizedBox(width: 8),
             Text(
               '${_teams.length} فرق',
               style: GoogleFonts.cairo(fontSize: 12, color: Colors.white60),
@@ -681,15 +792,19 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
                             ),
                           ),
                           const SizedBox(width: 12),
-                          Text(
-                            t['name'] as String,
-                            style: GoogleFonts.cairo(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
+                          Expanded(
+                            child: Text(
+                              t['name'] as String,
+                              softWrap: true,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.cairo(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
                             ),
                           ),
-                          const Spacer(),
+                          const SizedBox(width: 8),
                           Text(
                             '${t['score']} نقطة',
                             style: GoogleFonts.cairo(
