@@ -549,8 +549,8 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                         onTap: () => _onSelectChoice(index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
-                          height: 58,
-                          padding: const EdgeInsets.symmetric(horizontal: 14),
+                          constraints: const BoxConstraints(minHeight: 58),
+                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                           decoration: BoxDecoration(
                             color: bgColor,
                             borderRadius: BorderRadius.circular(18),
@@ -595,10 +595,14 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                               Expanded(
                                 child: Text(
                                   option,
+                                  softWrap: true,
                                   style: GoogleFonts.cairo(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: option.length > 50
+                                        ? 13.5
+                                        : (option.length > 25 ? 14.5 : 16.0),
+                                    fontWeight: FontWeight.w800,
                                     color: Colors.white,
+                                    height: 1.35,
                                   ),
                                   textAlign: TextAlign.start,
                                 ),
