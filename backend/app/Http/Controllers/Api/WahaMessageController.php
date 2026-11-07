@@ -21,5 +21,43 @@ class WahaMessageController extends Controller
             $data['idempotency_key'] ?? (string) Str::uuid());
         return response()->json($message, 202);
     }
+
+    /**
+     * إرسال رسالة واتساب للاعبين المسجلين في التطبيق
+     */
+    public function sendToUsers(Request $request, WahaMessageService $service)
+    {
+        $validated = $request->validate([
+            'user_ids' => 'nullable|array',
+            'user_ids.*' => 'integer|exists:users,id',
+            'text' => 'required|string|max:4096',
+            'session' => 'nullable|string|max:100',
+        ]);
+
+        $query = \App\Models\User::query()->whereNotNull('phone')->where('phone', '!=', '');
+        if (!empty($validated['user_ids'])) {
+            $query->whereIn('id', $validated['user_ids']);
+        }
+
+        $users = $query->get();
+        $session = $validated['session'] ?? config('waha.default_session', 'default');
+        $queuedCount = 0;
+
+        foreach ($users as $user) {
+            $cleanPhone = preg_replace('/\D+/', '', $user->phone);
+            if (strlen($cleanPhone) >= 8) {
+                $personalizedText = str_replace('{name}', $user->name, $validated['text']);
+                $service->queueText($session, $cleanPhone, $personalizedText, (string) Str::uuid());
+                $queuedCount++;
+            }
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => "تمت جدولة إرسال رسالة الواتساب إلى {$queuedCount} لاعب مسجل بنجاح.",
+            'queued_count' => $queuedCount,
+        ]);
+    }
+
     public function show(WahaMessage $message) { return response()->json($message); }
 }

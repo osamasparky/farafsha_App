@@ -15,5 +15,6 @@ Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('wa')->group(functi
     Route::post('/sessions/{name}/stop', [WahaSessionController::class, 'stop']);
     Route::get('/sessions/{name}/qr', [WahaSessionController::class, 'qr']);
     Route::post('/messages', [WahaMessageController::class, 'store'])->middleware('throttle:30,1');
+    Route::post('/messages/send-to-users', [WahaMessageController::class, 'sendToUsers'])->middleware('throttle:30,1');
     Route::get('/messages/{message}', [WahaMessageController::class, 'show']);
 });

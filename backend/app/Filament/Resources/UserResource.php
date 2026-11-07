@@ -36,6 +36,14 @@ class UserResource extends Resource
                             ->required()
                             ->unique(ignoreRecord: true),
 
+                        Forms\Components\TextInput::make('phone')
+                            ->label('رقم الهاتف (مع كود الدولة)')
+                            ->tel()
+                            ->placeholder('201012345678'),
+
+                        Forms\Components\DateTimePicker::make('phone_verified_at')
+                            ->label('تاريخ توثيق الهاتف (OTP)'),
+
                         Forms\Components\TextInput::make('password')
                             ->label('كلمة المرور الجديدة')
                             ->password()
@@ -85,6 +93,20 @@ class UserResource extends Resource
                     ->label('البريد الإلكتروني')
                     ->searchable(),
 
+                Tables\Columns\TextColumn::make('phone')
+                    ->label('رقم الهاتف')
+                    ->searchable()
+                    ->copyable()
+                    ->icon('heroicon-m-phone'),
+
+                Tables\Columns\IconColumn::make('phone_verified_at')
+                    ->label('موثق OTP')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
+
                 Tables\Columns\TextColumn::make('level')
                     ->label('المستوى')
                     ->badge()
@@ -112,10 +134,89 @@ class UserResource extends Resource
             ])
             ->defaultSort('total_score', 'desc')
             ->actions([
+                Tables\Actions\Action::make('send_whatsapp')
+                    ->label('إرسال واتساب')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->color('success')
+                    ->visible(fn ($record) => !empty($record->phone))
+                    ->modalHeading(fn ($record) => "إرسال رسالة واتساب إلى: {$record->name}")
+                    ->modalSubmitActionLabel('إرسال الرسالة الآن 📲')
+                    ->form([
+                        Forms\Components\Textarea::make('message')
+                            ->label('نص رسالة الواتساب')
+                            ->placeholder("اكتب نص الرسالة هنا...\n(يمكنك كتابة {name} ليتم استبدالها باسم اللاعب تلقائياً)")
+                            ->required()
+                            ->rows(4),
+                    ])
+                    ->action(function ($record, array $data) {
+                        try {
+                            $cleanPhone = preg_replace('/\D+/', '', $record->phone);
+                            $text = str_replace('{name}', $record->name, $data['message']);
+                            $wahaService = app(\App\Services\WahaMessageService::class);
+                            $wahaService->queueText(
+                                config('waha.default_session', 'default'),
+                                $cleanPhone,
+                                $text,
+                                (string) \Illuminate\Support\Str::uuid()
+                            );
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('تمت الجدولة بنجاح!')
+                                ->body("تم إرسال رسالة الواتساب إلى {$record->name} بنجاح 📲")
+                                ->success()
+                                ->send();
+                        } catch (\Throwable $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('تعذر إرسال الرسالة')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('broadcast_whatsapp')
+                        ->label('إرسال واتساب للمحددين')
+                        ->icon('heroicon-o-chat-bubble-bottom-center-text')
+                        ->color('success')
+                        ->modalHeading('إرسال رسالة واتساب جماعية للاعبين المحددين')
+                        ->modalSubmitActionLabel('إرسال للجميع الآن 📢')
+                        ->form([
+                            Forms\Components\Textarea::make('message')
+                                ->label('نص الرسالة الجماعية')
+                                ->placeholder("اكتب الرسالة هنا...\n(يمكنك استخدام {name} ليتم استبدالها باسم كل لاعب شخصياً)")
+                                ->required()
+                                ->rows(4),
+                        ])
+                        ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
+                            $count = 0;
+                            $wahaService = app(\App\Services\WahaMessageService::class);
+                            $session = config('waha.default_session', 'default');
+
+                            foreach ($records as $record) {
+                                if (empty($record->phone)) continue;
+                                $cleanPhone = preg_replace('/\D+/', '', $record->phone);
+                                if (strlen($cleanPhone) < 8) continue;
+
+                                $text = str_replace('{name}', $record->name, $data['message']);
+                                try {
+                                    $wahaService->queueText($session, $cleanPhone, $text, (string) \Illuminate\Support\Str::uuid());
+                                    $count++;
+                                } catch (\Throwable $e) {
+                                    \Illuminate\Support\Facades\Log::warning("WAHA Bulk send error for user {$record->id}: " . $e->getMessage());
+                                }
+                            }
+
+                            \Filament\Notifications\Notification::make()
+                                ->title('تم الإرسال بنجاح!')
+                                ->body("تمت جدولة رسائل الواتساب بنجاح إلى {$count} لاعب.")
+                                ->success()
+                                ->send();
+                        }),
+
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ]);

@@ -5,9 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\WahaMessageService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class AuthController extends Controller
@@ -39,63 +42,201 @@ class AuthController extends Controller
     }
 
     /**
-     * إرسال رمز التحقق OTP لرقم الهاتف
+     * توحيد صيغة رقم الهاتف للأرقام الدولية (E.164 digits)
+     */
+    protected function normalizePhone(string $phone, ?string $countryCode = '+20'): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone);
+        if (str_starts_with($digits, '01') && strlen($digits) === 11) {
+            return '20' . substr($digits, 1);
+        }
+        if (str_starts_with($digits, '05') && strlen($digits) === 10) {
+            return '966' . substr($digits, 1);
+        }
+        return $digits;
+    }
+
+    /**
+     * إرسال رمز التحقق OTP لرقم الهاتف عبر واتساب (WAHA)
      */
     public function sendOtp(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'phone' => 'required|string',
-            'country_code' => 'nullable|string|default:+20',
+            'country_code' => 'nullable|string',
         ]);
 
-        // رمز تجريبي للتطوير المحلي 1234
-        $otp = '1234';
+        $normalized = $this->normalizePhone($validated['phone'], $validated['country_code'] ?? '+20');
+        if (strlen($normalized) < 8 || strlen($normalized) > 15) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'رقم الهاتف غير صالح، يرجى كتابة الرقم بالصيغة الدولية المعتمدة.',
+            ], 422);
+        }
 
-        return response()->json([
+        // توليد رمز تحقق عشوائي آمن مكون من 4 أرقام
+        $otp = (string) random_int(1000, 9999);
+        Cache::put("otp:phone:{$normalized}", $otp, 300); // صالح لمدة 5 دقائق
+
+        // تجهيز نص رسالة الواتساب
+        $messageText = "مرحباً بك في منصة وتطبيق فرفشة! 🎮🥳\nرمز التحقق الخاص بك هو: *{$otp}*\nصالح لمدة 5 دقائق. لا تشارك هذا الرمز مع أحد.";
+
+        // إرسال الرسالة عبر خادم WAHA لواتساب
+        try {
+            $wahaService = app(WahaMessageService::class);
+            $wahaService->queueText(
+                config('waha.default_session', 'default'),
+                $normalized,
+                $messageText,
+                (string) Str::uuid()
+            );
+        } catch (\Throwable $e) {
+            Log::warning('WAHA sendOtp queue notice: ' . $e->getMessage());
+        }
+
+        $res = [
             'status' => 'success',
-            'message' => 'تم إرسال رمز التحقق لهاتفك بنجاح',
-            'debug_otp' => $otp,
-            'expires_in_seconds' => 60,
-        ]);
+            'message' => 'تم إرسال رمز التحقق لهاتفك عبر واتساب بنجاح 📲',
+            'expires_in_seconds' => 300,
+        ];
+
+        // في بيئة التطوير والاختبار المحلي، نقوم بإرفاق الكود لتسهيل الفحص
+        if (app()->environment('local', 'testing')) {
+            $res['debug_otp'] = $otp;
+        }
+
+        return response()->json($res);
     }
 
     /**
-     * التحقق من كود الـ OTP المكون من 4 أرقام
+     * التحقق من كود الـ OTP المكون من 4 أرقام وتأكيد ملكية الهاتف
      */
     public function verifyOtp(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'phone' => 'required|string',
             'otp' => 'required|string|size:4',
+            'country_code' => 'nullable|string',
         ]);
 
-        if ($validated['otp'] !== '1234') {
+        $normalized = $this->normalizePhone($validated['phone'], $validated['country_code'] ?? '+20');
+        $cachedOtp = Cache::get("otp:phone:{$normalized}");
+
+        $isValid = ($cachedOtp && $cachedOtp === $validated['otp'])
+            || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
+
+        if (!$isValid) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'رمز التحقق غير صحيح، يرجى المحاولة مرة أخرى.',
+                'message' => 'رمز التحقق غير صحيح أو انتهت صلاحيته، يرجى طلب رمز جديد.',
             ], 422);
         }
 
-        $email = $validated['phone'] . '@phone.lammah.app';
-        $user = User::firstOrCreate(
-            ['email' => $email],
-            [
-                'name' => 'لاعب جديد',
-                'password' => Hash::make(Str::random(16)),
-                'avatar' => 'av-ahmed',
-                'level' => 1,
-                'total_score' => 0,
-            ]
-        );
+        // تم التحقق بنجاح
+        Cache::forget("otp:phone:{$normalized}");
+        Cache::put("verified_phone:{$normalized}", true, 3600); // موثق لمدة ساعة لإتمام التسجيل
+        Cache::put("verified_phone:{$validated['phone']}", true, 3600);
 
-        $token = $user->createToken('mobile_user_token')->plainTextToken;
+        // هل المستخدم مسجل مسبقاً بهذا الهاتف؟
+        $user = User::where('phone', $normalized)
+            ->orWhere('phone', $validated['phone'])
+            ->orWhere('email', $normalized . '@phone.lammah.app')
+            ->first();
+
+        if ($user) {
+            $user->update([
+                'phone' => $normalized,
+                'phone_verified_at' => now(),
+            ]);
+            $token = $user->createToken('mobile_user_token')->plainTextToken;
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم التحقق من هاتفك بنجاح، مرحباً بك مجدداً! 🎉',
+                'token' => $token,
+                'user' => $user,
+                'is_new_user' => false,
+            ]);
+        }
 
         return response()->json([
             'status' => 'success',
-            'message' => 'تم التحقق بنجاح',
-            'token' => $token,
-            'user' => $user,
-            'is_new_user' => $user->wasRecentlyCreated,
+            'message' => 'تم التحقق من هاتفك بنجاح! يمكنك الآن إكمال إنشاء حسابك.',
+            'phone' => $normalized,
+            'is_verified' => true,
+            'is_new_user' => true,
+        ]);
+    }
+
+    /**
+     * إرسال رمز التحقق OTP للبريد الإلكتروني
+     */
+    public function sendEmailOtp(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|max:150',
+        ]);
+
+        $email = strtolower(trim($validated['email']));
+        $otp = (string) random_int(1000, 9999);
+        Cache::put("otp:email:{$email}", $otp, 300);
+
+        // محاولة إرسال بريد
+        try {
+            \Illuminate\Support\Facades\Mail::raw(
+                "رمز التحقق الخاص بك في منصة فرفشة هو: {$otp}\nصالح لمدة 5 دقائق.",
+                function ($m) use ($email) {
+                    $m->to($email)->subject('رمز التحقق في فرفشة 🎮');
+                }
+            );
+        } catch (\Throwable $e) {
+            Log::warning('sendEmailOtp notice: ' . $e->getMessage());
+        }
+
+        $res = [
+            'status' => 'success',
+            'message' => 'تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح ✉️',
+            'expires_in_seconds' => 300,
+        ];
+
+        if (app()->environment('local', 'testing')) {
+            $res['debug_otp'] = $otp;
+        }
+
+        return response()->json($res);
+    }
+
+    /**
+     * التحقق من رمز الـ OTP للبريد الإلكتروني
+     */
+    public function verifyEmailOtp(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'required|email|max:150',
+            'otp' => 'required|string|size:4',
+        ]);
+
+        $email = strtolower(trim($validated['email']));
+        $cachedOtp = Cache::get("otp:email:{$email}");
+
+        $isValid = ($cachedOtp && $cachedOtp === $validated['otp'])
+            || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
+
+        if (!$isValid) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'رمز التحقق للبريد غير صحيح أو انتهت صلاحيته.',
+            ], 422);
+        }
+
+        Cache::forget("otp:email:{$email}");
+        Cache::put("verified_email:{$email}", true, 3600);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم التحقق من بريدك الإلكتروني بنجاح!',
+            'email' => $email,
+            'is_verified' => true,
         ]);
     }
 
@@ -209,18 +350,45 @@ class AuthController extends Controller
             'phone.required' => 'رقم الهاتف مطلوب.',
         ]);
 
+        $normalizedPhone = $this->normalizePhone($validated['phone']);
+        $normalizedEmail = strtolower(trim($validated['email']));
+
         // التحقق من تكرار الهاتف
-        if (User::where('phone', $validated['phone'])->exists()) {
+        if (User::where('phone', $normalizedPhone)->orWhere('phone', $validated['phone'])->exists()) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'رقم الهاتف مسجل بالفعل بحساب آخر.',
             ], 422);
         }
 
+        // التحقق الإلزامي: التأكد من توثيق رقم الهاتف أو البريد الإلكتروني عبر OTP
+        $phoneVerified = (bool) (Cache::get("verified_phone:{$normalizedPhone}") || Cache::get("verified_phone:{$validated['phone']}"));
+        $emailVerified = (bool) Cache::get("verified_email:{$normalizedEmail}");
+
+        // إذا تم إرسال كود OTP مع طلب التسجيل مباشرة، نتحقق منه فوراً
+        if (!$phoneVerified && !empty($request->otp)) {
+            $cachedPhoneOtp = Cache::get("otp:phone:{$normalizedPhone}");
+            if (($cachedPhoneOtp && $cachedPhoneOtp === (string)$request->otp) || ((string)$request->otp === '1234' && app()->environment('local', 'testing'))) {
+                $phoneVerified = true;
+                Cache::forget("otp:phone:{$normalizedPhone}");
+            }
+        }
+
+        // لن يُنشأ أي حساب بدون التحقق المسبق
+        if (!$phoneVerified && !$emailVerified) {
+            return response()->json([
+                'status' => 'error',
+                'verification_required' => true,
+                'message' => 'عذراً، يجب التحقق من رقم هاتفك أو بريدك الإلكتروني عبر رمز OTP أولاً قبل إتمام إنشاء الحساب.',
+            ], 422);
+        }
+
         $user = User::create([
             'name' => $validated['name'],
-            'email' => $validated['email'],
-            'phone' => $validated['phone'],
+            'email' => $normalizedEmail,
+            'phone' => $normalizedPhone,
+            'phone_verified_at' => $phoneVerified ? now() : null,
+            'email_verified_at' => $emailVerified ? now() : null,
             'password' => Hash::make($validated['password']),
             'avatar' => $validated['avatar'] ?? 'assets/images/av-ahmed.png',
             'level' => 1,
@@ -228,6 +396,10 @@ class AuthController extends Controller
             'wins_count' => 0,
             'games_played' => 0,
         ]);
+
+        Cache::forget("verified_phone:{$normalizedPhone}");
+        Cache::forget("verified_phone:{$validated['phone']}");
+        Cache::forget("verified_email:{$normalizedEmail}");
 
         $token = $user->createToken('auth_token')->plainTextToken;
 

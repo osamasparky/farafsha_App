@@ -17,6 +17,8 @@ Route::prefix('auth')->group(function () {
     Route::post('/guest', [AuthController::class, 'guestLogin']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/send-email-otp', [AuthController::class, 'sendEmailOtp']);
+    Route::post('/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
     Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
     Route::post('/register-profile', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
