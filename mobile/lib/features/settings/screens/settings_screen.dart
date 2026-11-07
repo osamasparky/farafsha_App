@@ -168,7 +168,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       ),
                       Switch(
                         value: _familyMode,
-                        activeThumbColor: LammaColors.gold500,
+                        activeColor: LammaColors.gold500,
                         onChanged: (v) => setState(() => _familyMode = v),
                       ),
                     ],
@@ -310,7 +310,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Switch(
                 value: value,
-                activeThumbColor: LammaColors.gold500,
+                activeColor: LammaColors.gold500,
                 onChanged: onChanged,
               ),
             ],

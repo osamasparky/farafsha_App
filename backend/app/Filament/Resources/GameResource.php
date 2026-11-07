@@ -82,6 +82,18 @@ class GameResource extends Resource
                             ->required(),
                     ])->columns(2),
 
+                Forms\Components\Section::make('صورة وهوية كارت اللعبة')
+                    ->schema([
+                        Forms\Components\FileUpload::make('cover_image')
+                            ->label('صورة كارت اللعبة في تطبيق الموبايل (Cover / Card Image)')
+                            ->image()
+                            ->directory('games')
+                            ->visibility('public')
+                            ->imageEditor()
+                            ->helperText('هذه هي الصورة التي تظهر أعلى كارت اللعبة في شاشة تفاصيل وإعداد اللعبة، ويمكنك تغييرها في أي وقت.')
+                            ->columnSpanFull(),
+                    ]),
+
                 Forms\Components\Section::make('شرح وقواعد الجولة')
                     ->schema([
                         Forms\Components\Textarea::make('description')
@@ -141,6 +153,11 @@ class GameResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('cover_image')
+                    ->label('الصورة')
+                    ->disk('public')
+                    ->square(),
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('اسم اللعبة')
                     ->searchable()

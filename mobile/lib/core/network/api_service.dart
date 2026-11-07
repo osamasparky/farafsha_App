@@ -47,17 +47,65 @@ class ApiService {
     return null;
   }
 
+  /// جلب قائمة جميع الألعاب من الباك إند
+  Future<List<Map<String, dynamic>>> getGames({String? category, String? mode}) async {
+    try {
+      var url = '$baseUrl/games';
+      final params = <String>[];
+      if (category != null && category != 'all') params.add('category=$category');
+      if (mode != null) params.add('mode=$mode');
+      if (params.isNotEmpty) url += '?${params.join('&')}';
+
+      final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map && decoded['data'] != null) {
+          return List<Map<String, dynamic>>.from(decoded['data']);
+        } else if (decoded is List) {
+          return List<Map<String, dynamic>>.from(decoded);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching online games failed ($e). Loading local seed data...');
+    }
+
+    return _loadSeedGames();
+  }
+
+  /// جلب تفاصيل لعبة محددة
+  Future<Map<String, dynamic>?> getGameBySlug(String slug) async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/games/$slug'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map && decoded['data'] != null) {
+          return decoded['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching game details failed ($e). Loading from local seeds...');
+    }
+
+    final all = await _loadSeedGames();
+    return all.firstWhere(
+      (g) => g['slug'] == slug,
+      orElse: () => all.isNotEmpty ? all.first : {},
+    );
+  }
+
   /// جلب بطاقات لعبة محددة مع إمكانية العمل بلا إنترنت (Offline fallback)
   Future<List<Map<String, dynamic>>> getGameCards(String slug) async {
     try {
       final res = await http
           .get(Uri.parse('$baseUrl/games/$slug/cards'), headers: _headers)
-          .timeout(const Duration(seconds: 3));
+          .timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is List) {
           return List<Map<String, dynamic>>.from(data);
+        } else if (data is Map && data['cards'] != null) {
+          return List<Map<String, dynamic>>.from(data['cards']);
         } else if (data is Map && data['data'] != null) {
           return List<Map<String, dynamic>>.from(data['data']);
         }
@@ -123,6 +171,20 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('⚠️ Leaderboard fetch failed: $e');
+    }
+    return [];
+  }
+
+  /// قراءة الألعاب المحلية المرفقة في التطبيق لحالة الـ Offline
+  Future<List<Map<String, dynamic>>> _loadSeedGames() async {
+    try {
+      final jsonStr = await rootBundle.loadString('assets/data/seed_games.json');
+      final decoded = jsonDecode(jsonStr);
+      if (decoded is List) {
+        return List<Map<String, dynamic>>.from(decoded);
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error loading offline seed games: $e');
     }
     return [];
   }

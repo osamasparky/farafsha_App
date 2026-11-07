@@ -14,7 +14,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _phoneController = TextEditingController(text: '5');
-  String _countryCode = '+966';
+  final String _countryCode = '+966';
 
   @override
   void dispose() {

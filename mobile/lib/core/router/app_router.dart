@@ -16,6 +16,7 @@ import '../../features/games/screens/amthal_game_screen.dart';
 import '../../features/games/screens/movie_quotes_game_screen.dart';
 import '../../features/games/screens/taboo_game_screen.dart';
 import '../../features/games/screens/drawing_game_screen.dart';
+import '../../features/games/screens/lamma_host_game_screen.dart';
 import '../../features/leaderboard/screens/leaderboard_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -60,7 +61,8 @@ final appRouter = GoRouter(
       path: '/game-setup/:id',
       builder: (context, state) {
         final gameId = state.pathParameters['id'] ?? 'amthal-shaabiya';
-        return GameSetupScreen(gameId: gameId);
+        final gameData = state.extra as Map<String, dynamic>?;
+        return GameSetupScreen(gameId: gameId, initialGameData: gameData);
       },
     ),
     GoRoute(
@@ -92,6 +94,20 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/game/draw',
       builder: (context, state) => const DrawingGameScreen(),
+    ),
+    GoRoute(
+      path: '/game/lammah-host',
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final gameSlug = extra['gameSlug'] as String? ?? 'amthal-shaabiya';
+        final subMode = extra['subMode'] as String? ?? 'teams';
+        final teams = extra['teams'] as List<Map<String, dynamic>>? ?? [];
+        return LammaHostGameScreen(
+          gameSlug: gameSlug,
+          subMode: subMode,
+          initialTeams: teams,
+        );
+      },
     ),
     GoRoute(
       path: '/results',

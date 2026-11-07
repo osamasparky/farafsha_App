@@ -1,12 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
 class GameSetupScreen extends StatefulWidget {
   final String gameId;
-  const GameSetupScreen({super.key, required this.gameId});
+  final Map<String, dynamic>? initialGameData;
+
+  const GameSetupScreen({
+    super.key,
+    required this.gameId,
+    this.initialGameData,
+  });
 
   @override
   State<GameSetupScreen> createState() => _GameSetupScreenState();
@@ -16,9 +24,89 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   int _playersCount = 4;
   int _roundsCount = 10;
   String _difficulty = 'متوسط';
+  Map<String, dynamic>? _game;
+
+  @override
+  void initState() {
+    super.initState();
+    _game = widget.initialGameData;
+    _loadGameDetails();
+  }
+
+  Future<void> _loadGameDetails() async {
+    if (_game == null || _game!['cover_image_url'] == null) {
+      final data = await ApiService.instance.getGameBySlug(widget.gameId);
+      if (mounted && data != null) {
+        setState(() {
+          _game = data;
+        });
+      }
+    }
+  }
+
+  String _getDefaultAssetForSlug(String slug) {
+    switch (slug) {
+      case 'amthal-shaabiya':
+        return 'assets/images/proverb.png';
+      case 'famous-quotes':
+        return 'assets/images/popcorn.png';
+      case 'who-am-i':
+        return 'assets/images/ic-mask.png';
+      case 'forbidden-words':
+        return 'assets/images/ic-a.png';
+      case 'speed-trivia':
+        return 'assets/images/ic-bulb.png';
+      case 'two-truths-and-lie':
+        return 'assets/images/ic-dice.png';
+      default:
+        return 'assets/images/proverb.png';
+    }
+  }
+
+  Widget _buildCoverImage() {
+    final coverUrl = _game?['cover_image_url'] as String?;
+    final defaultAsset = _getDefaultAssetForSlug(widget.gameId);
+
+    if (coverUrl != null && coverUrl.isNotEmpty) {
+      return Container(
+        height: 250,
+        alignment: Alignment.center,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: Image.network(
+            coverUrl,
+            height: 250,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => Image.asset(
+              defaultAsset,
+              height: 250,
+              fit: BoxFit.contain,
+            ),
+            loadingBuilder: (context, child, progress) {
+              if (progress == null) return child;
+              return const SizedBox(
+                height: 250,
+                child: Center(
+                  child: CircularProgressIndicator(color: LammaColors.violet500),
+                ),
+              );
+            },
+          ),
+        ),
+      );
+    }
+
+    return Image.asset(
+      defaultAsset,
+      height: 250,
+      fit: BoxFit.contain,
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final gameTitle = _game?['name'] ?? 'إعداد اللعبة';
+
     return LammaScaffold(
       body: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
@@ -33,6 +121,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
                   onPressed: () => context.pop(),
                 ),
+                Text(
+                  gameTitle,
+                  style: GoogleFonts.cairo(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
+                ),
                 IconButton(
                   icon: const Icon(Icons.info_outline_rounded, color: Colors.white, size: 24),
                   onPressed: () => _showRulesSheet(context),
@@ -40,14 +136,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
               ],
             ),
 
-            // صورة غلاف أمثال شعبية التراثية
+            const SizedBox(height: 8),
+
+            // صورة كارت اللعبة القادمة من الباك إند
             Center(
-              child: Image.asset(
-                'assets/images/proverb.png',
-                width: 380,
-                height: 250,
-                fit: BoxFit.contain,
-              ),
+              child: _buildCoverImage(),
             ),
 
             const SizedBox(height: 10),
@@ -70,22 +163,22 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                     value: '$_playersCount لاعبين',
                     onTap: () {
                       setState(() {
-                        _playersCount = (_playersCount % 8) + 2;
+                        _playersCount = _playersCount >= 10 ? 2 : _playersCount + 2;
                       });
                     },
                   ),
-                  Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
+                  const Divider(color: LammaColors.cardBorder, height: 1),
                   _buildSettingRow(
                     icon: Icons.layers_rounded,
                     title: 'عدد الجولات',
                     value: '$_roundsCount جولات',
                     onTap: () {
                       setState(() {
-                        _roundsCount = _roundsCount == 10 ? 15 : (_roundsCount == 15 ? 5 : 10);
+                        _roundsCount = _roundsCount >= 15 ? 5 : _roundsCount + 5;
                       });
                     },
                   ),
-                  Divider(color: Colors.white.withValues(alpha: 0.08), height: 1),
+                  const Divider(color: LammaColors.cardBorder, height: 1),
                   _buildSettingRow(
                     icon: Icons.bar_chart_rounded,
                     title: 'مستوى الصعوبة',
@@ -106,7 +199,7 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             GameButton(
               text: 'ابدأ اللعبة',
               onPressed: () {
-                context.push('/players');
+                context.push('/players', extra: '/game/${widget.gameId == 'famous-quotes' ? 'quotes' : 'amthal'}');
               },
             ),
             const SizedBox(height: 8),
@@ -143,6 +236,12 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   }
 
   void _showRulesSheet(BuildContext context) {
+    final instructions = _game?['instructions'] ??
+        '1. يظهر صدر المثل الشعبي وتختار التكملة الصحيحة.\n'
+        '2. العداد التنازلي 20 ثانية لكل دور.\n'
+        '3. 3 نقاط للإجابة الصحيحة المباشرة، ونقطتان بعد التلميح.\n'
+        '4. الفائز هو الفريق صاحب أعلى رصيد نقاط في ختام الجولات.';
+
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -157,19 +256,16 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Center(
+            Center(
               child: Text(
-                'قواعد لعبة أمثال شعبية',
-                style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
+                'قواعد لعبة ${_game?['name'] ?? 'اللمّة'}',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
               ),
             ),
             const SizedBox(height: 16),
-            const Text(
-              '1. يظهر صدر المثل الشعبي وتختار التكملة الصحيحة.\n'
-              '2. العداد التنازلي 20 ثانية لكل دور.\n'
-              '3. 3 نقاط للإجابة الصحيحة المباشرة، ونقطتان بعد التلميح.\n'
-              '4. الفائز هو الفريق صاحب أعلى رصيد نقاط في ختام الجولات.',
-              style: TextStyle(fontSize: 15, color: Color(0xFFEADFFF), height: 1.8),
+            Text(
+              instructions,
+              style: const TextStyle(fontSize: 15, color: Color(0xFFEADFFF), height: 1.8),
             ),
             const SizedBox(height: 20),
             GameButton(

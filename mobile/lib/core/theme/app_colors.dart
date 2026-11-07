@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+extension ColorValuesCompatColors on Color {
+  Color withValues({double? alpha, double? red, double? green, double? blue}) {
+    return withOpacity((alpha ?? 1.0).clamp(0.0, 1.0));
+  }
+}
+
 /// نظام الألوان لتطبيق لمّة (Lammah)
 /// متوافق 100% مع الهوية المعتمدة في وثيقة المنتج ونظام التصميم
 class AppColors {

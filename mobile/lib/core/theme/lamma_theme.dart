@@ -1,5 +1,11 @@
 import 'package:flutter/material.dart';
 
+extension ColorValuesCompat on Color {
+  Color withValues({double? alpha, double? red, double? green, double? blue}) {
+    return withOpacity((alpha ?? 1.0).clamp(0.0, 1.0));
+  }
+}
+
 class LammaColors {
   LammaColors._();
 

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
@@ -12,66 +14,129 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: المفضلة
-  int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب (الوسطى), 3: الترتيب, 4: الكل
+  int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب (الوسطى), 3: الترتيب, 4: الملف
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _games = [];
 
-  final List<Map<String, dynamic>> _games = [
-    {
-      'id': 'amthal-shaabiya',
-      'name': 'أمثال شعبية',
-      'sub': 'كمّل المثل الشعبي',
-      'icon': 'assets/images/ic-quote.png',
-      'colors': [Color(0xFFD2566A), Color(0xFF8E2A4E)],
-    },
-    {
-      'id': 'famous-quotes',
-      'name': 'جمل مشهورة',
-      'sub': 'من الأفلام والمسلسلات',
-      'icon': 'assets/images/ic-film.png',
-      'colors': [Color(0xFF8F3BD0), Color(0xFF561C94)],
-    },
-    {
-      'id': 'forbidden-words',
-      'name': 'خمن الكلمة',
-      'sub': 'ممنوع تقول',
-      'icon': 'assets/images/ic-a.png',
-      'colors': [Color(0xFF4846BE), Color(0xFF2B2580)],
-    },
-    {
-      'id': 'speed-trivia',
-      'name': 'معلومات عامة',
-      'sub': 'سؤال على السريع',
-      'icon': 'assets/images/ic-bulb.png',
-      'colors': [Color(0xFF2F6E7A), Color(0xFF1B3F52)],
-    },
-    {
-      'id': 'guess-song',
-      'name': 'خمن الأغنية',
-      'sub': 'من التلميحات',
-      'icon': 'assets/images/ic-music.png',
-      'colors': [Color(0xFFB23A72), Color(0xFF6E1C4E)],
-    },
-    {
-      'id': 'draw-guess',
-      'name': 'خمن الصورة',
-      'sub': 'ارسم وخمّن',
-      'icon': 'assets/images/ic-photo.png',
-      'colors': [Color(0xFF4740B0), Color(0xFF28226E)],
-    },
-    {
-      'id': 'who-am-i',
-      'name': 'مين أنا؟',
-      'sub': 'شخصيات وأشياء',
-      'icon': 'assets/images/ic-mask.png',
-      'colors': [Color(0xFF7A6A3A), Color(0xFF3F3420)],
-    },
-    {
-      'id': 'random-challenge',
-      'name': 'تحديات عشوائية',
-      'sub': 'مفاجآت كل جولة',
-      'icon': 'assets/images/ic-dice.png',
-      'colors': [Color(0xFF8C3468), Color(0xFF531B44)],
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _fetchGames();
+  }
+
+  Future<void> _fetchGames() async {
+    setState(() => _isLoading = true);
+    final games = await ApiService.instance.getGames();
+    if (mounted) {
+      setState(() {
+        _games = games.isNotEmpty ? games : _fallbackGames();
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _fallbackGames() {
+    return [
+      {
+        'id': 1,
+        'slug': 'amthal-shaabiya',
+        'name': 'أمثال شعبية',
+        'subtitle': 'كمّل المثل الشعبي',
+        'category': 'أمثال',
+        'icon': 'assets/images/ic-quote.png',
+      },
+      {
+        'id': 2,
+        'slug': 'famous-quotes',
+        'name': 'جمل مشهورة',
+        'subtitle': 'من الأفلام والمسلسلات',
+        'category': 'إفيهات',
+        'icon': 'assets/images/ic-film.png',
+      },
+      {
+        'id': 3,
+        'slug': 'forbidden-words',
+        'name': 'خمن الكلمة',
+        'subtitle': 'ممنوع تقول',
+        'category': 'ذكاء وسرعة',
+        'icon': 'assets/images/ic-a.png',
+      },
+      {
+        'id': 4,
+        'slug': 'speed-trivia',
+        'name': 'معلومات عامة',
+        'subtitle': 'سؤال على السريع',
+        'category': 'معلومات عامة',
+        'icon': 'assets/images/ic-bulb.png',
+      },
+      {
+        'id': 5,
+        'slug': 'guess-song',
+        'name': 'خمن الأغنية',
+        'subtitle': 'من التلميحات',
+        'category': 'فن',
+        'icon': 'assets/images/ic-music.png',
+      },
+      {
+        'id': 6,
+        'slug': 'draw-guess',
+        'name': 'خمن الصورة',
+        'subtitle': 'ارسم وخمّن',
+        'category': 'رسم',
+        'icon': 'assets/images/ic-photo.png',
+      },
+      {
+        'id': 7,
+        'slug': 'who-am-i',
+        'name': 'مين أنا؟',
+        'subtitle': 'شخصيات وأشياء',
+        'category': 'تخمين',
+        'icon': 'assets/images/ic-mask.png',
+      },
+      {
+        'id': 8,
+        'slug': 'random-challenge',
+        'name': 'تحديات عشوائية',
+        'subtitle': 'مفاجآت كل جولة',
+        'category': 'تحدي',
+        'icon': 'assets/images/ic-dice.png',
+      },
+    ];
+  }
+
+  List<Color> _getGameColors(String slug) {
+    switch (slug) {
+      case 'amthal-shaabiya':
+        return const [Color(0xFFD2566A), Color(0xFF8E2A4E)];
+      case 'famous-quotes':
+        return const [Color(0xFF8F3BD0), Color(0xFF561C94)];
+      case 'forbidden-words':
+        return const [Color(0xFF4846BE), Color(0xFF2B2580)];
+      case 'speed-trivia':
+        return const [Color(0xFF2F6E7A), Color(0xFF1B3F52)];
+      case 'guess-song':
+        return const [Color(0xFFB23A72), Color(0xFF6E1C4E)];
+      case 'draw-guess':
+        return const [Color(0xFF4740B0), Color(0xFF28226E)];
+      case 'who-am-i':
+        return const [Color(0xFF7A6A3A), Color(0xFF3F3420)];
+      default:
+        return const [Color(0xFF8C3468), Color(0xFF531B44)];
+    }
+  }
+
+  String _getGameIcon(String slug) {
+    switch (slug) {
+      case 'amthal-shaabiya': return 'assets/images/ic-quote.png';
+      case 'famous-quotes': return 'assets/images/ic-film.png';
+      case 'forbidden-words': return 'assets/images/ic-a.png';
+      case 'speed-trivia': return 'assets/images/ic-bulb.png';
+      case 'guess-song': return 'assets/images/ic-music.png';
+      case 'draw-guess': return 'assets/images/ic-photo.png';
+      case 'who-am-i': return 'assets/images/ic-mask.png';
+      default: return 'assets/images/ic-dice.png';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -107,14 +172,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 10),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: const [
+                      children: [
                         Text(
                           'مساء الخير',
-                          style: TextStyle(fontSize: 13, color: Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
+                          style: GoogleFonts.cairo(fontSize: 13, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
                         ),
                         Text(
                           'أهلاً يا أسامة',
-                          style: TextStyle(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white),
+                          style: GoogleFonts.cairo(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
                       ],
                     ),
@@ -177,48 +242,58 @@ class _HomeScreenState extends State<HomeScreen> {
 
           const SizedBox(height: 14),
 
-          // 3. شبكة الألعاب الـ 8 (2×4 Grid)
+          // 3. شبكة الألعاب من الباك إند
           Expanded(
-            child: GridView.builder(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 1.15,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-              ),
-              itemCount: _games.length,
-              itemBuilder: (context, index) {
-                final g = _games[index];
-                return _buildGameTile(g);
-              },
-            ),
+            child: _isLoading
+                ? const Center(
+                    child: CircularProgressIndicator(color: LammaColors.violet500),
+                  )
+                : RefreshIndicator(
+                    onRefresh: _fetchGames,
+                    color: LammaColors.violet500,
+                    child: GridView.builder(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        childAspectRatio: 1.15,
+                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 12,
+                      ),
+                      itemCount: _games.length,
+                      itemBuilder: (context, index) {
+                        final g = _games[index];
+                        return _buildGameTile(g);
+                      },
+                    ),
+                  ),
           ),
         ],
       ),
 
       // 4. شريط التنقل السفلي مع زر الألعاب المرفوع المجسم (Raised Center Game Button)
       bottomNavigationBar: Container(
-        height: 84,
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF1F1042), Color(0xFF130828)],
-          ),
-          border: Border(top: BorderSide(color: LammaColors.cardBorder, width: 1)),
+        height: 82,
+        decoration: BoxDecoration(
+          color: const Color(0xFF130928).withValues(alpha: 0.96),
+          border: const Border(top: BorderSide(color: Color(0x33A35BFF), width: 1.2)),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.5),
+              blurRadius: 20,
+              offset: const Offset(0, -6),
+            ),
+          ],
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
-            _buildNavItem(0, 'الرئيسية', Icons.home_filled, onTap: () {}),
-            _buildNavItem(1, 'الأصدقاء', Icons.group_rounded, onTap: () => context.push('/friends')),
-            // الزر الأوسط المرفوع (الألعاب)
-            GestureDetector(
-              onTap: () => setState(() => _currentNavIndex = 2),
-              child: Container(
-                margin: const EdgeInsets.only(top: 0),
-                transform: Matrix4.translationValues(0, -18, 0),
+            _buildNavItem(0, 'الرئيسية', Icons.home_rounded, onTap: () {}),
+            _buildNavItem(1, 'طريقة اللعب', Icons.gamepad_rounded, onTap: () => context.push('/mode-select')),
+            // الزر الأوسط المرفوع للألعاب
+            Transform.translate(
+              offset: const Offset(0, -18),
+              child: GestureDetector(
+                onTap: _fetchGames,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -227,16 +302,14 @@ class _HomeScreenState extends State<HomeScreen> {
                       height: 58,
                       decoration: BoxDecoration(
                         gradient: const LinearGradient(
-                          colors: [Color(0xFFB98AFF), Color(0xFF6A24C9)],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
+                          colors: [Color(0xFFA35BFF), Color(0xFF7A2FE0)],
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
                         ),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border(
-                          top: const BorderSide(color: Colors.white54, width: 1.5),
-                          bottom: const BorderSide(color: Color(0xFF4A1690), width: 4.5),
-                          left: const BorderSide(color: Colors.white24, width: 1),
-                          right: const BorderSide(color: Colors.white24, width: 1),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 1.5,
                         ),
                         boxShadow: [
                           BoxShadow(
@@ -251,9 +324,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 3),
-                    const Text(
+                    Text(
                       'الألعاب',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
+                      style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
                   ],
                 ),
@@ -296,7 +369,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Center(
             child: Text(
               title,
-              style: TextStyle(
+              style: GoogleFonts.cairo(
                 fontSize: 15,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFFCFC6E4),
@@ -309,10 +382,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildGameTile(Map<String, dynamic> game) {
-    final List<Color> colors = game['colors'] as List<Color>;
+    final slug = (game['slug'] ?? game['id'] ?? 'amthal-shaabiya').toString();
+    final name = (game['name'] ?? 'لعبة لمّة').toString();
+    final subtitle = (game['subtitle'] ?? game['sub'] ?? '').toString();
+    final List<Color> colors = _getGameColors(slug);
+    final iconAsset = _getGameIcon(slug);
+    final coverUrl = game['cover_image_url'] as String?;
 
     return GestureDetector(
-      onTap: () => context.push('/game-setup/${game['id']}'),
+      onTap: () => context.push('/game-setup/$slug', extra: game),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
@@ -334,29 +412,41 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Image.asset(
-              game['icon'] as String,
-              width: 58,
-              height: 48,
-              fit: BoxFit.contain,
-            ),
+            if (coverUrl != null && coverUrl.isNotEmpty)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Image.network(
+                  coverUrl,
+                  width: 58,
+                  height: 48,
+                  fit: BoxFit.contain,
+                  errorBuilder: (_, __, ___) => Image.asset(iconAsset, width: 58, height: 48, fit: BoxFit.contain),
+                ),
+              )
+            else
+              Image.asset(
+                iconAsset,
+                width: 58,
+                height: 48,
+                fit: BoxFit.contain,
+              ),
             const SizedBox(height: 4),
             Text(
-              game['name'] as String,
+              name,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: GoogleFonts.cairo(
                 fontSize: 16,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
-                shadows: [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2))],
+                shadows: const [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2))],
               ),
             ),
             Text(
-              game['sub'] as String,
+              subtitle,
               textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: GoogleFonts.cairo(
                 fontSize: 11,
                 fontWeight: FontWeight.w500,
                 color: Colors.white.withValues(alpha: 0.88),
@@ -386,7 +476,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 3),
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.cairo(
               fontSize: 11,
               fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
               color: isSelected ? Colors.white : const Color(0xFFCFC6E4),

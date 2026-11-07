@@ -23,14 +23,22 @@ class RoomController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $validated = $request->validate([
+        $gameId = $request->input('game_id') ?: Game::where('slug', $request->input('game_slug'))->value('id');
+        $hostName = $request->input('host_name') ?: 'أسامة';
+
+        $data = array_merge($request->all(), [
+            'game_id' => $gameId,
+            'host_name' => $hostName,
+        ]);
+
+        $validated = validator($data, [
             'game_id' => 'required|exists:games,id',
             'host_name' => 'required|string|max:50',
-            'max_players' => 'integer|min:2|max:12',
-            'total_rounds' => 'integer|min:3|max:20',
-            'round_duration_seconds' => 'integer|min:10|max:120',
-            'difficulty' => 'string',
-        ]);
+            'max_players' => 'nullable|integer|min:2|max:12',
+            'total_rounds' => 'nullable|integer|min:3|max:20',
+            'round_duration_seconds' => 'nullable|integer|min:10|max:120',
+            'difficulty' => 'nullable|string',
+        ])->validate();
 
         // توليد رمز غرفة عشوائي مكون من 6 أرقام فريدة مثل 784521
         do {
@@ -127,7 +135,7 @@ class RoomController extends Controller
         $totalPlayers = $room->players()->count();
 
         // بث لحظي عبر WebSockets لجميع المتواجدين في الغرفة
-        broadcast(new PlayerJoinedRoom($room->code, $player, $totalPlayers));
+        $this->safeBroadcast(new PlayerJoinedRoom($room->code, $player, $totalPlayers));
 
         return response()->json([
             'status' => 'success',
@@ -183,8 +191,8 @@ class RoomController extends Controller
         ];
 
         // بث حدث بدء اللعبة والجولة الأولى لجميع اللاعبين فوراً
-        broadcast(new GameStarted($room, $publicCard));
-        broadcast(new RoundStarted($room->code, 1, $room->total_rounds, $room->round_duration_seconds, $publicCard));
+        $this->safeBroadcast(new GameStarted($room, $publicCard));
+        $this->safeBroadcast(new RoundStarted($room->code, 1, $room->total_rounds, $room->round_duration_seconds, $publicCard));
 
         return response()->json([
             'status' => 'success',
@@ -238,14 +246,14 @@ class RoomController extends Controller
         $answeredCount = count($answers);
 
         // بث إشعار أن اللاعب الفلاني أجاب (بدون كشف هل هي صحيحة لحين انتهاء الجميع)
-        broadcast(new PlayerAnswered($room->code, $player->id, $player->player_name, $answeredCount, $totalPlayers));
+        $this->safeBroadcast(new PlayerAnswered($room->code, $player->id, $player->player_name, $answeredCount, $totalPlayers));
 
         // إذا أجاب جميع اللاعبين، يتم إنهاء الجولة فوراً وبث النتيجة
         if ($answeredCount >= $totalPlayers) {
             $leaderboard = $room->players()->orderBy('score', 'desc')->get(['id', 'player_name', 'score'])->toArray();
             $isGameOver = $room->current_round >= $room->total_rounds;
 
-            broadcast(new RoundEnded(
+            $this->safeBroadcast(new RoundEnded(
                 $room->code,
                 $room->current_round,
                 $card->answer,
@@ -261,5 +269,14 @@ class RoomController extends Controller
             'points_earned' => $pointsEarned,
             'total_score' => $player->score,
         ]);
+    }
+
+    private function safeBroadcast($event): void
+    {
+        try {
+            broadcast($event);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('Broadcast failed (continuing normally): ' . $e->getMessage());
+        }
     }
 }
