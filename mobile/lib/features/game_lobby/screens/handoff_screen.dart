@@ -200,7 +200,11 @@ class HandoffScreen extends StatelessWidget {
                   showArrow: false,
                   height: 64,
                   onPressed: () {
-                    context.push(targetRoute);
+                    if (context.canPop()) {
+                      context.pop(true);
+                    } else {
+                      context.push(targetRoute);
+                    }
                   },
                 ),
                 const SizedBox(height: 12),

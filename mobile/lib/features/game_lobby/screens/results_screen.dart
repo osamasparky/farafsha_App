@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/models/game_session.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
@@ -22,6 +23,25 @@ class ResultsScreen extends StatelessWidget {
     this.mvpAvatar = 'assets/images/av-sara.png',
     this.mvpStats = 'سارة — 7 إجابات صح',
   });
+
+  factory ResultsScreen.fromSession(GameSession session) {
+    final ranked = session.rankedTeams;
+    final winner = ranked.isNotEmpty ? ranked.first : const MapEntry('فريق الفائز', 0);
+    final runnerUp = ranked.length > 1
+        ? ranked[1]
+        : (ranked.isNotEmpty ? ranked.first : const MapEntry('فريق المنافس', 0));
+    final mvp = session.mvp;
+
+    return ResultsScreen(
+      winnerTeam: winner.key,
+      winnerScore: winner.value,
+      runnerUpTeam: runnerUp.key,
+      runnerUpScore: runnerUp.value,
+      mvpName: mvp?.name ?? 'البطل',
+      mvpAvatar: mvp?.avatar ?? 'assets/images/av-ahmed.png',
+      mvpStats: '${mvp?.name ?? "البطل"} — ${mvp?.correctAnswers ?? 0} إجابات صح',
+    );
+  }
 
   @override
   Widget build(BuildContext context) {

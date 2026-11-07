@@ -1,4 +1,5 @@
 import 'package:go_router/go_router.dart';
+import '../models/game_session.dart';
 import '../../features/splash_onboarding/screens/splash_screen.dart';
 import '../../features/splash_onboarding/screens/onboarding_flow_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
@@ -80,6 +81,15 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/players',
       builder: (context, state) {
+        if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          return PlayersScreen(
+            targetRoute: data['targetRoute']?.toString() ?? '/game/amthal',
+            gameSlug: data['gameSlug']?.toString() ?? 'amthal-shaabiya',
+            gameTitle: data['gameTitle']?.toString() ?? 'أمثال شعبية',
+            totalRounds: data['totalRounds'] as int? ?? 10,
+          );
+        }
         final target = state.extra as String? ?? '/game/amthal';
         return PlayersScreen(targetRoute: target);
       },
@@ -87,17 +97,44 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/handoff',
       builder: (context, state) {
+        if (state.extra is GameSession) {
+          final session = state.extra as GameSession;
+          return HandoffScreen(
+            playerName: session.activePlayer.name,
+            teamName: session.activePlayer.teamName,
+            playerAvatar: session.activePlayer.avatar,
+            round: session.currentRoundNumber,
+            totalRounds: session.totalRounds,
+            targetRoute: session.gameRoute,
+          );
+        } else if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          return HandoffScreen(
+            playerName: data['playerName']?.toString() ?? 'اللاعب التالي',
+            teamName: data['teamName']?.toString() ?? 'فريق الأبطال',
+            playerAvatar: data['playerAvatar']?.toString() ?? 'assets/images/av-ahmed.png',
+            round: data['round'] as int? ?? 1,
+            totalRounds: data['totalRounds'] as int? ?? 10,
+            targetRoute: data['targetRoute']?.toString() ?? '/game/amthal',
+          );
+        }
         final target = state.extra as String? ?? '/game/amthal';
         return HandoffScreen(targetRoute: target);
       },
     ),
     GoRoute(
       path: '/game/amthal',
-      builder: (context, state) => const AmthalGameScreen(),
+      builder: (context, state) {
+        final session = state.extra as GameSession?;
+        return AmthalGameScreen(session: session);
+      },
     ),
     GoRoute(
       path: '/game/quotes',
-      builder: (context, state) => const MovieQuotesGameScreen(),
+      builder: (context, state) {
+        final session = state.extra as GameSession?;
+        return MovieQuotesGameScreen(session: session);
+      },
     ),
     GoRoute(
       path: '/game/taboo',
@@ -123,7 +160,23 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/results',
-      builder: (context, state) => const ResultsScreen(),
+      builder: (context, state) {
+        if (state.extra is GameSession) {
+          return ResultsScreen.fromSession(state.extra as GameSession);
+        } else if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          return ResultsScreen(
+            winnerTeam: data['winnerTeam']?.toString() ?? 'فريق البنفسج',
+            winnerScore: data['winnerScore'] as int? ?? 24,
+            runnerUpTeam: data['runnerUpTeam']?.toString() ?? 'فريق البرتقان',
+            runnerUpScore: data['runnerUpScore'] as int? ?? 19,
+            mvpName: data['mvpName']?.toString() ?? 'سارة',
+            mvpAvatar: data['mvpAvatar']?.toString() ?? 'assets/images/av-sara.png',
+            mvpStats: data['mvpStats']?.toString() ?? 'أعلى نقاط',
+          );
+        }
+        return const ResultsScreen();
+      },
     ),
     GoRoute(
       path: '/online-room',

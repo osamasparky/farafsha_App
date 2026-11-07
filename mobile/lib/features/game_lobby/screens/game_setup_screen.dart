@@ -199,7 +199,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             GameButton(
               text: 'ابدأ اللعبة',
               onPressed: () {
-                context.push('/players', extra: '/game/${widget.gameId == 'famous-quotes' ? 'quotes' : 'amthal'}');
+                context.push('/players', extra: {
+                  'targetRoute': '/game/${widget.gameId == 'famous-quotes' ? 'quotes' : 'amthal'}',
+                  'gameSlug': widget.gameId,
+                  'gameTitle': _game?['name'] ?? (widget.gameId == 'famous-quotes' ? 'جمل مشهورة' : 'أمثال شعبية'),
+                  'totalRounds': _roundsCount,
+                  'playersCount': _playersCount,
+                  'difficulty': _difficulty,
+                });
               },
             ),
             const SizedBox(height: 8),

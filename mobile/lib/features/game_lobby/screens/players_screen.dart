@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/models/game_session.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
@@ -20,7 +22,17 @@ class TeamModel {
 
 class PlayersScreen extends StatefulWidget {
   final String targetRoute;
-  const PlayersScreen({super.key, this.targetRoute = '/game/amthal'});
+  final String gameSlug;
+  final String gameTitle;
+  final int totalRounds;
+
+  const PlayersScreen({
+    super.key,
+    this.targetRoute = '/game/amthal',
+    this.gameSlug = 'amthal-shaabiya',
+    this.gameTitle = 'أمثال شعبية',
+    this.totalRounds = 10,
+  });
 
   @override
   State<PlayersScreen> createState() => _PlayersScreenState();
@@ -389,9 +401,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
               GameButton(
                 text: 'ابدأ اللعبة 🚀',
                 onPressed: _totalPlayersCount >= 2
-                    ? () {
-                        context.push(widget.targetRoute);
-                      }
+                    ? _startGame
                     : () {
                         ScaffoldMessenger.of(context).showSnackBar(
                           const SnackBar(
@@ -407,6 +417,87 @@ class _PlayersScreenState extends State<PlayersScreen> {
         ),
       ),
     );
+  }
+
+  void _startGame() async {
+    // 1. جمع اللاعبين الفعليين
+    final List<GamePlayer> gamePlayers = [];
+    final avatarPool = [
+      'assets/images/av-ahmed.png',
+      'assets/images/av-sara.png',
+      'assets/images/av-mahmoud.png',
+      'assets/images/av-karim.png',
+      'assets/images/av-mena.png',
+    ];
+
+    int avatarIndex = 0;
+
+    if (_isTeamsMode) {
+      for (final team in _teams) {
+        for (final pName in team.players) {
+          gamePlayers.add(
+            GamePlayer(
+              id: UniqueKey().toString(),
+              name: pName,
+              teamName: team.name,
+              avatar: avatarPool[avatarIndex % avatarPool.length],
+              teamColor: team.color,
+            ),
+          );
+          avatarIndex++;
+        }
+      }
+    } else {
+      for (final pName in _soloPlayers) {
+        gamePlayers.add(
+          GamePlayer(
+            id: UniqueKey().toString(),
+            name: pName,
+            teamName: 'المتنافسين',
+            avatar: avatarPool[avatarIndex % avatarPool.length],
+            teamColor: const Color(0xFFA35BFF),
+          ),
+        );
+        avatarIndex++;
+      }
+    }
+
+    if (gamePlayers.length < 2) {
+      gamePlayers.addAll([
+        GamePlayer(
+          id: '1',
+          name: 'أحمد',
+          teamName: 'فريق البنفسج',
+          avatar: 'assets/images/av-ahmed.png',
+          teamColor: const Color(0xFFA35BFF),
+        ),
+        GamePlayer(
+          id: '2',
+          name: 'سارة',
+          teamName: 'فريق البرتقان',
+          avatar: 'assets/images/av-sara.png',
+          teamColor: const Color(0xFFFF8A4C),
+        ),
+      ]);
+    }
+
+    // 2. جلب الأسئلة الفعلية
+    final cardsRaw = await ApiService.instance.getGameCards(widget.gameSlug);
+    final questions = cardsRaw.map((c) => GameQuestion.fromMap(c)).toList();
+
+    // 3. بناء جلسة اللعبة
+    final session = GameSession(
+      gameSlug: widget.gameSlug,
+      gameTitle: widget.gameTitle,
+      gameRoute: widget.targetRoute,
+      totalRounds: widget.totalRounds,
+      players: gamePlayers,
+      questions: questions,
+      currentRoundIndex: 0,
+    );
+
+    if (!mounted) return;
+    context.push(widget.targetRoute, extra: session);
   }
 
   Widget _buildTeamsList() {
