@@ -15,7 +15,7 @@ class HandoffScreen extends StatelessWidget {
     super.key,
     this.playerName = 'منة',
     this.playerAvatar = 'assets/images/av-mena.png',
-    this.teamName = 'فريق البرتقان',
+    this.teamName = 'قفوش',
     this.round = 3,
     this.totalRounds = 10,
     this.targetRoute = '/game/amthal',

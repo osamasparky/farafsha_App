@@ -187,9 +187,9 @@ final appRouter = GoRouter(
         } else if (state.extra is Map<String, dynamic>) {
           final data = state.extra as Map<String, dynamic>;
           return ResultsScreen(
-            winnerTeam: data['winnerTeam']?.toString() ?? 'فريق البنفسج',
+            winnerTeam: data['winnerTeam']?.toString() ?? 'فرفوش',
             winnerScore: data['winnerScore'] as int? ?? 24,
-            runnerUpTeam: data['runnerUpTeam']?.toString() ?? 'فريق البرتقان',
+            runnerUpTeam: data['runnerUpTeam']?.toString() ?? 'قفوش',
             runnerUpScore: data['runnerUpScore'] as int? ?? 19,
             mvpName: data['mvpName']?.toString() ?? 'سارة',
             mvpAvatar: data['mvpAvatar']?.toString() ?? 'assets/images/av-sara.png',

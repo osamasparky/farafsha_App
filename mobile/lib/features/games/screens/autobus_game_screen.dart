@@ -72,8 +72,8 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
 
   // فرق وافتراضيات اللعب الجماعي إن لم توجد جلسة
   final List<Map<String, dynamic>> _teams = [
-    {'name': 'فريق البنفسج', 'score': 0, 'color': const Color(0xFFA35BFF)},
-    {'name': 'فريق البرتقان', 'score': 0, 'color': const Color(0xFFFF8A4C)},
+    {'name': 'فرفوش', 'score': 0, 'color': const Color(0xFFA35BFF)},
+    {'name': 'قفوش', 'score': 0, 'color': const Color(0xFFFF8A4C)},
   ];
 
   @override
@@ -159,10 +159,10 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
     _stopTimer?.cancel();
 
     int vScore = _session != null
-        ? (_session!.teamScores['فريق البنفسج'] ?? 0)
+        ? (_session!.teamScores['فرفوش'] ?? _session!.teamScores['فريق البنفسج'] ?? 0)
         : (_teams[0]['score'] as int);
     int oScore = _session != null
-        ? (_session!.teamScores['فريق البرتقان'] ?? 0)
+        ? (_session!.teamScores['قفوش'] ?? _session!.teamScores['فريق البرتقان'] ?? 0)
         : (_teams[1]['score'] as int);
 
     PauseDialog.show(

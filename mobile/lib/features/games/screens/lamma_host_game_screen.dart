@@ -46,8 +46,8 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
     _teams = widget.initialTeams.isNotEmpty
         ? widget.initialTeams.map((t) => Map<String, dynamic>.from(t)).toList()
         : [
-            {'name': 'فريق البنفسج', 'score': 0, 'color': const Color(0xFFA35BFF)},
-            {'name': 'فريق البرتقان', 'score': 0, 'color': const Color(0xFFFF8A4C)},
+            {'name': 'فرفوش', 'score': 0, 'color': const Color(0xFFA35BFF)},
+            {'name': 'قفوش', 'score': 0, 'color': const Color(0xFFFF8A4C)},
           ];
     _loadQuestions();
   }

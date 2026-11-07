@@ -17,9 +17,9 @@ class ResultsScreen extends StatelessWidget {
   const ResultsScreen({
     super.key,
     this.session,
-    this.winnerTeam = 'فريق البنفسج',
+    this.winnerTeam = 'فرفوش',
     this.winnerScore = 24,
-    this.runnerUpTeam = 'فريق البرتقان',
+    this.runnerUpTeam = 'قفوش',
     this.runnerUpScore = 19,
     this.mvpName = 'سارة',
     this.mvpAvatar = 'assets/images/av-sara.png',

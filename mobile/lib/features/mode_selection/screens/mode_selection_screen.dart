@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/game_button.dart';
@@ -266,9 +267,67 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
   final TextEditingController _teamNameController = TextEditingController();
 
   final List<Map<String, dynamic>> _teams = [
-    {'name': 'فريق البنفسج', 'score': 0, 'color': const Color(0xFFA35BFF)},
-    {'name': 'فريق البرتقان', 'score': 0, 'color': const Color(0xFFFF8A4C)},
+    {'name': 'فرفوش', 'score': 0, 'color': const Color(0xFFA35BFF)},
+    {'name': 'قفوش', 'score': 0, 'color': const Color(0xFFFF8A4C)},
   ];
+
+  bool _isLoadingGames = true;
+  List<Map<String, dynamic>> _availableGames = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGames();
+  }
+
+  Future<void> _loadGames() async {
+    try {
+      final games = await ApiService.instance.getGames();
+      if (mounted) {
+        setState(() {
+          _availableGames = games.where((g) => g['is_active'] != false).toList();
+          _isLoadingGames = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _isLoadingGames = false);
+    }
+  }
+
+  List<Map<String, dynamic>> get _displayGames {
+    if (_availableGames.isNotEmpty) return _availableGames;
+    return const [
+      {'name': 'أمثال شعبية', 'slug': 'amthal-shaabiya', 'category': 'أمثال'},
+      {'name': 'جمل مشهورة', 'slug': 'famous-quotes', 'category': 'إفيهات'},
+      {'name': 'سؤال على السريع', 'slug': 'speed-trivia', 'category': 'معلومات عامة'},
+      {'name': 'مين أنا؟', 'slug': 'who-am-i', 'category': 'تخمين'},
+      {'name': 'ممنوع تقول', 'slug': 'forbidden-words', 'category': 'ذكاء وسرعة'},
+      {'name': 'حقيقتان وكذبة', 'slug': 'two-truths-and-lie', 'category': 'تواصل وضحك'},
+      {'name': 'أتوبيس كومبليت', 'slug': 'autobus-complete', 'category': 'ذكاء وسرعة'},
+    ];
+  }
+
+  IconData _getGameIcon(String slug) {
+    switch (slug) {
+      case 'amthal-shaabiya':
+        return Icons.format_quote_rounded;
+      case 'famous-quotes':
+        return Icons.movie_filter_rounded;
+      case 'who-am-i':
+        return Icons.help_outline_rounded;
+      case 'forbidden-words':
+      case 'taboo':
+        return Icons.block_rounded;
+      case 'two-truths-and-lie':
+        return Icons.psychology_rounded;
+      case 'speed-trivia':
+        return Icons.bolt_rounded;
+      case 'autobus-complete':
+        return Icons.directions_bus_rounded;
+      default:
+        return Icons.sports_esports_rounded;
+    }
+  }
 
   final List<Color> _presetColors = const [
     Color(0xFFA35BFF),
@@ -473,21 +532,112 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
               const SizedBox(height: 18),
             ],
 
-            // اختيار اللعبة للعبها
-            Text(
-              'اختر نوع الأسئلة:',
-              style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
-            ),
-            const SizedBox(height: 8),
-
+            // اختيار اللعبة للعبها (محدثة ديناميكياً من الـ API)
             Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _buildGameOption('أمثال شعبية', 'amthal-shaabiya', Icons.format_quote_rounded),
-                const SizedBox(width: 8),
-                _buildGameOption('جمل مشهورة', 'famous-quotes', Icons.movie_filter_rounded),
-                const SizedBox(width: 8),
-                _buildGameOption('معلومات عامة', 'speed-trivia', Icons.bolt_rounded),
+                Text(
+                  'اختر نوع الأسئلة واللعبة:',
+                  style: GoogleFonts.cairo(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                ),
+                if (_isLoadingGames)
+                  const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2, color: LammaColors.gold500),
+                  ),
               ],
+            ),
+            const SizedBox(height: 10),
+
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: _displayGames.map((game) {
+                final slug = game['slug']?.toString() ?? '';
+                final name = game['name']?.toString() ?? slug;
+                final category = game['category']?.toString();
+                final isSelected = _selectedGameSlug == slug;
+                final icon = _getGameIcon(slug);
+
+                return SizedBox(
+                  width: (MediaQuery.of(context).size.width - 56) / 2,
+                  child: GestureDetector(
+                    onTap: () => setState(() => _selectedGameSlug = slug),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 180),
+                      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: isSelected ? const Color(0xFF451A8A) : Colors.white.withValues(alpha: 0.05),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: isSelected ? LammaColors.gold500 : Colors.white24,
+                          width: isSelected ? 2 : 1,
+                        ),
+                        boxShadow: isSelected
+                            ? [
+                                BoxShadow(
+                                  color: LammaColors.gold500.withValues(alpha: 0.35),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 2),
+                                ),
+                              ]
+                            : null,
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? LammaColors.gold500.withValues(alpha: 0.25)
+                                  : Colors.white.withValues(alpha: 0.08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              icon,
+                              color: isSelected ? LammaColors.gold500 : const Color(0xFFD9C2FF),
+                              size: 18,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                if (category != null)
+                                  Text(
+                                    category,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w600,
+                                      color: isSelected ? LammaColors.gold300 : const Color(0xFFA99BC8),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                          if (isSelected)
+                            const Icon(Icons.check_circle_rounded, color: LammaColors.gold500, size: 16),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }).toList(),
             ),
 
             const SizedBox(height: 24),
@@ -556,41 +706,6 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGameOption(String name, String slug, IconData icon) {
-    final bool isSelected = _selectedGameSlug == slug;
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedGameSlug = slug),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 6),
-          decoration: BoxDecoration(
-            color: isSelected ? LammaColors.violet700 : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: isSelected ? Colors.white : Colors.white24,
-              width: isSelected ? 1.5 : 1,
-            ),
-          ),
-          child: Column(
-            children: [
-              Icon(icon, color: isSelected ? Colors.white : const Color(0xFFD9C2FF), size: 20),
-              const SizedBox(height: 4),
-              Text(
-                name,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.cairo(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
-                ),
-              ),
-            ],
-          ),
         ),
       ),
     );

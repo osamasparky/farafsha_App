@@ -168,7 +168,7 @@ class _PauseDialogState extends State<PauseDialog> {
     // 3. القيم الافتراضية
     list.add(
       TeamScoreDisplay(
-        name: 'فريق البنفسج',
+        name: 'فرفوش',
         score: widget.violetScore,
         color: const Color(0xFFEADFFF),
         borderColor: const Color(0xFFB98AFF).withValues(alpha: 0.6),
@@ -177,7 +177,7 @@ class _PauseDialogState extends State<PauseDialog> {
     );
     list.add(
       TeamScoreDisplay(
-        name: 'فريق البرتقان',
+        name: 'قفوش',
         score: widget.orangeScore,
         color: const Color(0xFFFFE3D2),
         borderColor: const Color(0xFFFF9E6A).withValues(alpha: 0.6),

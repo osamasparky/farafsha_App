@@ -103,12 +103,12 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
     _teams = [
       TeamModel(
-        name: 'فريق البنفسج',
+        name: 'فرفوش',
         color: _presetColors[0],
         players: team1Players,
       ),
       TeamModel(
-        name: 'فريق البرتقان',
+        name: 'قفوش',
         color: _presetColors[1],
         players: team2Players,
       ),
@@ -541,14 +541,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
         GamePlayer(
           id: '1',
           name: 'ياسين',
-          teamName: 'فريق البنفسج',
+          teamName: 'فرفوش',
           avatar: 'assets/images/av-ahmed.png',
           teamColor: const Color(0xFFA35BFF),
         ),
         GamePlayer(
           id: '2',
           name: 'رانيا',
-          teamName: 'فريق البرتقان',
+          teamName: 'قفوش',
           avatar: 'assets/images/av-sara.png',
           teamColor: const Color(0xFFFF8A4C),
         ),
