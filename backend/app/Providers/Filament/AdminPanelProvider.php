@@ -27,7 +27,10 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login()
-            ->brandName('تطبيق لمّة | إدارة المحتوى والألعاب')
+            ->brandName('منصة فرفشة | إدارة المحتوى والألعاب')
+            ->brandLogo(fn () => asset('assets/app_icon.png'))
+            ->brandLogoHeight('2.4rem')
+            ->favicon(fn () => asset('assets/app_icon.png'))
             ->colors([
                 'primary' => Color::hex('#8138E8'),
                 'warning' => Color::hex('#FF9850'),

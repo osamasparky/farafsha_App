@@ -9,3 +9,4 @@ class CreateBadge extends CreateRecord
 {
     protected static string $resource = BadgeResource::class;
 }
+

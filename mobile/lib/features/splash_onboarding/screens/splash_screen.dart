@@ -19,30 +19,30 @@ class SplashScreen extends StatelessWidget {
             children: [
               const SizedBox(height: 10),
 
-              // شعار لمّة مع التاج
+              // شعار فرفشة 3D
               Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    width: 120,
+                    height: 120,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.brandViolet.withValues(alpha: 0.35),
+                          color: AppColors.brandViolet.withValues(alpha: 0.5),
                           blurRadius: 40,
-                          spreadRadius: 10,
+                          spreadRadius: 8,
                         ),
                       ],
                     ),
-                    child: const Icon(
-                      Icons.emoji_events_rounded,
-                      size: 64,
-                      color: Color(0xFFFFD700),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(999),
+                      child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
-                    'لمّة',
+                    'فرفشة',
                     style: AppTypography.heading1.copyWith(
                       fontSize: 48,
                       fontWeight: FontWeight.w900,
@@ -51,7 +51,7 @@ class SplashScreen extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    'لعبة الجماعة',
+                    'لعبة القعدة والفرفشة 🎉',
                     style: AppTypography.heading2.copyWith(
                       color: AppColors.accentPink,
                       fontWeight: FontWeight.w800,

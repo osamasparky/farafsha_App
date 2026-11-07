@@ -157,7 +157,7 @@ class ApiService {
     return [];
   }
 
-  /// جلب اللهجات المتاحة من السيرفر
+  /// جلب اللهجات المتاحة من السيرفر (فقط إذا كانت مفعلة في لوحة التحكم)
   Future<List<Map<String, dynamic>>> getDialects() async {
     try {
       final res = await http.get(Uri.parse('$baseUrl/dialects'), headers: _headers).timeout(const Duration(seconds: 4));
@@ -170,12 +170,7 @@ class ApiService {
     } catch (e) {
       debugPrint('⚠️ Fetching dialects failed: $e');
     }
-    return [
-      {'name': 'لهجة مصرية', 'code': 'egyptian', 'icon': '🇪🇬'},
-      {'name': 'لهجة خليجية', 'code': 'gulf', 'icon': '🇸🇦'},
-      {'name': 'لهجة شامية', 'code': 'levantine', 'icon': '🇱🇧'},
-      {'name': 'لهجة مغاربية', 'code': 'maghrebi', 'icon': '🇲🇦'},
-    ];
+    return [];
   }
 
   /// جلب لوحة الترتيب والمتصدرين حسب الفترة (weekly, monthly, all_time)
@@ -335,9 +330,10 @@ class ApiService {
   }
 
   /// جلب بيانات البروفايل الكاملة وحساب المستوى تلقائياً
-  Future<Map<String, dynamic>?> getProfile() async {
+  Future<Map<String, dynamic>?> getProfile({bool isGuest = false}) async {
     try {
-      final res = await http.get(Uri.parse('$baseUrl/profile'), headers: _headers).timeout(const Duration(seconds: 4));
+      final url = isGuest ? '$baseUrl/profile?guest=true' : '$baseUrl/profile';
+      final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is Map && data['data'] is Map) {
@@ -346,6 +342,110 @@ class ApiService {
       }
     } catch (e) {
       debugPrint('⚠️ Fetching profile failed: $e');
+    }
+    return null;
+  }
+
+  /// جلب مزودي تسجيل الدخول والتواصل الاجتماعي المفعلين من لوحة التحكم
+  Future<List<Map<String, dynamic>>> getSocialProviders() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/auth/social-providers'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching social providers failed: $e');
+    }
+    return [
+      {'provider': 'google', 'name': 'تسجيل الدخول بحساب Google', 'is_enabled': true, 'icon': 'google'},
+      {'provider': 'apple', 'name': 'تسجيل الدخول بحساب Apple', 'is_enabled': true, 'icon': 'apple'},
+    ];
+  }
+
+  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
+  Future<Map<String, dynamic>?> socialLogin({
+    required String provider,
+    String? email,
+    String? name,
+    String? avatar,
+    String? providerId,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/social-login'),
+            headers: _headers,
+            body: jsonEncode({
+              'provider': provider,
+              if (email != null) 'email': email,
+              if (name != null) 'name': name,
+              if (avatar != null) 'avatar': avatar,
+              if (providerId != null) 'provider_id': providerId,
+            }),
+          )
+          .timeout(const Duration(seconds: 6));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (e) {
+      debugPrint('⚠️ Social login error: $e');
+    }
+    return null;
+  }
+
+  /// تسجيل الدخول المباشر بالبريد الإلكتروني
+  Future<Map<String, dynamic>?> loginByEmail(String email, {String? name}) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/login-by-email'),
+            headers: _headers,
+            body: jsonEncode({
+              'email': email,
+              if (name != null) 'name': name,
+            }),
+          )
+          .timeout(const Duration(seconds: 6));
+      if (res.statusCode == 200) {
+        return jsonDecode(res.body);
+      }
+    } catch (e) {
+      debugPrint('⚠️ Login by email error: $e');
+    }
+    return null;
+  }
+
+  /// تحديث بيانات البروفايل (الاسم، الأفاتار، الهاتف، البريد)
+  Future<Map<String, dynamic>?> updateProfile({
+    String? name,
+    String? avatar,
+    String? phone,
+    String? email,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/profile/update'),
+            headers: _headers,
+            body: jsonEncode({
+              if (name != null) 'name': name,
+              if (avatar != null) 'avatar': avatar,
+              if (phone != null) 'phone': phone,
+              if (email != null) 'email': email,
+            }),
+          )
+          .timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Updating profile failed: $e');
     }
     return null;
   }

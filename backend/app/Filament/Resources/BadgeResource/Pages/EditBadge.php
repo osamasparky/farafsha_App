@@ -17,3 +17,4 @@ class EditBadge extends EditRecord
         ];
     }
 }
+

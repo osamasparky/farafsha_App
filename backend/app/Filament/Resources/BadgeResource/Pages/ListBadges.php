@@ -17,3 +17,4 @@ class ListBadges extends ListRecords
         ];
     }
 }
+

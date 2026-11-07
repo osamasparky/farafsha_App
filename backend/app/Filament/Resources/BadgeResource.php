@@ -80,7 +80,9 @@ class BadgeResource extends Resource
 
                         Forms\Components\FileUpload::make('image')
                             ->label('صورة مخصصة للوسام (اختياري)')
+                            ->disk('public')
                             ->directory('badges')
+                            ->visibility('public')
                             ->image()
                             ->imageEditor()
                             ->helperText('إذا تم رفع صورة ستظهر بدلاً من الأيقونة الافتراضية'),
@@ -148,3 +150,4 @@ class BadgeResource extends Resource
         ];
     }
 }
+

@@ -71,7 +71,9 @@ class SitePageResource extends Resource
                                         Forms\Components\FileUpload::make('og_image')
                                             ->label('صورة المشاركة بشبكات التواصل (OG Image)')
                                             ->image()
+                                            ->disk('public')
                                             ->directory('pages-og')
+                                            ->visibility('public')
                                             ->columnSpanFull(),
                                     ]),
                             ]),

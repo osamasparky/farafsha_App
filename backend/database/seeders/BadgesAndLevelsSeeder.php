@@ -109,3 +109,4 @@ class BadgesAndLevelsSeeder extends Seeder
         }
     }
 }
+

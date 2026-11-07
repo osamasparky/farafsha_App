@@ -12,6 +12,34 @@ class Game extends Model
 {
     use HasFactory, LogsActivity;
 
+    /**
+     * قائمة الأيقونات المعتمدة لقوالب وألعاب فرفشة في تطبيق الهاتف والويب
+     */
+    public const AVAILABLE_ICONS = [
+        'format_quote_rounded' => 'أمثال واقتباسات (format_quote_rounded) 💬',
+        'movie_filter_rounded' => 'إفيهات وأفلام وسينما (movie_filter_rounded) 🎬',
+        'psychology_rounded' => 'مين أنا وتخمين شخصيات (psychology_rounded) 🧠',
+        'block_rounded' => 'ممنوع تقول / تابو (block_rounded) 🚫',
+        'casino_rounded' => 'حقيقتان وكذبة / نرد الحظ (casino_rounded) 🎲',
+        'bolt_rounded' => 'سؤال على السريع / سرعة وبديهة (bolt_rounded) ⚡',
+        'theater_comedy_rounded' => 'تمثيل ومقالب وكوميديا (theater_comedy_rounded) 🎭',
+        'lightbulb_rounded' => 'ألغاز وفوازير وأفكار (lightbulb_rounded) 💡',
+        'music_note_rounded' => 'نغمات وأغاني وتحديات صوتية (music_note_rounded) 🎵',
+        'brush_rounded' => 'رسم وتخمين وشخابيط (brush_rounded) 🎨',
+        'emoji_events_rounded' => 'كؤوس وبطولات ومنافسات (emoji_events_rounded) 🏆',
+        'sports_esports_rounded' => 'ألعاب عامة وتحكم (sports_esports_rounded) 🎮',
+        'groups_rounded' => 'لمّة وتحديات جماعية (groups_rounded) 👥',
+        'timer_rounded' => 'تحدي الثواني والسرعة (timer_rounded) ⏱️',
+        'celebration_rounded' => 'حفلات ومرح (celebration_rounded) 🎉',
+        'star_rounded' => 'لعبة مميزة / نجوم (star_rounded) ⭐',
+        'local_fire_department_rounded' => 'تحديات نارية ساخنة (local_fire_department_rounded) 🔥',
+    ];
+
+    public static function getAvailableIcons(): array
+    {
+        return self::AVAILABLE_ICONS;
+    }
+
     protected $fillable = [
         'name',
         'slug',

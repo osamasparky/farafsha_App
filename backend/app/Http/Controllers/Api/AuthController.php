@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -120,6 +121,102 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث بياناتك بنجاح',
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * جلب قائمة مزودي تسجيل الدخول والتواصل المعروضين في التطبيق
+     */
+    public function getSocialProviders(): JsonResponse
+    {
+        $providers = SocialProvider::orderBy('sort_order', 'asc')->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $providers->map(function ($p) {
+                return [
+                    'id' => $p->id,
+                    'provider' => $p->provider,
+                    'name' => $p->name,
+                    'is_enabled' => (bool) $p->is_enabled,
+                    'client_id' => $p->client_id,
+                    'icon' => $p->icon,
+                ];
+            }),
+        ]);
+    }
+
+    /**
+     * تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
+     */
+    public function socialLogin(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'provider' => 'required|string|in:google,apple,facebook',
+            'provider_id' => 'nullable|string',
+            'email' => 'nullable|email',
+            'name' => 'nullable|string|max:100',
+            'avatar' => 'nullable|string',
+        ]);
+
+        $provider = SocialProvider::where('provider', $validated['provider'])->first();
+        if ($provider && !$provider->is_enabled) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تسجيل الدخول عبر ' . $provider->name . ' غير مفعل حالياً من لوحة التحكم.',
+            ], 403);
+        }
+
+        $email = $validated['email'] ?? ($validated['provider'] . '_' . ($validated['provider_id'] ?? Str::random(8)) . '@social.farfasha.app');
+        $user = User::firstOrCreate(
+            ['email' => $email],
+            [
+                'name' => $validated['name'] ?? ('مستخدم ' . ucfirst($validated['provider'])),
+                'avatar' => $validated['avatar'] ?? 'assets/images/av-ahmed.png',
+                'password' => Hash::make(Str::random(24)),
+                'level' => 1,
+                'total_score' => 100,
+            ]
+        );
+
+        $token = $user->createToken('social_user_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تسجيل الدخول بنجاح عبر ' . ucfirst($validated['provider']),
+            'token' => $token,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * تسجيل الدخول المباشر بالبريد الإلكتروني
+     */
+    public function loginByEmail(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'email' => 'required|email',
+            'name' => 'nullable|string|max:100',
+        ]);
+
+        $user = User::firstOrCreate(
+            ['email' => $validated['email']],
+            [
+                'name' => $validated['name'] ?? explode('@', $validated['email'])[0],
+                'avatar' => 'assets/images/av-ahmed.png',
+                'password' => Hash::make(Str::random(16)),
+                'level' => 1,
+                'total_score' => 100,
+            ]
+        );
+
+        $token = $user->createToken('email_user_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تسجيل الدخول بنجاح',
+            'token' => $token,
             'user' => $user,
         ]);
     }

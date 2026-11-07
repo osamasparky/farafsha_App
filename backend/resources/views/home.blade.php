@@ -5,20 +5,20 @@
 
 @section('structured_data')
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "MobileApplication",
-  "name": "فرفشة (Farfasha)",
-  "operatingSystem": "iOS, Android",
-  "applicationCategory": "GameApplication",
-  "offers": {
-    "@type": "Offer",
-    "price": "0",
-    "priceCurrency": "USD"
-  },
-  "description": "منصة الألعاب الجماعية العربية الأولى للمات الأهل والأصدقاء على جهاز واحد أو أونلاين.",
-  "inLanguage": ["ar", "en"]
-}
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'MobileApplication',
+    'name' => 'فرفشة (Farfasha)',
+    'operatingSystem' => 'iOS, Android',
+    'applicationCategory' => 'GameApplication',
+    'offers' => [
+        '@type' => 'Offer',
+        'price' => '0',
+        'priceCurrency' => 'USD',
+    ],
+    'description' => 'منصة الألعاب الجماعية العربية الأولى للمات الأهل والأصدقاء على جهاز واحد أو أونلاين.',
+    'inLanguage' => ['ar', 'en'],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
 </script>
 @endsection
 
@@ -36,8 +36,8 @@
             <div class="lg:col-span-7 text-center lg:text-start space-y-6">
                 
                 {{-- شارة أعلى العنوان --}}
-                <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/5 border border-[#A35BFF]/40 text-purple-200 text-xs md:text-sm font-bold backdrop-blur-md shadow-sm">
-                    <span class="text-base">🎮</span>
+                <div class="inline-flex items-center gap-2.5 px-3.5 py-1 rounded-full bg-white/5 border border-[#A35BFF]/40 text-purple-200 text-xs md:text-sm font-bold backdrop-blur-md shadow-sm">
+                    <img src="{{ asset('assets/app_icon.png') }}" alt="أيقونة فرفشة" class="w-5 h-5 rounded-md object-cover">
                     <span>المنصة العربية الأولى لألعاب اللمّة والتحدي</span>
                 </div>
 

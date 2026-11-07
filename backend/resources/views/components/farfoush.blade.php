@@ -85,3 +85,4 @@
         <div class="absolute inset-0 bg-[#F2569A]/20 blur-xl rounded-full -z-10 group-hover:bg-[#FF8A4C]/30 transition-all"></div>
     </div>
 </div>
+

@@ -33,7 +33,9 @@ class BannerResource extends Resource
 
                         Forms\Components\FileUpload::make('image')
                             ->label('صورة البنر')
+                            ->disk('public')
                             ->directory('banners')
+                            ->visibility('public')
                             ->image()
                             ->imageEditor()
                             ->required(),

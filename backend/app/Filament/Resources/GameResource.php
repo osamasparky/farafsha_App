@@ -157,14 +157,19 @@ class GameResource extends Resource
                                 Forms\Components\FileUpload::make('cover_image')
                                     ->label('صورة كارت اللعبة (Cover Image)')
                                     ->image()
+                                    ->disk('public')
                                     ->directory('games')
                                     ->visibility('public')
                                     ->imageEditor()
                                     ->columnSpanFull(),
 
-                                Forms\Components\TextInput::make('icon')
-                                    ->label('الأيقونة أو رمز الأيقونة')
-                                    ->placeholder('format_quote_rounded, block_rounded, psychology_rounded'),
+                                Forms\Components\Select::make('icon')
+                                    ->label('رمز الأيقونة (Material Icon)')
+                                    ->options(Game::getAvailableIcons())
+                                    ->searchable()
+                                    ->preload()
+                                    ->placeholder('اختر رمز الأيقونة المعتمد للعبة...')
+                                    ->helperText('الرمز البرمجي للأيقونة المتوافق مع شاشات تطبيق الهاتف والويب'),
 
                                 Forms\Components\TextInput::make('trailer_video_url')
                                     ->label('رابط فيديو توضيحي (YouTube / Vimeo / MP4)')
@@ -206,17 +211,38 @@ class GameResource extends Resource
                                     ]),
                             ]),
 
-                        Forms\Components\Tabs\Tab::make('الأسئلة الشائعة والـ SEO')
+                        Forms\Components\Tabs\Tab::make('الأسئلة الشائعة')
+                            ->icon('heroicon-o-question-mark-circle')
+                            ->schema([
+                                Forms\Components\Placeholder::make('faqs_notice')
+                                    ->label('التحكم في قسم الأسئلة الشائعة')
+                                    ->content('إذا كانت هذه القائمة فارغة، فلن يظهر قسم الأسئلة الشائعة نهائياً في صفحة اللعبة. يمكنك إضافة أي عدد من الأسئلة أو تعديلها أو حذفها بالكامل في أي وقت.')
+                                    ->columnSpanFull(),
+
+                                Forms\Components\Repeater::make('faqs')
+                                    ->label('الأسئلة الشائعة الخاصة بهذه اللعبة')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('question')
+                                            ->label('السؤال')
+                                            ->placeholder('مثال: هل تحتاج اللعبة إلى إنترنت؟')
+                                            ->required(),
+                                        Forms\Components\Textarea::make('answer')
+                                            ->label('الإجابة')
+                                            ->placeholder('اكتب إجابة السؤال...')
+                                            ->rows(2)
+                                            ->required(),
+                                    ])
+                                    ->itemLabel(fn (array $state): ?string => $state['question'] ?? 'سؤال جديد')
+                                    ->collapsible()
+                                    ->collapsed(false)
+                                    ->addActionLabel('إضافة سؤال شائع جديد')
+                                    ->reorderable()
+                                    ->columnSpanFull(),
+                            ]),
+
+                        Forms\Components\Tabs\Tab::make('محركات البحث (SEO)')
                             ->icon('heroicon-o-magnifying-glass')
                             ->schema([
-                                Forms\Components\Repeater::make('faqs')
-                                    ->label('الأسئلة الشائعة الخاصة باللعبة')
-                                    ->schema([
-                                        Forms\Components\TextInput::make('question')->label('السؤال')->required(),
-                                        Forms\Components\Textarea::make('answer')->label('الإجابة')->required(),
-                                    ])
-                                    ->collapsible(),
-
                                 Forms\Components\TextInput::make('seo_title')
                                     ->label('عنوان الـ SEO (Meta Title)')
                                     ->maxLength(70),
@@ -228,6 +254,7 @@ class GameResource extends Resource
                                 Forms\Components\FileUpload::make('og_image')
                                     ->label('صورة المشاركة بشبكات التواصل (OG Image)')
                                     ->image()
+                                    ->disk('public')
                                     ->directory('seo')
                                     ->visibility('public'),
                             ]),

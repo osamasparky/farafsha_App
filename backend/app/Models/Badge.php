@@ -51,3 +51,4 @@ class Badge extends Model
         return url(Storage::url($this->image));
     }
 }
+

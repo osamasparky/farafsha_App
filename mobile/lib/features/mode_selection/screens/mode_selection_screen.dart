@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/theme/lamma_theme.dart';
+import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
@@ -19,6 +20,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     return LammaScaffold(
+      bottomNavigationBar: const AppBottomNavBar(currentIndex: 1),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 8.0),

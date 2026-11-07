@@ -6,45 +6,51 @@
 
 @section('structured_data')
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "BreadcrumbList",
-  "itemListElement": [{
-    "@type": "ListItem",
-    "position": 1,
-    "name": "الرئيسية",
-    "item": "{{ url('/') }}"
-  },{
-    "@type": "ListItem",
-    "position": 2,
-    "name": "الألعاب",
-    "item": "{{ url('/games') }}"
-  },{
-    "@type": "ListItem",
-    "position": 3,
-    "name": "{{ $game->name }}",
-    "item": "{{ url('/games/' . $game->slug) }}"
-  }]
-}
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'BreadcrumbList',
+    'itemListElement' => [
+        [
+            '@type' => 'ListItem',
+            'position' => 1,
+            'name' => 'الرئيسية',
+            'item' => url('/'),
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 2,
+            'name' => 'الألعاب',
+            'item' => url('/games'),
+        ],
+        [
+            '@type' => 'ListItem',
+            'position' => 3,
+            'name' => $game->name,
+            'item' => url('/games/' . $game->slug),
+        ],
+    ],
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
 </script>
 @if($game->faqs && count($game->faqs) > 0)
+@php
+    $faqItems = [];
+    foreach ($game->faqs as $faq) {
+        $faqItems[] = [
+            '@type' => 'Question',
+            'name' => $faq['question'] ?? '',
+            'acceptedAnswer' => [
+                '@type' => 'Answer',
+                'text' => $faq['answer'] ?? '',
+            ],
+        ];
+    }
+@endphp
 <script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  "mainEntity": [
-    @foreach($game->faqs as $index => $faq)
-    {
-      "@type": "Question",
-      "name": "{{ $faq['question'] }}",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "{{ $faq['answer'] }}"
-      }
-    }{{ $loop->last ? '' : ',' }}
-    @endforeach
-  ]
-}
+{!! json_encode([
+    '@context' => 'https://schema.org',
+    '@type' => 'FAQPage',
+    'mainEntity' => $faqItems,
+], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
 </script>
 @endif
 @endsection

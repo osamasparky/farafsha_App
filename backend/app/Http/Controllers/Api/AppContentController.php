@@ -10,6 +10,8 @@ use App\Models\AppNotification;
 use App\Models\AppPage;
 use App\Models\Badge;
 use App\Models\Level;
+use App\Models\SiteSetting;
+use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -32,10 +34,18 @@ class AppContentController extends Controller
     }
 
     /**
-     * قائمة اللهجات المدعومة
+     * قائمة اللهجات المدعومة (تعتمد على تفعيل الإدارة وحالة النشاط)
      */
     public function dialects(): JsonResponse
     {
+        $dialectsEnabled = (bool) SiteSetting::get('dialects_enabled', false);
+        if (!$dialectsEnabled) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [],
+            ]);
+        }
+
         $dialects = Dialect::where('is_active', true)
             ->orderBy('sort_order', 'asc')
             ->get();
@@ -157,13 +167,82 @@ class AppContentController extends Controller
     }
 
     /**
+     * تحديث بيانات البروفايل (الاسم، الأفاتار، الهاتف، البريد، والصورة المرفوعة)
+     */
+    public function updateProfile(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:100',
+            'avatar' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50',
+            'email' => 'nullable|email|max:150',
+            'photo' => 'nullable|image|max:10240', // يدعم حتى 10 ميجا
+        ]);
+
+        $user = $request->user() ?? User::find(1);
+        if ($user) {
+            if (!empty($validated['name'])) {
+                $user->name = $validated['name'];
+            }
+            if (!empty($validated['avatar'])) {
+                $user->avatar = $validated['avatar'];
+            }
+            if (!empty($validated['phone'])) {
+                $user->phone = $validated['phone'];
+            }
+            if (!empty($validated['email'])) {
+                $user->email = $validated['email'];
+            }
+            if ($request->hasFile('photo')) {
+                $path = $request->file('photo')->store('avatars', 'public');
+                $user->avatar = '/storage/' . $path;
+            }
+            $user->save();
+        }
+
+        return $this->profile($request);
+    }
+
+    /**
      * بيانات البروفايل وحساب المستوى والأوسمة بناءً على نقاط التحكم
      */
     public function profile(Request $request): JsonResponse
     {
-        $userPoints = 4320;
-        $wins = 32;
-        $gamesPlayed = 148;
+        $isGuest = $request->query('guest') === 'true' || $request->query('guest') === '1';
+        if ($isGuest) {
+            return response()->json([
+                'status' => 'success',
+                'data' => [
+                    'name' => 'زائر فرفشة',
+                    'avatar' => 'assets/images/farfasha_logo.png',
+                    'is_guest' => true,
+                    'total_points' => 0,
+                    'wins' => 0,
+                    'games_played' => 0,
+                    'level' => [
+                        'level_number' => 1,
+                        'title' => 'ضيف جديد',
+                        'color' => '#A35BFF',
+                        'icon' => 'person',
+                        'current_points' => 0,
+                        'points_in_level' => 0,
+                        'needed_for_next' => 100,
+                        'next_level_min' => 100,
+                        'progress_percent' => 0.0,
+                    ],
+                    'badges' => [],
+                ],
+            ]);
+        }
+
+        $user = $request->user() ?? User::find(1);
+        $userName = $user?->name ?? 'أسامة صبري';
+        $userAvatar = !empty($user?->avatar) ? $user->avatar : 'assets/images/av-ahmed.png';
+        $userPhone = $user?->phone ?? '01012345678';
+        $userEmail = $user?->email ?? 'osama@farfasha.app';
+        $userPoints = $user?->total_score ?? 4320;
+        $wins = $user?->wins_count ?? 32;
+        $gamesPlayed = $user?->games_played ?? 148;
 
         // حساب المستوى بناءً على جدول المستويات في قاعدة البيانات
         $levels = Level::orderBy('level_number', 'asc')->get();
@@ -190,8 +269,11 @@ class AppContentController extends Controller
         return response()->json([
             'status' => 'success',
             'data' => [
-                'name' => 'أسامة صبري',
-                'avatar' => 'assets/images/av-ahmed.png',
+                'name' => $userName,
+                'avatar' => $userAvatar,
+                'email' => $userEmail,
+                'phone' => $userPhone,
+                'is_guest' => false,
                 'total_points' => $userPoints,
                 'wins' => $wins,
                 'games_played' => $gamesPlayed,

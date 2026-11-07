@@ -414,20 +414,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
                   const SizedBox(height: 14),
 
-                  // 1. قسم التفضيلات
-                  _buildSectionHeader('التفضيلات والمحتوى', secondaryTextColor),
-                  _buildCardContainer([
-                    _buildActionRow(
-                      icon: Icons.chat_bubble_outline_rounded,
-                      title: 'لهجة المحتوى',
-                      trailingText: _settings.dialect,
-                      onTap: _showDialectSheet,
-                      hasDivider: false,
-                      isDark: isDark,
-                    ),
-                  ], isDark),
-
-                  const SizedBox(height: 16),
+                  // 1. قسم التفضيلات (يظهر فقط إذا كانت اللهجات مفعلة ومتعددة في لوحة التحكم)
+                  if (_dialects.length > 1) ...[
+                    _buildSectionHeader('التفضيلات والمحتوى', secondaryTextColor),
+                    _buildCardContainer([
+                      _buildActionRow(
+                        icon: Icons.chat_bubble_outline_rounded,
+                        title: 'لهجة المحتوى',
+                        trailingText: _settings.dialect,
+                        onTap: _showDialectSheet,
+                        hasDivider: false,
+                        isDark: isDark,
+                      ),
+                    ], isDark),
+                    const SizedBox(height: 16),
+                  ],
 
                   // 2. قسم الصوت والاهتزاز
                   _buildSectionHeader('الصوت والحركة', secondaryTextColor),

@@ -24,3 +24,4 @@ class Level extends Model
         'sort_order' => 'integer',
     ];
 }
+

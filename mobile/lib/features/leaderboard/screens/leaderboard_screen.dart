@@ -5,6 +5,7 @@ import '../../../core/network/api_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
+import '../../../core/widgets/app_bottom_nav_bar.dart';
 
 class LeaderboardScreen extends StatefulWidget {
   const LeaderboardScreen({super.key});
@@ -232,6 +233,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: const AppBottomNavBar(currentIndex: 2),
     );
   }
 

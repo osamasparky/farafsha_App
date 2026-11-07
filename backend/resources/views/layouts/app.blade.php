@@ -21,6 +21,10 @@
     <link rel="alternate" hreflang="en" href="{{ url('/en/' . ltrim(preg_replace('#^en/?#', '', request()->path()), '/')) }}">
     <link rel="alternate" hreflang="x-default" href="{{ url('/') }}">
 
+    {{-- أيقونة الموقع المفضلة (Favicon) --}}
+    <link rel="icon" type="image/png" href="{{ asset('assets/app_icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ asset('assets/app_icon.png') }}">
+
     {{-- الخطوط والأنماط --}}
     <link rel="preload" href="{{ asset('fonts/cairo-arabic-700-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="{{ asset('fonts/cairo-arabic-900-normal.woff2') }}" as="font" type="font/woff2" crossorigin>
@@ -52,11 +56,9 @@
                 
                 {{-- الشعار والعلامة التجارية --}}
                 <div class="flex items-center gap-3">
-                    <a href="{{ url('/') }}" class="flex items-center gap-2.5 group">
-                        <div class="relative w-10 h-10 rounded-2xl bg-gradient-to-br from-[#FFB25E] via-[#FF8A4C] to-[#F2569A] p-0.5 shadow-[0_0_15px_rgba(242,86,154,0.5)] transition-transform group-hover:scale-105">
-                            <div class="w-full h-full bg-[#1F0E3D] rounded-[14px] flex items-center justify-center">
-                                <span class="text-xl filter drop-shadow">👑</span>
-                            </div>
+                    <a href="{{ url('/') }}" class="flex items-center gap-3 group">
+                        <div class="relative w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFB25E] via-[#FF8A4C] to-[#F2569A] p-0.5 shadow-[0_0_15px_rgba(242,86,154,0.5)] transition-transform group-hover:scale-105 flex-shrink-0">
+                            <img src="{{ asset('assets/app_icon.png') }}" alt="شعار فرفشة" class="w-full h-full object-cover rounded-[14px]">
                         </div>
                         <div class="flex flex-col">
                             <span class="text-2xl md:text-3xl font-black tracking-tight bg-gradient-to-r from-white via-[#FFD27A] to-[#F2569A] bg-clip-text text-transparent">
@@ -117,7 +119,13 @@
                                 @click="open = !open" 
                                 class="px-2.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-bold text-purple-200 flex items-center gap-1.5 transition-colors cursor-pointer">
                             <span class="text-sm">
-                                @if($currentCountry === 'EG') 🇪🇬 @elseif($currentCountry === 'SA') 🇸🇦 @elseif($currentCountry === 'AE') 🇦🇪 @elseif($currentCountry === 'KW') 🇰🇼 @else 🌍 @endif
+                                {{ match($currentCountry ?? 'EG') {
+                                    'EG' => '🇪🇬',
+                                    'SA' => '🇸🇦',
+                                    'AE' => '🇦🇪',
+                                    'KW' => '🇰🇼',
+                                    default => '🌍'
+                                } }}
                             </span>
                             <span class="uppercase font-mono">{{ $currentCountry }}</span>
                             <span class="text-[10px]">▼</span>
@@ -207,13 +215,18 @@
                 
                 {{-- النبذة والعلامة التجارية --}}
                 <div class="lg:col-span-2 space-y-4">
-                    <div class="flex items-center gap-2.5">
-                        <span class="text-2xl font-black bg-gradient-to-r from-white via-[#FFD27A] to-[#F2569A] bg-clip-text text-transparent">
-                            فرفشة
-                        </span>
-                        <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#A35BFF]/30 text-purple-200 font-bold border border-[#A35BFF]/40">
-                            Party Games
-                        </span>
+                    <div class="flex items-center gap-3">
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-[#FFB25E] via-[#FF8A4C] to-[#F2569A] p-0.5 shadow-[0_0_12px_rgba(242,86,154,0.4)] flex-shrink-0">
+                            <img src="{{ asset('assets/app_icon.png') }}" alt="شعار فرفشة" class="w-full h-full object-cover rounded-[14px]">
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="text-2xl font-black bg-gradient-to-r from-white via-[#FFD27A] to-[#F2569A] bg-clip-text text-transparent">
+                                فرفشة
+                            </span>
+                            <span class="text-xs px-2.5 py-0.5 rounded-full bg-[#A35BFF]/30 text-purple-200 font-bold border border-[#A35BFF]/40">
+                                Party Games
+                            </span>
+                        </div>
                     </div>
                     <p class="text-sm text-purple-200/80 leading-relaxed max-w-sm">
                         منصة الألعاب الجماعية العربية الأولى. صُممت خصيصاً لإعادة الدفء والضحك والتحدي الحقيقي لجلسات العائلات والأصدقاء بدون تعقيد.

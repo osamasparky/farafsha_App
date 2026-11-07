@@ -83,6 +83,7 @@ class TestimonialResource extends Resource
                         Forms\Components\FileUpload::make('avatar')
                             ->label('صورة أو صورة الحساب (Avatar)')
                             ->image()
+                            ->disk('public')
                             ->directory('testimonials')
                             ->visibility('public'),
 

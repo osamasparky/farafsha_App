@@ -8,7 +8,7 @@
 @theme {
     --font-cairo: 'Cairo', system-ui, -apple-system, sans-serif;
     --font-kufi: 'Reem Kufi', 'Cairo', serif;
-    
+
     --color-farfasha-deepest: #150A2E;
     --color-farfasha-deep: #170B30;
     --color-farfasha-base: #241050;
@@ -39,7 +39,7 @@
 body {
     background-color: #170B30;
     color: #FFFFFF;
-    background-image: 
+    background-image:
         radial-gradient(circle at 50% 15%, rgba(78, 37, 144, 0.45) 0%, transparent 60%),
         radial-gradient(circle at 10% 40%, rgba(242, 86, 154, 0.12) 0%, transparent 50%),
         radial-gradient(circle at 90% 70%, rgba(163, 91, 255, 0.15) 0%, transparent 50%),
@@ -169,7 +169,10 @@ body {
 
 /* دعم تقليل الحركة */
 @media (prefers-reduced-motion: reduce) {
-    *, ::before, ::after {
+
+    *,
+    ::before,
+    ::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
         transition-duration: 0.01ms !important;
@@ -177,7 +180,9 @@ body {
     }
 }
 
-.reduce-motion *, .reduce-motion ::before, .reduce-motion ::after {
+.reduce-motion *,
+.reduce-motion ::before,
+.reduce-motion ::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
@@ -186,8 +191,15 @@ body {
 
 /* حركة التمايل اللطيفة لفرفوش */
 @keyframes farfoush-float {
-    0%, 100% { transform: translateY(0px) rotate(0deg); }
-    50% { transform: translateY(-8px) rotate(1.5deg); }
+
+    0%,
+    100% {
+        transform: translateY(0px) rotate(0deg);
+    }
+
+    50% {
+        transform: translateY(-8px) rotate(1.5deg);
+    }
 }
 
 .animate-farfoush {

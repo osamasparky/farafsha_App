@@ -3,14 +3,16 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
+import 'core/services/auth_service.dart';
 import 'core/services/settings_service.dart';
 import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // تهيئة إعدادات المستخدم والخدمات الأساسية
+  // تهيئة إعدادات المستخدم والمصادقة والخدمات الأساسية
   await SettingsService.instance.init();
+  await AuthService.instance.init();
 
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -39,7 +41,7 @@ class LammahApp extends StatelessWidget {
         final isDarkMode = SettingsService.instance.isDarkMode;
 
         return MaterialApp.router(
-          title: 'لمّـة - لعبة الجماعة',
+          title: 'فرفشة - لعبة الجماعة',
           debugShowCheckedModeBanner: false,
           theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,

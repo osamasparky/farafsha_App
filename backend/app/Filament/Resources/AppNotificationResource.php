@@ -51,9 +51,13 @@ class AppNotificationResource extends Resource
                                     ->default('info')
                                     ->required(),
 
-                                Forms\Components\TextInput::make('icon')
-                                    ->label('اسم الأيقونة')
-                                    ->default('notifications'),
+                                Forms\Components\Select::make('icon')
+                                    ->label('رمز الأيقونة')
+                                    ->options(AppNotification::getAvailableIcons())
+                                    ->searchable()
+                                    ->preload()
+                                    ->default('notifications')
+                                    ->required(),
 
                                 Forms\Components\Toggle::make('is_active')
                                     ->label('مفعّل في التطبيق')

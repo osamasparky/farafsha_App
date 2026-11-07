@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
@@ -23,6 +25,27 @@ class _RegisterScreenState extends State<RegisterScreen> {
   int _selectedAvatarIndex = 2; // Default: Ahmed
   final TextEditingController _nameController = TextEditingController(text: 'أسامة');
   String _selectedDialect = 'مصري';
+  List<Map<String, dynamic>> _dialects = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadDialects();
+  }
+
+  Future<void> _loadDialects() async {
+    try {
+      final list = await ApiService.instance.getDialects();
+      if (mounted) {
+        setState(() {
+          _dialects = list;
+          if (_dialects.isNotEmpty) {
+            _selectedDialect = _dialects[0]['name']?.toString() ?? 'مصري';
+          }
+        });
+      }
+    } catch (_) {}
+  }
 
   @override
   void dispose() {
@@ -169,31 +192,42 @@ class _RegisterScreenState extends State<RegisterScreen> {
               ),
             ),
 
-            const SizedBox(height: 22),
+            if (_dialects.length > 1) ...[
+              const SizedBox(height: 22),
 
-            const Text(
-              'لهجة المحتوى المفضلة',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFEADFFF)),
-            ),
-            const SizedBox(height: 8),
+              const Text(
+                'لهجة المحتوى المفضلة',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Color(0xFFEADFFF)),
+              ),
+              const SizedBox(height: 8),
 
-            // خيارات اللهجة الثلاثية
-            Row(
-              children: [
-                _buildDialectButton('مصري'),
-                const SizedBox(width: 8),
-                _buildDialectButton('خليجي'),
-                const SizedBox(width: 8),
-                _buildDialectButton('عربي عام'),
-              ],
-            ),
+              // خيارات اللهجات المفعلة من السيرفر
+              Row(
+                children: _dialects.map((d) {
+                  final name = d['name']?.toString() ?? '';
+                  return Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                      child: _buildDialectButton(name),
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
 
             const SizedBox(height: 36),
 
             GameButton(
               text: 'يلا نلعب',
-              onPressed: () {
-                context.push('/home');
+              onPressed: () async {
+                await AuthService.instance.loginUser(
+                  name: _nameController.text.trim().isNotEmpty ? _nameController.text.trim() : 'أسامة صبري',
+                  phone: '01012345678',
+                  avatar: _avatars[_selectedAvatarIndex],
+                  dialect: _selectedDialect,
+                );
+                if (!context.mounted) return;
+                context.go('/home');
               },
             ),
             const SizedBox(height: 12),

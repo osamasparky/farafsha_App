@@ -3,9 +3,11 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
+import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -17,7 +19,6 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: المفضلة
-  int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب, 3: الترتيب, 4: الملف
   bool _isLoading = false;
   List<Map<String, dynamic>> _games = [];
   List<Map<String, dynamic>> _banners = [];
@@ -201,58 +202,75 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return LammaScaffold(
-      showBokeh: false,
-      body: Column(
-        children: [
-          // 1. الشريط العلوي (الهيدر)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(
+    return ListenableBuilder(
+      listenable: AuthService.instance,
+      builder: (context, _) {
+        final auth = AuthService.instance;
+        final isGuest = auth.isGuest;
+        final avatarPath = auth.userAvatar;
+        final greetingName = isGuest ? 'زائر فرفشة 🎭' : auth.userName;
+
+        return LammaScaffold(
+          showBokeh: false,
+          body: Column(
+            children: [
+              // 1. الشريط العلوي (الهيدر)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(2.5),
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(color: LammaColors.gold500, width: 2.5),
-                        boxShadow: [
-                          BoxShadow(
-                            color: LammaColors.gold500.withValues(alpha: 0.45),
-                            blurRadius: 14,
+                    GestureDetector(
+                      onTap: () {
+                        SoundService.instance.playClick();
+                        context.push('/profile');
+                      },
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(2.5),
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: isGuest ? const Color(0xFFA35BFF) : LammaColors.gold500,
+                                width: 2.5,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: (isGuest ? const Color(0xFFA35BFF) : LammaColors.gold500).withValues(alpha: 0.45),
+                                  blurRadius: 14,
+                                ),
+                              ],
+                            ),
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundImage: AssetImage(avatarPath),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                isGuest ? 'تصفح كزائر' : 'مساء الخير',
+                                style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
+                              ),
+                              Text(
+                                isGuest ? greetingName : 'أهلاً يا $greetingName',
+                                style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
+                              ),
+                            ],
                           ),
                         ],
                       ),
-                      child: const CircleAvatar(
-                        radius: 20,
-                        backgroundImage: AssetImage('assets/images/av-ahmed.png'),
-                      ),
                     ),
-                    const SizedBox(width: 10),
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'مساء الخير',
-                          style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
-                        ),
-                        Text(
-                          'أهلاً يا أسامة',
-                          style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                GestureDetector(
-                  onTap: () {
-                    SoundService.instance.playClick();
-                    context.push('/notifications');
-                  },
-                  child: Container(
-                    width: 44,
+                    GestureDetector(
+                      onTap: () {
+                        SoundService.instance.playClick();
+                        context.push('/notifications');
+                      },
+                      child: Container(
+                        width: 44,
                     height: 44,
                     decoration: BoxDecoration(
                       color: Colors.white.withValues(alpha: 0.08),
@@ -338,9 +356,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNavigationBar(),
+      bottomNavigationBar: const AppBottomNavBar(currentIndex: 0),
     );
-  }
+  },
+);
+}
 
   Widget _buildBannerSection() {
     return Column(
@@ -520,178 +540,256 @@ class _HomeScreenState extends State<HomeScreen> {
     final colors = _getGameGradient(slug);
     final fallbackIcon = _getGameIcon(slug);
     final coverImageUrl = game['cover_image_url']?.toString();
+    final isUnlocked = AuthService.instance.isGameUnlocked(slug);
 
     return GestureDetector(
       onTap: () {
         SettingsService.instance.triggerHaptic();
         SoundService.instance.playClick();
-        context.push('/game-setup', extra: game);
+        if (!isUnlocked) {
+          _showGuestLockedModal(context, game['name'] ?? 'اللعبة');
+        } else {
+          context.push('/game-setup', extra: game);
+        }
       },
       child: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: colors,
+            colors: isUnlocked
+                ? colors
+                : [colors.first.withValues(alpha: 0.55), colors.last.withValues(alpha: 0.45)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.18),
-            width: 1.2,
+            color: isUnlocked
+                ? Colors.white.withValues(alpha: 0.18)
+                : const Color(0xFFFFD27A).withValues(alpha: 0.4),
+            width: isUnlocked ? 1.2 : 1.6,
           ),
           boxShadow: [
             BoxShadow(
-              color: colors.first.withValues(alpha: 0.45),
+              color: colors.first.withValues(alpha: isUnlocked ? 0.45 : 0.2),
               offset: const Offset(0, 10),
               blurRadius: 20,
               spreadRadius: -2,
             ),
           ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 52,
-                height: 52,
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 52,
+                    height: 52,
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.22),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: coverImageUrl != null && coverImageUrl.isNotEmpty
+                          ? Image.network(
+                              coverImageUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Image.asset(fallbackIcon, fit: BoxFit.contain),
+                            )
+                          : Image.asset(fallbackIcon, fit: BoxFit.contain),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    game['name'] ?? '',
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  if (isUnlocked)
+                    Text(
+                      game['subtitle'] ?? '',
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.cairo(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFFE2D9F3),
+                      ),
+                    )
+                  else
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.lock_rounded, size: 12, color: Color(0xFFFFD27A)),
+                        const SizedBox(width: 4),
+                        Flexible(
+                          child: Text(
+                            'سجل دخول عشان تفرفش',
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.cairo(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFFD27A),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                ],
+              ),
+            ),
+            if (!isUnlocked)
+              Positioned(
+                top: 10,
+                left: 10,
+                child: Container(
+                  padding: const EdgeInsets.all(5),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.65),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: const Color(0xFFFFD27A), width: 1.2),
+                  ),
+                  child: const Icon(Icons.lock_rounded, size: 13, color: Color(0xFFFFD27A)),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showGuestLockedModal(BuildContext context, String gameTitle) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+        decoration: const BoxDecoration(
+          color: Color(0xFF190C36),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border(
+            top: BorderSide(color: Color(0xFF8F4BF0), width: 2),
+          ),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 48,
+              height: 5,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(10),
+              ),
+            ),
+            const SizedBox(height: 18),
+            Container(
+              width: 86,
+              height: 86,
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF8F4BF0).withValues(alpha: 0.5),
+                    blurRadius: 28,
+                    spreadRadius: 2,
+                  ),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(999),
+                child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'سجل دخول عشان تفرفش! 🎉',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'لعبة "$gameTitle" وباقي الألعاب المميزة متاحة للأعضاء المسجلين فقط.\nسجّل دخولك الآن وافتح جميع الألعاب والتحديات واحفظ نقاطك وإنجازاتك!',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFFD9CCF2),
+                height: 1.6,
+              ),
+            ),
+            const SizedBox(height: 24),
+            GestureDetector(
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/login');
+              },
+              child: Container(
+                width: double.infinity,
+                height: 56,
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.22),
-                  borderRadius: BorderRadius.circular(16),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF8A4C), Color(0xFFE94560)],
+                  ),
+                  borderRadius: BorderRadius.circular(18),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 4),
+                      color: const Color(0xFFE94560).withValues(alpha: 0.4),
+                      blurRadius: 18,
+                      offset: const Offset(0, 6),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: coverImageUrl != null && coverImageUrl.isNotEmpty
-                      ? Image.network(
-                          coverImageUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => Image.asset(fallbackIcon, fit: BoxFit.contain),
-                        )
-                      : Image.asset(fallbackIcon, fit: BoxFit.contain),
+                child: Center(
+                  child: Text(
+                    'تسجيل الدخول / إنشاء حساب 🚀',
+                    style: GoogleFonts.cairo(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
-              Text(
-                game['name'] ?? '',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.cairo(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w900,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                game['subtitle'] ?? '',
-                textAlign: TextAlign.center,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.cairo(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFE2D9F3),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNavigationBar() {
-    return Container(
-      decoration: const BoxDecoration(
-        color: Color(0xFF130924),
-        border: Border(top: BorderSide(color: Color(0xFF2E1C55), width: 1.2)),
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 68,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _buildNavItem(icon: Icons.home_filled, label: 'الرئيسية', index: 0, route: '/home'),
-              _buildNavItem(icon: Icons.sports_esports_rounded, label: 'طريقة اللعب', index: 1, route: '/mode-selection'),
-              _buildCenterGameIcon(),
-              _buildNavItem(icon: Icons.leaderboard_rounded, label: 'الترتيب', index: 3, route: '/leaderboard'),
-              _buildNavItem(icon: Icons.person_rounded, label: 'الملف', index: 4, route: '/profile'),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem({required IconData icon, required String label, required int index, required String route}) {
-    final bool isSelected = _currentNavIndex == index;
-    return GestureDetector(
-      onTap: () {
-        SettingsService.instance.triggerHaptic();
-        SoundService.instance.playClick();
-        setState(() => _currentNavIndex = index);
-        if (route != '/home') {
-          context.push(route);
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFFB98AFF) : const Color(0xFF8B7AA8),
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.cairo(
-              fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-              color: isSelected ? Colors.white : const Color(0xFF8B7AA8),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCenterGameIcon() {
-    return GestureDetector(
-      onTap: () {
-        SettingsService.instance.triggerHaptic();
-        SoundService.instance.playClick();
-        context.push('/mode-selection');
-      },
-      child: Container(
-        width: 52,
-        height: 52,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const RadialGradient(
-            colors: [Color(0xFFB98AFF), Color(0xFF7524E4)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFA35BFF).withValues(alpha: 0.65),
-              blurRadius: 18,
-              spreadRadius: 2,
+            const SizedBox(height: 12),
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(
+                'الاستمرار كزائر للعبتين المتاحتين',
+                style: GoogleFonts.cairo(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w700,
+                  color: const Color(0xFFA99BC8),
+                ),
+              ),
             ),
           ],
-        ),
-        child: const Center(
-          child: Icon(Icons.videogame_asset_rounded, color: Colors.white, size: 28),
         ),
       ),
     );

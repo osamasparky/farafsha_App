@@ -7,11 +7,14 @@ use App\Http\Controllers\Api\RoomController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// مسارات المصادقة والهاتف واللعب كضيف
+// مسارات المصادقة والهاتف واللعب كضيف ووسائل التواصل
 Route::prefix('auth')->group(function () {
     Route::post('/guest', [AuthController::class, 'guestLogin']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
+    Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
+    Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
+    Route::post('/social-login', [AuthController::class, 'socialLogin']);
     Route::post('/register', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 });
@@ -46,3 +49,4 @@ Route::get('/contact-info', [AppContentController::class, 'contactInfo']);
 Route::get('/badges', [AppContentController::class, 'badges']);
 Route::get('/levels', [AppContentController::class, 'levels']);
 Route::get('/profile', [AppContentController::class, 'profile']);
+Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
