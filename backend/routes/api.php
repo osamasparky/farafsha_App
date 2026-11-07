@@ -59,6 +59,12 @@ Route::prefix('rooms')->group(function () {
 });
 
 // مسارات المحتوى والإنتاجية الجديدة
+Route::get('/gameplay-modes', function () {
+    $modes = \App\Models\GameplayMode::where('is_active', true)
+        ->orderBy('sort_order', 'asc')
+        ->get();
+    return response()->json($modes);
+});
 Route::get('/banners', [AppContentController::class, 'banners']);
 Route::get('/dialects', [AppContentController::class, 'dialects']);
 Route::get('/leaderboard', [AppContentController::class, 'leaderboard']);

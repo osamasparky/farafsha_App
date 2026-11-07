@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
@@ -25,7 +26,8 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
   @override
   void initState() {
     super.initState();
-    final currentUserName = ApiService.instance.currentUser?['name']?.toString() ?? '';
+    final authName = AuthService.instance.userName.trim();
+    final currentUserName = authName.isNotEmpty ? authName : (ApiService.instance.currentUser?['name']?.toString().trim() ?? '');
     _nameController = TextEditingController(text: currentUserName);
 
     // ملء رمز الغرفة تلقائياً في حال الدخول عبر ديب لينك (Deep Link) أو مسح QR كود

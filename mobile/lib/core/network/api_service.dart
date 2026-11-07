@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ApiService {
   static final ApiService instance = ApiService._internal();
@@ -9,9 +10,13 @@ class ApiService {
 
   static String? _workingBaseUrl;
   Map<String, dynamic>? _currentUser;
+  String? _authToken;
 
   Map<String, dynamic>? get currentUser => _currentUser;
   void setCurrentUser(Map<String, dynamic>? user) => _currentUser = user;
+
+  String? get authToken => _authToken;
+  void setAuthToken(String? token) => _authToken = token;
 
   // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على USB يتم استخدام 127.0.0.1، على الواي فاي 192.168.100.3
   String get baseUrl {
@@ -46,6 +51,7 @@ class ApiService {
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
+        if (_authToken != null && _authToken!.isNotEmpty) 'Authorization': 'Bearer $_authToken',
       };
 
   Map<String, String> _authHeaders(String? token) => {
@@ -958,6 +964,81 @@ class ApiService {
   }
 
   // ==========================================
+  // أنماط وطرق اللعب (Gameplay Modes)
+  // ==========================================
+
+  /// جلب أنماط وطرق اللعب من السيرفر مع تخزين مؤقت و fallback محلي
+  Future<List<Map<String, dynamic>>> getGameplayModes() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/gameplay-modes'), headers: _headers)
+          .timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final decoded = jsonDecode(utf8.decode(res.bodyBytes));
+        if (decoded is List && decoded.isNotEmpty) {
+          final list = List<Map<String, dynamic>>.from(decoded);
+          try {
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('cached_gameplay_modes', jsonEncode(list));
+          } catch (_) {}
+          return list;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Error fetching gameplay modes from server: $e');
+    }
+
+    // محاولة القراءة من الكاش
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final cached = prefs.getString('cached_gameplay_modes');
+      if (cached != null && cached.isNotEmpty) {
+        final decoded = jsonDecode(cached);
+        if (decoded is List && decoded.isNotEmpty) {
+          return List<Map<String, dynamic>>.from(decoded);
+        }
+      }
+    } catch (_) {}
+
+    // القائمة الافتراضية المدمجة
+    return const [
+      {
+        'slug': 'local',
+        'title': 'لعبة محلية',
+        'subtitle': 'على جهاز واحد بالتناوب\nمع أصحابك جنبك (Pass & Play)',
+        'badge': 'التناوب الكلاسيكي',
+        'image': 'assets/images/local.png',
+        'image_url': null,
+        'highlight_color': '#A35BFF',
+        'sort_order': 1,
+        'is_active': true,
+      },
+      {
+        'slug': 'lammah',
+        'title': 'طريقة اللمّة',
+        'subtitle': 'واحد معاه الموبايل والميكروفون\nويقرأ الأسئلة للقعدة كلها',
+        'badge': 'الأمتع للقعدة 🎉',
+        'image': 'assets/images/crowd.png',
+        'image_url': null,
+        'highlight_color': '#FF8A4C',
+        'sort_order': 2,
+        'is_active': true,
+      },
+      {
+        'slug': 'online',
+        'title': 'لعبة أونلاين',
+        'subtitle': 'العب مع أصحابك\nعن بُعد بغرفة ورمز سري',
+        'badge': 'غرف شبكية',
+        'image': 'assets/images/online.png',
+        'image_url': null,
+        'highlight_color': '#A35BFF',
+        'sort_order': 3,
+        'is_active': true,
+      },
+    ];
+  }
+
+  // ==========================================
   // غرف اللعب أونلاين (Online Multiplayer Rooms)
   // ==========================================
 
@@ -969,9 +1050,15 @@ class ApiService {
     int roundDurationSeconds = 20,
     int maxPlayers = 8,
   }) async {
+    final resolvedName = (hostName != null && hostName.trim().isNotEmpty)
+        ? hostName.trim()
+        : (_currentUser?['name'] != null && _currentUser!['name'].toString().trim().isNotEmpty)
+            ? _currentUser!['name'].toString().trim()
+            : 'لاعب فرفشة';
+
     final body = {
       'game_slug': gameSlug,
-      'host_name': hostName ?? _currentUser?['name'] ?? 'لاعب فرفشة',
+      'host_name': resolvedName,
       'total_rounds': totalRounds,
       'round_duration_seconds': roundDurationSeconds,
       'max_players': maxPlayers,
@@ -997,8 +1084,14 @@ class ApiService {
     String? playerName,
     String? avatar,
   }) async {
+    final resolvedPlayerName = (playerName != null && playerName.trim().isNotEmpty)
+        ? playerName.trim()
+        : (_currentUser?['name'] != null && _currentUser!['name'].toString().trim().isNotEmpty)
+            ? _currentUser!['name'].toString().trim()
+            : 'ضيف فرفشة';
+
     final body = {
-      'player_name': playerName ?? _currentUser?['name'] ?? 'ضيف فرفشة',
+      'player_name': resolvedPlayerName,
       'avatar': avatar ?? _currentUser?['avatar'],
     };
 

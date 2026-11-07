@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/game_button.dart';
@@ -17,9 +18,84 @@ class ModeSelectionScreen extends StatefulWidget {
 
 class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
   String _selectedMode = 'local'; // 'local', 'lammah', 'online'
+  List<Map<String, dynamic>> _modes = [];
+
+  static const List<Map<String, dynamic>> _defaultModes = [
+    {
+      'slug': 'local',
+      'title': 'لعبة محلية',
+      'subtitle': 'على جهاز واحد بالتناوب\nمع أصحابك جنبك (Pass & Play)',
+      'badge': 'التناوب الكلاسيكي',
+      'image': 'assets/images/local.png',
+      'image_url': null,
+      'highlight_color': '#A35BFF',
+    },
+    {
+      'slug': 'lammah',
+      'title': 'طريقة اللمّة',
+      'subtitle': 'واحد معاه الموبايل والميكروفون\nويقرأ الأسئلة للقعدة كلها',
+      'badge': 'الأمتع للقعدة 🎉',
+      'image': 'assets/images/crowd.png',
+      'image_url': null,
+      'highlight_color': '#FF8A4C',
+    },
+    {
+      'slug': 'online',
+      'title': 'لعبة أونلاين',
+      'subtitle': 'العب مع أصحابك\nعن بُعد بغرفة ورمز سري',
+      'badge': 'غرف شبكية',
+      'image': 'assets/images/online.png',
+      'image_url': null,
+      'highlight_color': '#A35BFF',
+    },
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadModes();
+  }
+
+  Future<void> _loadModes() async {
+    try {
+      final modes = await ApiService.instance.getGameplayModes();
+      if (mounted && modes.isNotEmpty) {
+        setState(() {
+          _modes = modes;
+        });
+      }
+    } catch (_) {}
+  }
+
+  String _fallbackAsset(String slug) {
+    switch (slug) {
+      case 'lammah':
+        return 'assets/images/crowd.png';
+      case 'online':
+        return 'assets/images/online.png';
+      case 'local':
+      default:
+        return 'assets/images/local.png';
+    }
+  }
+
+  Color _parseColor(String? hexString, Color fallback) {
+    if (hexString == null || hexString.isEmpty) return fallback;
+    try {
+      final clean = hexString.replaceAll('#', '');
+      if (clean.length == 6) {
+        return Color(int.parse('0xFF$clean'));
+      } else if (clean.length == 8) {
+        return Color(int.parse('0x$clean'));
+      }
+    } catch (_) {}
+    return fallback;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final activeModes = _modes.isNotEmpty ? _modes : _defaultModes;
+
     return LammaScaffold(
       bottomNavigationBar: const AppBottomNavBar(currentIndex: 1),
       body: SafeArea(
@@ -57,43 +133,35 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
 
               const SizedBox(height: 14),
 
-              // قائمة كروت الطرق الثلاثة قابلة للتمرير
+              // قائمة كروت الطرق الثلاثة قابلة للتمرير والتحكم من لوحة الإدارة
               Expanded(
                 child: ListView(
                   physics: const BouncingScrollPhysics(),
-                  children: [
-                    // 1. كارت اللعب المحلي (تمرير الهاتف)
-                    _buildModeCard(
-                      modeId: 'local',
-                      title: 'لعبة محلية',
-                      subtitle: 'على جهاز واحد بالتناوب\nمع أصحابك جنبك (Pass & Play)',
-                      imageAsset: 'assets/images/local.png',
-                      badge: 'التناوب الكلاسيكي',
-                    ),
+                  children: activeModes.map((mode) {
+                    final slug = mode['slug']?.toString() ?? 'local';
+                    final title = mode['title']?.toString() ?? '';
+                    final subtitle = mode['subtitle']?.toString() ?? '';
+                    final badge = mode['badge']?.toString() ?? '';
+                    final imageUrl = mode['image_url']?.toString();
+                    final fallbackAsset = _fallbackAsset(slug);
+                    final color = _parseColor(
+                      mode['highlight_color']?.toString(),
+                      slug == 'lammah' ? const Color(0xFFFF8A4C) : const Color(0xFFA35BFF),
+                    );
 
-                    const SizedBox(height: 14),
-
-                    // 2. كارت طريقة اللمّة (المذيع)
-                    _buildModeCard(
-                      modeId: 'lammah',
-                      title: 'طريقة اللمّة',
-                      subtitle: 'واحد معاه الموبايل والميكروفون\nويقرأ الأسئلة للقعدة كلها',
-                      imageAsset: 'assets/images/crowd.png',
-                      badge: 'الأمتع للقعدة 🎉',
-                      highlightColor: const Color(0xFFFF8A4C),
-                    ),
-
-                    const SizedBox(height: 14),
-
-                    // 3. كارت اللعب أونلاين
-                    _buildModeCard(
-                      modeId: 'online',
-                      title: 'لعبة أونلاين',
-                      subtitle: 'العب مع أصحابك\nعن بُعد بغرفة ورمز سري',
-                      imageAsset: 'assets/images/online.png',
-                      badge: 'غرف شبكية',
-                    ),
-                  ],
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 14.0),
+                      child: _buildModeCard(
+                        modeId: slug,
+                        title: title,
+                        subtitle: subtitle,
+                        imageAsset: fallbackAsset,
+                        imageUrl: imageUrl,
+                        badge: badge,
+                        highlightColor: color,
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
 
@@ -125,6 +193,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
     required String title,
     required String subtitle,
     required String imageAsset,
+    String? imageUrl,
     required String badge,
     Color highlightColor = const Color(0xFFA35BFF),
   }) {
@@ -175,12 +244,35 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
         child: Row(
           children: [
             // صورة الكارت
-            Image.asset(
-              imageAsset,
+            SizedBox(
               width: 90,
               height: 90,
-              fit: BoxFit.contain,
-              errorBuilder: (_, __, ___) => const Icon(Icons.group_work_rounded, color: Colors.white, size: 48),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: (imageUrl != null && (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')))
+                    ? Image.network(
+                        imageUrl,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => Image.asset(
+                          imageAsset,
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.group_work_rounded,
+                            color: Colors.white,
+                            size: 48,
+                          ),
+                        ),
+                      )
+                    : Image.asset(
+                        imageAsset,
+                        fit: BoxFit.contain,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.group_work_rounded,
+                          color: Colors.white,
+                          size: 48,
+                        ),
+                      ),
+              ),
             ),
             const SizedBox(width: 14),
             // النصوص والبادج
@@ -755,8 +847,10 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
   @override
   void initState() {
     super.initState();
-    final name = ApiService.instance.currentUser?['name']?.toString() ?? '';
-    _joinNameController = TextEditingController(text: name);
+    final authName = AuthService.instance.userName.trim();
+    final apiName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
+    final initialName = authName.isNotEmpty ? authName : (apiName.isNotEmpty ? apiName : '');
+    _joinNameController = TextEditingController(text: initialName);
     _loadGames();
   }
 
@@ -796,8 +890,13 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
     HapticFeedback.heavyImpact();
 
     try {
+      final hostName = AuthService.instance.userName.trim().isNotEmpty
+          ? AuthService.instance.userName.trim()
+          : (ApiService.instance.currentUser?['name']?.toString().trim() ?? '');
+
       final res = await ApiService.instance.createRoom(
         gameSlug: _selectedGameSlug,
+        hostName: hostName.isNotEmpty ? hostName : null,
         totalRounds: _totalRounds,
         roundDurationSeconds: _roundDuration,
       );

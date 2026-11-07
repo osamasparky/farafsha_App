@@ -75,6 +75,9 @@ class AuthService extends ChangeNotifier {
         }
       } catch (_) {}
 
+      // مزامنة التوكن مع ApiService
+      _syncWithApiService();
+
       // إذا كان مسجلاً ولديه توكن، يتم جلب أحدث بيانات في الخلفية للتأكد من صلاحية الجلسة
       if (_isLoggedIn && _authToken != null && _authToken!.isNotEmpty) {
         ApiService.instance.getCurrentUser(_authToken!).then((userData) {
@@ -86,6 +89,7 @@ class AuthService extends ChangeNotifier {
             _totalPoints = (userData['total_points'] ?? userData['total_score'] ?? _totalPoints) as int;
             _wins = (userData['wins'] ?? userData['wins_count'] ?? _wins) as int;
             _gamesPlayed = (userData['games_played'] ?? _gamesPlayed) as int;
+            _syncWithApiService();
             notifyListeners();
           }
         }).catchError((_) {});
@@ -94,6 +98,25 @@ class AuthService extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('⚠️ Error initializing AuthService: $e');
+    }
+  }
+
+  /// مزامنة جلسة المستخدم والمصادقة مع شبكة ApiService
+  void _syncWithApiService() {
+    if (_authToken != null && _authToken!.isNotEmpty) {
+      ApiService.instance.setAuthToken(_authToken);
+    }
+    if (_userName.isNotEmpty) {
+      ApiService.instance.setCurrentUser({
+        'name': _userName,
+        'email': _userEmail,
+        'phone': _userPhone,
+        'avatar': _userAvatar,
+        'dialect': _userDialect,
+        'total_points': _totalPoints,
+        'wins': _wins,
+        'games_played': _gamesPlayed,
+      });
     }
   }
 
@@ -121,6 +144,7 @@ class AuthService extends ChangeNotifier {
     await prefs.setString('auth_user_name', _userName);
     await prefs.setString('auth_user_avatar', _userAvatar);
 
+    _syncWithApiService();
     notifyListeners();
   }
 
@@ -190,6 +214,7 @@ class AuthService extends ChangeNotifier {
       );
     } catch (_) {}
 
+    _syncWithApiService();
     notifyListeners();
   }
 
@@ -230,6 +255,7 @@ class AuthService extends ChangeNotifier {
         await prefs.setString('auth_token', _authToken!);
       }
 
+      _syncWithApiService();
       notifyListeners();
       return {'success': true, 'message': res['message']};
     }
@@ -272,6 +298,7 @@ class AuthService extends ChangeNotifier {
       if (_authToken != null) {
         await prefs.setString('auth_token', _authToken!);
       }
+      _syncWithApiService();
       notifyListeners();
     }
     return res;
@@ -322,6 +349,7 @@ class AuthService extends ChangeNotifier {
         await prefs.setString('auth_token', _authToken!);
       }
 
+      _syncWithApiService();
       notifyListeners();
       return {'success': true, 'message': res['message']};
     }
@@ -369,6 +397,7 @@ class AuthService extends ChangeNotifier {
         await prefs.setString('auth_token', _authToken!);
       }
 
+      _syncWithApiService();
       notifyListeners();
       return {'success': true, 'message': res['message'] ?? 'تم تسجيل الدخول بنجاح'};
     }
@@ -530,6 +559,9 @@ class AuthService extends ChangeNotifier {
       const storage = FlutterSecureStorage();
       await storage.delete(key: 'sanctum_token');
     } catch (_) {}
+
+    ApiService.instance.setAuthToken(null);
+    ApiService.instance.setCurrentUser(null);
 
     notifyListeners();
   }
