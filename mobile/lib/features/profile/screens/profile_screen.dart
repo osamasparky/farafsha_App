@@ -770,6 +770,280 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
+  void _showChangePasswordSheet(BuildContext context) {
+    final currentPassCtrl = TextEditingController();
+    final newPassCtrl = TextEditingController();
+    final confirmPassCtrl = TextEditingController();
+
+    bool obscureCurrent = true;
+    bool obscureNew = true;
+    bool obscureConfirm = true;
+    bool isSaving = false;
+    String? errorMsg;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => StatefulBuilder(
+        builder: (modalContext, setModalState) {
+          return Padding(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(modalContext).viewInsets.bottom,
+            ),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 20),
+              decoration: const BoxDecoration(
+                color: Color(0xFF1D0E38),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+                border: Border(
+                  top: BorderSide(color: Color(0xFFB98AFF), width: 2),
+                ),
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Colors.white24,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    const Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.lock_reset_rounded, color: Color(0xFFFFD27A), size: 24),
+                        SizedBox(width: 8),
+                        Text(
+                          'تغيير كلمة المرور',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    const Text(
+                      'أدخل كلمة المرور الحالية ثم عيّن كلمة المرور الجديدة وتأكيدها.',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(fontSize: 12, color: Color(0xFFCFC6E4)),
+                    ),
+                    const SizedBox(height: 16),
+
+                    if (errorMsg != null) ...[
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        margin: const EdgeInsets.only(bottom: 12),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFD2566A).withOpacity(0.15),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFD2566A), width: 1.2),
+                        ),
+                        child: Text(
+                          errorMsg!,
+                          style: const TextStyle(color: Color(0xFFFF9AA2), fontSize: 13, fontWeight: FontWeight.w700),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+
+                    // كلمة المرور الحالية
+                    const Text(
+                      'كلمة المرور الحالية',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFEADFFF)),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFA35BFF).withOpacity(0.6), width: 1.5),
+                      ),
+                      child: TextField(
+                        controller: currentPassCtrl,
+                        obscureText: obscureCurrent,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: '•••••••• (اتركها فارغة إذا لم تعين كلمة مرور مسبقاً)',
+                          hintStyle: const TextStyle(color: Colors.white30, fontSize: 12),
+                          prefixIcon: const Icon(Icons.lock_outline_rounded, color: Color(0xFFB98AFF), size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureCurrent ? Icons.visibility_off : Icons.visibility, color: Colors.white54, size: 20),
+                            onPressed: () => setModalState(() => obscureCurrent = !obscureCurrent),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // كلمة المرور الجديدة
+                    const Text(
+                      'كلمة المرور الجديدة (6 خانات كحد أدنى)',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFEADFFF)),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFA35BFF).withOpacity(0.6), width: 1.5),
+                      ),
+                      child: TextField(
+                        controller: newPassCtrl,
+                        obscureText: obscureNew,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'أدخل كلمة المرور الجديدة',
+                          hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                          prefixIcon: const Icon(Icons.lock_rounded, color: Color(0xFFB98AFF), size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureNew ? Icons.visibility_off : Icons.visibility, color: Colors.white54, size: 20),
+                            onPressed: () => setModalState(() => obscureNew = !obscureNew),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+
+                    // تأكيد كلمة المرور الجديدة
+                    const Text(
+                      'تأكيد كلمة المرور الجديدة',
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFEADFFF)),
+                    ),
+                    const SizedBox(height: 6),
+                    Container(
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.black26,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFA35BFF).withOpacity(0.6), width: 1.5),
+                      ),
+                      child: TextField(
+                        controller: confirmPassCtrl,
+                        obscureText: obscureConfirm,
+                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
+                        decoration: InputDecoration(
+                          hintText: 'أعد كتابة كلمة المرور الجديدة',
+                          hintStyle: const TextStyle(color: Colors.white30, fontSize: 13),
+                          prefixIcon: const Icon(Icons.lock_reset_rounded, color: Color(0xFFB98AFF), size: 20),
+                          suffixIcon: IconButton(
+                            icon: Icon(obscureConfirm ? Icons.visibility_off : Icons.visibility, color: Colors.white54, size: 20),
+                            onPressed: () => setModalState(() => obscureConfirm = !obscureConfirm),
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 22),
+
+                    // زر الحفظ
+                    GestureDetector(
+                      onTap: isSaving
+                          ? null
+                          : () async {
+                              final newPass = newPassCtrl.text;
+                              final confirmPass = confirmPassCtrl.text;
+
+                              if (newPass.isEmpty) {
+                                setModalState(() => errorMsg = 'يرجى إدخال كلمة المرور الجديدة.');
+                                return;
+                              }
+                              if (newPass.length < 6) {
+                                setModalState(() => errorMsg = 'كلمة المرور يجب ألا تقل عن 6 خانات.');
+                                return;
+                              }
+                              if (newPass != confirmPass) {
+                                setModalState(() => errorMsg = 'كلمتا المرور غير متطابقتين.');
+                                return;
+                              }
+
+                              setModalState(() {
+                                isSaving = true;
+                                errorMsg = null;
+                              });
+
+                              final res = await ApiService.instance.changePassword(
+                                currentPassword: currentPassCtrl.text.isNotEmpty ? currentPassCtrl.text : null,
+                                newPassword: newPass,
+                                newPasswordConfirmation: confirmPass,
+                                token: AuthService.instance.authToken,
+                              );
+
+                              if (!modalContext.mounted) return;
+                              setModalState(() => isSaving = false);
+
+                              if (res['success'] == true) {
+                                Navigator.pop(modalContext);
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('تم تحديث كلمة المرور بنجاح 🔒', style: TextStyle(fontWeight: FontWeight.bold)),
+                                    backgroundColor: Color(0xFF10B981),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              } else {
+                                setModalState(() {
+                                  errorMsg = res['message']?.toString() ?? 'فشل تغيير كلمة المرور.';
+                                });
+                              }
+                            },
+                      child: Container(
+                        height: 52,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFF8F4BF0), Color(0xFF6A24C9)],
+                          ),
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF8F4BF0).withOpacity(0.5),
+                              blurRadius: 16,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
+                        ),
+                        child: Center(
+                          child: isSaving
+                              ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
+                              : const Text(
+                                  'حفظ كلمة المرور الجديدة 🔒',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
@@ -1210,7 +1484,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Column(
                     children: [
-                      if (!isGuest)
+                      if (!isGuest) ...[
                         _buildNavigationRow(
                           icon: Icons.edit_note_rounded,
                           title: 'تعديل الملف الشخصي والصورة',
@@ -1218,6 +1492,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           onTap: () => _showEditProfileSheet(context),
                           hasDivider: true,
                         ),
+                        _buildNavigationRow(
+                          icon: Icons.lock_reset_rounded,
+                          title: 'تغيير كلمة المرور',
+                          count: 'تأمين 🔒',
+                          onTap: () => _showChangePasswordSheet(context),
+                          hasDivider: true,
+                        ),
+                      ],
                       _buildNavigationRow(
                         icon: Icons.leaderboard_rounded,
                         title: 'لوحة الترتيب والمتصدرين',

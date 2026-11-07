@@ -83,6 +83,7 @@ class GameResource extends Resource
                                                 'two_truths_one_lie' => 'حقيقتان وكذبة',
                                                 'speed_trivia' => 'سؤال على السريع',
                                                 'acting_drawing' => 'تمثيل ورسم صامت',
+                                                'scattergories' => 'أتوبيس كومبليت (حروف وتصنيفات)',
                                             ])
                                             ->default('choice')
                                             ->required(),
@@ -90,11 +91,14 @@ class GameResource extends Resource
                                         Forms\Components\Select::make('game_mode')
                                             ->label('نمط اللعب المتاح')
                                             ->options([
-                                                'local_only' => 'لعب محلي فقط (جهاز واحد)',
-                                                'online_only' => 'أونلاين فقط (غرف متعددة الأجهزة)',
-                                                'hybrid' => 'هجين (يدعم المحلي والأونلاين)',
+                                                'all' => 'كافة الأنماط (محلي + طريقة اللمّة + أونلاين) 🌟',
+                                                'lammah' => 'طريقة اللمّة (المذيع والقعدة) 👥',
+                                                'local_only' => 'لعب محلي فقط (جهاز واحد - Pass & Play) 📱',
+                                                'online_only' => 'أونلاين فقط (غرف متعددة الأجهزة) 🌐',
+                                                'hybrid' => 'هجين (محلي وأونلاين) 🔄',
+                                                'local_and_lammah' => 'محلي وطريقة اللمّة 👥📱',
                                             ])
-                                            ->default('hybrid')
+                                            ->default('all')
                                             ->required(),
 
                                         Forms\Components\TextInput::make('age_group')
@@ -293,6 +297,24 @@ class GameResource extends Resource
                     ->label('التصنيف')
                     ->badge()
                     ->color('primary'),
+
+                Tables\Columns\BadgeColumn::make('game_mode')
+                    ->label('نمط اللعب')
+                    ->colors([
+                        'success' => fn ($state) => in_array($state, ['all', 'hybrid', 'local_and_lammah']),
+                        'warning' => fn ($state) => in_array($state, ['lammah']),
+                        'info' => fn ($state) => in_array($state, ['local_only']),
+                        'primary' => fn ($state) => in_array($state, ['online_only']),
+                    ])
+                    ->formatStateUsing(fn ($state) => match ($state) {
+                        'all' => 'كافة الأنماط 🌟',
+                        'lammah' => 'طريقة اللمّة 👥',
+                        'local_only' => 'محلي فقط 📱',
+                        'online_only' => 'أونلاين فقط 🌐',
+                        'hybrid' => 'محلي وأونلاين 🔄',
+                        'local_and_lammah' => 'محلي ولمّة 👥📱',
+                        default => $state ?? 'كافة الأنماط 🌟',
+                    }),
 
                 Tables\Columns\TextColumn::make('min_players')
                     ->label('اللاعبين')

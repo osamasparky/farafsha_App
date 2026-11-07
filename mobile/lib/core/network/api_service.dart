@@ -729,6 +729,160 @@ class ApiService {
     return null;
   }
 
+  /// طلب استعادة كلمة المرور عبر البريد أو الهاتف
+  Future<Map<String, dynamic>> forgotPassword(String identifier) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/forgot-password'),
+            headers: _headers,
+            body: jsonEncode({'identifier': identifier.trim()}),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم إرسال رمز التحقق بنجاح.',
+          'type': data['type'] ?? 'email',
+          'target': data['target'] ?? identifier,
+          if (data['debug_otp'] != null) 'debug_otp': data['debug_otp'],
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'فشل طلب استعادة كلمة المرور.',
+      };
+    } catch (e) {
+      debugPrint('⚠️ forgotPassword error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر. يرجى التحقق من اتصالك بالإنترنت.',
+      };
+    }
+  }
+
+  /// التحقق من رمز OTP لاستعادة كلمة المرور
+  Future<Map<String, dynamic>> verifyResetOtp({
+    required String identifier,
+    required String otp,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/verify-reset-otp'),
+            headers: _headers,
+            body: jsonEncode({
+              'identifier': identifier.trim(),
+              'otp': otp.trim(),
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم التحقق من الرمز بنجاح.',
+          'reset_token': data['reset_token'],
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'رمز التحقق غير صحيح أو انتهت صلاحيته.',
+      };
+    } catch (e) {
+      debugPrint('⚠️ verifyResetOtp error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر.',
+      };
+    }
+  }
+
+  /// تعيين كلمة مرور جديدة باستخدام Reset Token
+  Future<Map<String, dynamic>> resetPassword({
+    required String resetToken,
+    required String password,
+    required String passwordConfirmation,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/reset-password'),
+            headers: _headers,
+            body: jsonEncode({
+              'reset_token': resetToken,
+              'password': password,
+              'password_confirmation': passwordConfirmation,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم تغيير كلمة المرور بنجاح!',
+          'token': data['token'],
+          'user': data['user'],
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'فشل تعيين كلمة المرور.',
+      };
+    } catch (e) {
+      debugPrint('⚠️ resetPassword error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر.',
+      };
+    }
+  }
+
+  /// تغيير كلمة المرور للمستخدم المسجل دخوله
+  Future<Map<String, dynamic>> changePassword({
+    String? currentPassword,
+    required String newPassword,
+    required String newPasswordConfirmation,
+    String? token,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/change-password'),
+            headers: _authHeaders(token),
+            body: jsonEncode({
+              if (currentPassword != null && currentPassword.isNotEmpty)
+                'current_password': currentPassword,
+              'new_password': newPassword,
+              'new_password_confirmation': newPasswordConfirmation,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم تحديث كلمة المرور بنجاح 🔒',
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'فشل تغيير كلمة المرور.',
+      };
+    } catch (e) {
+      debugPrint('⚠️ changePassword error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر.',
+      };
+    }
+  }
+
   /// قراءة الألعاب المحلية المرفقة في التطبيق لحالة الـ Offline
   Future<List<Map<String, dynamic>>> _loadSeedGames() async {
     try {

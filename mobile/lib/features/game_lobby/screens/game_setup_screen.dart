@@ -50,6 +50,8 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
         return 'assets/images/proverb.png';
       case 'famous-quotes':
         return 'assets/images/popcorn.png';
+      case 'autobus-complete':
+        return 'assets/images/proverb.png';
       case 'who-am-i':
         return 'assets/images/ic-mask.png';
       case 'forbidden-words':
@@ -195,10 +197,20 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             GameButton(
               text: 'ابدأ اللعبة',
               onPressed: () {
+                final targetRoute = widget.gameId == 'famous-quotes'
+                    ? '/game/quotes'
+                    : (widget.gameId == 'autobus-complete'
+                        ? '/game/autobus-complete'
+                        : (widget.gameId == 'forbidden-words' || widget.gameId == 'taboo'
+                            ? '/game/taboo'
+                            : (widget.gameId == 'drawing' || widget.gameId == 'acting-drawing'
+                                ? '/game/draw'
+                                : '/game/amthal')));
+
                 context.push('/players', extra: {
-                  'targetRoute': '/game/${widget.gameId == 'famous-quotes' ? 'quotes' : 'amthal'}',
+                  'targetRoute': targetRoute,
                   'gameSlug': widget.gameId,
-                  'gameTitle': _game?['name'] ?? (widget.gameId == 'famous-quotes' ? 'جمل مشهورة' : 'أمثال شعبية'),
+                  'gameTitle': _game?['name'] ?? (widget.gameId == 'famous-quotes' ? 'جمل مشهورة' : (widget.gameId == 'autobus-complete' ? 'أتوبيس كومبليت' : 'أمثال شعبية')),
                   'totalRounds': _roundsCount,
                   'playersCount': _playersCount,
                   'difficulty': _difficulty,

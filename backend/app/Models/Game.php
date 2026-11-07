@@ -18,6 +18,8 @@ class Game extends Model
     public const AVAILABLE_ICONS = [
         'format_quote_rounded' => 'أمثال واقتباسات (format_quote_rounded) 💬',
         'movie_filter_rounded' => 'إفيهات وأفلام وسينما (movie_filter_rounded) 🎬',
+        'directions_bus_rounded' => 'أتوبيس كومبليت وسفر وحروف (directions_bus_rounded) 🚌',
+        'sort_by_alpha_rounded' => 'حروف وتصنيفات وأبجدية (sort_by_alpha_rounded) 🔤',
         'psychology_rounded' => 'مين أنا وتخمين شخصيات (psychology_rounded) 🧠',
         'block_rounded' => 'ممنوع تقول / تابو (block_rounded) 🚫',
         'casino_rounded' => 'حقيقتان وكذبة / نرد الحظ (casino_rounded) 🎲',

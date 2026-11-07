@@ -285,7 +285,27 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
 
-                    const SizedBox(height: 22),
+                    const SizedBox(height: 10),
+
+                    // رابط نسيت كلمة المرور
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: GestureDetector(
+                        onTap: () => context.push('/forgot-password'),
+                        child: const Text(
+                          'نسيت كلمة المرور؟',
+                          style: TextStyle(
+                            color: Color(0xFFFFD27A),
+                            fontSize: 13,
+                            fontWeight: FontWeight.w800,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Color(0xFFFFD27A),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
 
                     // زر تسجيل الدخول
                     GestureDetector(

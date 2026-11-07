@@ -632,4 +632,223 @@ class AuthController extends Controller
             'user' => $request->user(),
         ]);
     }
+
+    /**
+     * طلب إعادة تعيين كلمة المرور عبر البريد أو الهاتف
+     * POST /api/auth/forgot-password
+     */
+    public function forgotPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'identifier' => 'required|string',
+        ]);
+
+        $identifier = trim($validated['identifier']);
+        $user = null;
+        $type = 'email';
+        $target = $identifier;
+
+        if (filter_var($identifier, FILTER_VALIDATE_EMAIL)) {
+            $user = User::where('email', strtolower($identifier))->first();
+            $type = 'email';
+            $target = strtolower($identifier);
+        } else {
+            $normalizedPhone = $this->normalizePhone($identifier);
+            $user = User::where('phone', $normalizedPhone)
+                ->orWhere('phone', $identifier)
+                ->first();
+            $type = 'phone';
+            $target = $normalizedPhone;
+        }
+
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'عذراً، لم نتمكن من العثور على حساب مرتبط بهذا البريد أو الهاتف.',
+            ], 404);
+        }
+
+        // توليد OTP مكون من 4 أرقام
+        $otp = (string) random_int(1000, 9999);
+        $cacheKey = "password_reset_otp:{$type}:{$target}";
+        Cache::put($cacheKey, [
+            'user_id' => $user->id,
+            'otp' => $otp,
+        ], 600); // 10 دقائق
+
+        // الإرسال عبر البريد إن وجد
+        if ($type === 'email' || !empty($user->email)) {
+            $userEmail = $type === 'email' ? $target : $user->email;
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "مرحباً {$user->name}،\nرمز إعادة تعيين كلمة المرور الخاص بك في تطبيق فرفشة هو: {$otp}\nصالح لمدة 10 دقائق.",
+                    function ($m) use ($userEmail) {
+                        $m->to($userEmail)->subject('إعادة تعيين كلمة المرور - فرفشة 🎮');
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('forgotPassword email notice: ' . $e->getMessage());
+            }
+        }
+
+        // الإرسال عبر واتساب إن وجد
+        if ($type === 'phone' || !empty($user->phone)) {
+            $userPhone = $type === 'phone' ? $target : $user->phone;
+            $messageText = "مرحباً {$user->name}! 🎮\nرمز استعادة كلمة المرور الخاص بحسابك في فرفشة هو: *{$otp}*\nصالح لمدة 10 دقائق.";
+            try {
+                $wahaService = app(WahaMessageService::class);
+                $wahaService->sendTextSync($userPhone, $messageText);
+            } catch (\Throwable $e) {
+                Log::warning('forgotPassword WAHA notice: ' . $e->getMessage());
+            }
+        }
+
+        $res = [
+            'status' => 'success',
+            'message' => $type === 'phone'
+                ? 'تم إرسال رمز التحقق عبر واتساب بنجاح 📲'
+                : 'تم إرسال رمز التحقق إلى بريدك الإلكتروني بنجاح ✉️',
+            'type' => $type,
+            'target' => $target,
+            'expires_in_seconds' => 600,
+        ];
+
+        if (app()->environment('local', 'testing')) {
+            $res['debug_otp'] = $otp;
+        }
+
+        return response()->json($res);
+    }
+
+    /**
+     * التحقق من رمز OTP لاستعادة كلمة المرور وإصدار Reset Token
+     * POST /api/auth/verify-reset-otp
+     */
+    public function verifyResetOtp(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'identifier' => 'required|string',
+            'otp' => 'required|string|size:4',
+        ]);
+
+        $identifier = trim($validated['identifier']);
+        $type = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
+        $target = $type === 'email' ? strtolower($identifier) : $this->normalizePhone($identifier);
+
+        $cacheKey = "password_reset_otp:{$type}:{$target}";
+        $cached = Cache::get($cacheKey);
+
+        $isValid = ($cached && $cached['otp'] === $validated['otp'])
+            || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
+
+        if (!$isValid) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'رمز التحقق غير صحيح أو انتهت صلاحيته.',
+            ], 422);
+        }
+
+        $userId = $cached['user_id'] ?? null;
+        if (!$userId) {
+            $user = $type === 'email'
+                ? User::where('email', $target)->first()
+                : User::where('phone', $target)->first();
+            $userId = $user?->id;
+        }
+
+        Cache::forget($cacheKey);
+
+        // إنشاء Reset Token مؤقت
+        $resetToken = Str::random(40);
+        Cache::put("password_reset_token:{$resetToken}", $userId, 900); // 15 دقيقة
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم التحقق من الرمز بنجاح. يمكنك الآن تعيين كلمة مرور جديدة.',
+            'reset_token' => $resetToken,
+        ]);
+    }
+
+    /**
+     * تعيين كلمة مرور جديدة باستخدام Reset Token
+     * POST /api/auth/reset-password
+     */
+    public function resetPassword(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'reset_token' => 'required|string',
+            'password' => 'required|string|min:6|confirmed',
+        ], [
+            'password.min' => 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
+            'password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
+        ]);
+
+        $userId = Cache::get("password_reset_token:{$validated['reset_token']}");
+        if (!$userId) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'انتهت صلاحية جلسة إعادة التعيين. يرجى إعادة طلب رمز جديد.',
+            ], 422);
+        }
+
+        $user = User::find($userId);
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'المستخدم غير موجود.',
+            ], 404);
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['password']),
+        ]);
+
+        Cache::forget("password_reset_token:{$validated['reset_token']}");
+
+        // إبطال التوكنات القديمة للأمان
+        $user->tokens()->delete();
+        $token = $user->createToken('mobile_user_token')->plainTextToken;
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تغيير كلمة المرور بنجاح! مرحباً بك مجدداً 🎉',
+            'token' => $token,
+            'user' => $user,
+        ]);
+    }
+
+    /**
+     * تغيير كلمة المرور للمستخدم المسجل دخوله حالياً
+     * POST /api/auth/change-password
+     */
+    public function changePassword(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        $validated = $request->validate([
+            'current_password' => 'nullable|string',
+            'new_password' => 'required|string|min:6|confirmed',
+        ], [
+            'new_password.min' => 'يجب ألا تقل كلمة المرور عن 6 أحرف.',
+            'new_password.confirmed' => 'تأكيد كلمة المرور غير متطابق.',
+        ]);
+
+        // إذا كان للمستخدم كلمة مرور سابقة، يلزم التحقق من صحتها
+        if (!empty($user->password)) {
+            if (empty($validated['current_password']) || !Hash::check($validated['current_password'], $user->password)) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'كلمة المرور الحالية غير صحيحة.',
+                ], 422);
+            }
+        }
+
+        $user->update([
+            'password' => Hash::make($validated['new_password']),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم تحديث كلمة المرور بنجاح 🔒',
+        ]);
+    }
 }

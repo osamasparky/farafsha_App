@@ -5,6 +5,7 @@ import '../../features/splash_onboarding/screens/onboarding_flow_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/otp_screen.dart';
 import '../../features/auth/screens/register_screen.dart';
+import '../../features/auth/screens/forgot_password_screen.dart';
 import '../../features/mode_selection/screens/mode_selection_screen.dart';
 import '../../features/home/screens/home_screen.dart';
 import '../../features/game_lobby/screens/game_setup_screen.dart';
@@ -18,6 +19,7 @@ import '../../features/games/screens/movie_quotes_game_screen.dart';
 import '../../features/games/screens/taboo_game_screen.dart';
 import '../../features/games/screens/drawing_game_screen.dart';
 import '../../features/games/screens/lamma_host_game_screen.dart';
+import '../../features/games/screens/autobus_game_screen.dart';
 import '../../features/leaderboard/screens/leaderboard_screen.dart';
 import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
@@ -56,6 +58,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/register',
       builder: (context, state) => const RegisterScreen(),
+    ),
+    GoRoute(
+      path: '/forgot-password',
+      builder: (context, state) => const ForgotPasswordScreen(),
     ),
     GoRoute(
       path: '/mode-select',
@@ -151,6 +157,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/game/draw',
       builder: (context, state) => const DrawingGameScreen(),
+    ),
+    GoRoute(
+      path: '/game/autobus-complete',
+      builder: (context, state) {
+        final session = state.extra as GameSession?;
+        return AutobusGameScreen(session: session);
+      },
     ),
     GoRoute(
       path: '/game/lammah-host',

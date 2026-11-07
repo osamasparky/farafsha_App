@@ -20,6 +20,10 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/send-email-otp', [AuthController::class, 'sendEmailOtp']);
     Route::post('/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+    Route::post('/verify-reset-otp', [AuthController::class, 'verifyResetOtp']);
+    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
     Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
     Route::post('/register-profile', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');

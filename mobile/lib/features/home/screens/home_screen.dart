@@ -122,6 +122,15 @@ class _HomeScreenState extends State<HomeScreen> {
         'category': 'تخمين',
         'icon': 'assets/images/ic-mask.png',
       },
+      {
+        'id': 7,
+        'slug': 'autobus-complete',
+        'name': 'أتوبيس كومبليت',
+        'subtitle': 'ولد، بنت، جماد، نبات، بلاد، حيوان',
+        'category': 'ذكاء وسرعة',
+        'icon': 'assets/images/ic-dice.png',
+        'is_featured': true,
+      },
     ];
   }
 
@@ -149,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
         return const [Color(0xFF6B2B70), Color(0xFF3E1542)];
       case 'who-am-i':
         return const [Color(0xFF7A6A3A), Color(0xFF3F3420)];
+      case 'autobus-complete':
+        return const [Color(0xFFBF360C), Color(0xFFE65100)];
       default:
         return const [Color(0xFF8C3468), Color(0xFF531B44)];
     }
