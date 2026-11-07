@@ -125,7 +125,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 20),
-                      onPressed: () => context.pop(),
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/home');
+                        }
+                      },
                     ),
                     Expanded(
                       child: Text(

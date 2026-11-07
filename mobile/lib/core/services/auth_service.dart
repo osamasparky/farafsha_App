@@ -20,10 +20,19 @@ class AuthService extends ChangeNotifier {
   int _wins = 0;
   int _gamesPlayed = 0;
 
-  // اللعبتان المتاحتان للزائر فقط (وفق طلب المستخدم)
+  // جميع الألعاب مفعلة ومتاحة للعب
   static const List<String> kGuestUnlockedSlugs = [
     'amthal-shaabiya',
     'famous-quotes',
+    'forbidden-words',
+    'taboo-words',
+    'speed-trivia',
+    'guess-song',
+    'who-am-i',
+    'autobus-complete',
+    'two-truths-and-lie',
+    'acting-drawing',
+    'draw-guess',
   ];
 
   bool get isLoggedIn => _isLoggedIn;

@@ -131,6 +131,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
       setState(() {
         _currentIndex++;
         _lastScoredTeam = null;
+        _isAnswerRevealed = false;
       });
     }
   }
@@ -140,6 +141,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
       setState(() {
         _currentIndex--;
         _lastScoredTeam = null;
+        _isAnswerRevealed = false;
       });
     }
   }

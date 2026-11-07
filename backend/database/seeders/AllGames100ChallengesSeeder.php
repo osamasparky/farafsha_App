@@ -16,6 +16,9 @@ class AllGames100ChallengesSeeder extends Seeder
     {
         $jsonPath = base_path('../mobile/assets/data/seed_games.json');
         if (!File::exists($jsonPath)) {
+            $jsonPath = database_path('seeders/seed_games.json');
+        }
+        if (!File::exists($jsonPath)) {
             $this->command?->warn("Seed JSON not found at: {$jsonPath}");
             return;
         }

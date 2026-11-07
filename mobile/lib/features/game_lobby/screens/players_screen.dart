@@ -336,7 +336,13 @@ class _PlayersScreenState extends State<PlayersScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 22),
-                    onPressed: () => context.pop(),
+                    onPressed: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/home');
+                      }
+                    },
                   ),
                   Text(
                     'مين بيلعب؟ ($_totalPlayersCount)',

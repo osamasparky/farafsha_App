@@ -11,15 +11,16 @@ class ApiService {
 
   // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على USB يتم استخدام 127.0.0.1، على الواي فاي 192.168.100.3
   String get baseUrl {
-    if (kIsWeb) return 'http://localhost:8000/api';
+    if (kIsWeb) return 'https://farafsha.com/api';
     if (_workingBaseUrl != null) return _workingBaseUrl!;
-    return 'http://127.0.0.1:8000/api';
+    return 'https://farafsha.com/api';
   }
 
-  /// فحص واكتشاف عنوان السيرفر الفعّال تلقائياً (USB reverse، واي فاي الشبكة المحلية، أو المحاكي)
+  /// فحص واكتشاف عنوان السيرفر الفعّال تلقائياً (السيرفر السحابي المباشر، USB reverse، أو الشبكة المحلية)
   Future<void> detectWorkingHost() async {
     if (kIsWeb) return;
     const candidates = [
+      'https://farafsha.com/api',
       'http://127.0.0.1:8000/api',
       'http://192.168.100.3:8000/api',
       'http://10.0.2.2:8000/api',

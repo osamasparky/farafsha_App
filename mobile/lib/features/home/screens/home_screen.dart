@@ -217,6 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         SoundService.instance.playClick();
                         context.push('/profile');
@@ -261,6 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: () {
                         SoundService.instance.playClick();
                         context.push('/notifications');
@@ -374,6 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
               final hasUrl = banner['external_url'] != null && banner['external_url'].toString().isNotEmpty;
 
               return GestureDetector(
+                behavior: HitTestBehavior.opaque,
                 onTap: () => _onBannerTap(banner),
                 child: Container(
                   margin: const EdgeInsets.symmetric(horizontal: 20),
@@ -498,6 +501,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final bool isSelected = _selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
         onTap: () {
           SettingsService.instance.triggerHaptic();
           SoundService.instance.playClick();
@@ -540,6 +544,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final badgeText = game['badge_text']?.toString();
 
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         SettingsService.instance.triggerHaptic();
         SoundService.instance.playClick();

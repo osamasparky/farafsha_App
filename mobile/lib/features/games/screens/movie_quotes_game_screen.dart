@@ -200,6 +200,13 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
       SoundService.instance.playWin();
       context.push('/results', extra: _session);
     } else {
+      // تصفير حالة الإجابة فوراً قبل الانتقال للجولة التالية لمنع وميض الإجابة بالأخضر
+      setState(() {
+        _selectedChoiceIndex = null;
+        _isAnswered = false;
+        _secondsLeft = 15;
+      });
+
       _session.advanceToNextRound();
 
       await context.push('/handoff', extra: _session);
@@ -246,6 +253,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: _openPauseModal,
                       child: Container(
                         width: 44,
@@ -534,6 +542,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                       }
 
                       return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: () => _onSelectChoice(index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
@@ -603,6 +612,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
 
                 // زر التالي
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: _onNext,
                   child: Container(
                     height: 60,

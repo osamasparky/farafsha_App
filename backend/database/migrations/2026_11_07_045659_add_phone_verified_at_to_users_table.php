@@ -12,8 +12,11 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            if (!Schema::hasColumn('users', 'phone')) {
+                $table->string('phone', 50)->nullable()->after('email');
+            }
             if (!Schema::hasColumn('users', 'phone_verified_at')) {
-                $table->timestamp('phone_verified_at')->nullable()->after('phone');
+                $table->timestamp('phone_verified_at')->nullable();
             }
         });
     }

@@ -1160,7 +1160,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   children: [
                     IconButton(
                       icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
-                      onPressed: () => context.pop(),
+                      onPressed: () {
+                        if (context.canPop()) {
+                          context.pop();
+                        } else {
+                          context.go('/home');
+                        }
+                      },
                     ),
                     const Text(
                       'الملف الشخصي',

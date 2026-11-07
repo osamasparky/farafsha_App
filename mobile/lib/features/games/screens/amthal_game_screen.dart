@@ -208,6 +208,13 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
       SoundService.instance.playWin();
       context.push('/results', extra: _session);
     } else {
+      // تصفير حالة الإجابة فوراً قبل الانتقال للجولة التالية لمنع وميض الإجابة بالأخضر
+      setState(() {
+        _selectedOptionIndex = null;
+        _isAnswered = false;
+        _secondsLeft = 20;
+      });
+
       // الانتقال للجولة التالية
       _session.advanceToNextRound();
 
@@ -257,6 +264,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     GestureDetector(
+                      behavior: HitTestBehavior.opaque,
                       onTap: _openPauseModal,
                       child: Container(
                         width: 44,
@@ -564,6 +572,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                       }
 
                       return GestureDetector(
+                        behavior: HitTestBehavior.opaque,
                         onTap: () => _onSelectOption(index),
                         child: AnimatedContainer(
                           duration: const Duration(milliseconds: 180),
@@ -633,6 +642,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
 
                 // زر التالي (ينتقل للجولة التالية أو شاشة النتائج)
                 GestureDetector(
+                  behavior: HitTestBehavior.opaque,
                   onTap: _onNext,
                   child: Container(
                     height: 60,

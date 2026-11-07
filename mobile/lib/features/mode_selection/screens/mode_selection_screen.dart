@@ -33,7 +33,13 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                 alignment: Alignment.centerRight,
                 child: IconButton(
                   icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
-                  onPressed: () => context.pop(),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/home');
+                    }
+                  },
                 ),
               ),
 
@@ -98,7 +104,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                 text: 'متابعة',
                 onPressed: () {
                   if (_selectedMode == 'local') {
-                    context.push('/home');
+                    context.go('/home');
                   } else if (_selectedMode == 'lammah') {
                     _showLammahOptionsSheet(context);
                   } else {

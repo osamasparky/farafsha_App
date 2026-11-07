@@ -47,65 +47,70 @@ class LammaScaffold extends StatelessWidget {
           ),
 
           // 2. كرات الضوء والبوكيه الحيوية (Bokeh Glow Blobs)
-          if (showBokeh) ...[
-            Positioned(
-              top: 40,
-              right: 40,
-              child: Container(
-                width: 140,
-                height: 140,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LammaColors.violet500.withValues(alpha: 0.35),
-                  boxShadow: [
-                    BoxShadow(
-                      color: LammaColors.violet500.withValues(alpha: 0.45),
-                      blurRadius: 70,
-                      spreadRadius: 20,
+          if (showBokeh)
+            IgnorePointer(
+              child: Stack(
+                children: [
+                  Positioned(
+                    top: 40,
+                    right: 40,
+                    child: Container(
+                      width: 140,
+                      height: 140,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: LammaColors.violet500.withValues(alpha: 0.35),
+                        boxShadow: [
+                          BoxShadow(
+                            color: LammaColors.violet500.withValues(alpha: 0.45),
+                            blurRadius: 70,
+                            spreadRadius: 20,
+                          ),
+                        ],
+                      ),
                     ),
-                  ],
-                ),
+                  ),
+                  Positioned(
+                    top: 300,
+                    left: 20,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: LammaColors.orange300.withValues(alpha: 0.3),
+                        boxShadow: [
+                          BoxShadow(
+                            color: LammaColors.orange300.withValues(alpha: 0.35),
+                            blurRadius: 50,
+                            spreadRadius: 15,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 360,
+                    right: 10,
+                    child: Container(
+                      width: 90,
+                      height: 90,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: LammaColors.pink500.withValues(alpha: 0.25),
+                        boxShadow: [
+                          BoxShadow(
+                            color: LammaColors.pink500.withValues(alpha: 0.3),
+                            blurRadius: 60,
+                            spreadRadius: 20,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-            Positioned(
-              top: 300,
-              left: 20,
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LammaColors.orange300.withValues(alpha: 0.3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: LammaColors.orange300.withValues(alpha: 0.35),
-                      blurRadius: 50,
-                      spreadRadius: 15,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Positioned(
-              top: 360,
-              right: 10,
-              child: Container(
-                width: 90,
-                height: 90,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: LammaColors.pink500.withValues(alpha: 0.25),
-                  boxShadow: [
-                    BoxShadow(
-                      color: LammaColors.pink500.withValues(alpha: 0.3),
-                      blurRadius: 60,
-                      spreadRadius: 20,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
 
           // 3. المحتوى الفعلي
           SafeArea(

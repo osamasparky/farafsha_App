@@ -29,7 +29,6 @@ class AppBottomNavBar extends StatelessWidget {
         child: SizedBox(
           height: 68,
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(
                 context: context,
@@ -74,35 +73,49 @@ class AppBottomNavBar extends StatelessWidget {
     required String route,
   }) {
     final bool isSelected = currentIndex == index;
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        SettingsService.instance.triggerHaptic();
-        SoundService.instance.playClick();
-        if (currentIndex != index) {
-          context.push(route);
-        }
-      },
-      child: SizedBox(
-        width: 72,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isSelected ? const Color(0xFFB98AFF) : const Color(0xFF8B7AA8),
-              size: 24,
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            SettingsService.instance.triggerHaptic();
+            SoundService.instance.playClick();
+            context.go(route);
+          },
+          splashColor: const Color(0xFFB98AFF).withOpacity(0.2),
+          highlightColor: const Color(0xFFB98AFF).withOpacity(0.1),
+          child: SizedBox(
+            height: 68,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: isSelected ? const Color(0xFF2D1658) : Colors.transparent,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(
+                    icon,
+                    color: isSelected ? const Color(0xFFB98AFF) : const Color(0xFF8B7AA8),
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.cairo(
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+                    color: isSelected ? Colors.white : const Color(0xFF8B7AA8),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: GoogleFonts.cairo(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
-                color: isSelected ? Colors.white : const Color(0xFF8B7AA8),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
