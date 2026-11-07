@@ -764,28 +764,30 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
 
                     const SizedBox(height: 10),
 
-                    // زر أتوبيس كومبليت العملاق التفاعلي
+                    // زر أتوبيس كومبليت العملاق التفاعلي 3D
                     GestureDetector(
                       onTap: _onAutobusCompletePressed,
                       child: Container(
                         width: double.infinity,
-                        height: 58,
+                        height: 62,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFFF5E00), Color(0xFFD81B60)],
+                            colors: [Color(0xFFFF6E14), Color(0xFFE11D48)],
                             begin: Alignment.topRight,
                             end: Alignment.bottomLeft,
                           ),
-                          borderRadius: BorderRadius.circular(20),
-                          border: const Border(
-                            top: BorderSide(color: Colors.white60, width: 2),
-                            bottom: BorderSide(color: Color(0xFF880E4F), width: 5),
-                          ),
+                          borderRadius: BorderRadius.circular(22),
+                          border: Border.all(color: Colors.white.withOpacity(0.35), width: 1.5),
                           boxShadow: [
+                            const BoxShadow(
+                              color: Color(0xFF880E4F),
+                              offset: Offset(0, 5),
+                              blurRadius: 0,
+                            ),
                             BoxShadow(
-                              color: const Color(0xFFFF5E00).withValues(alpha: 0.5),
-                              blurRadius: 20,
-                              offset: const Offset(0, 6),
+                              color: const Color(0xFFFF5E00).withOpacity(0.45),
+                              blurRadius: 18,
+                              offset: const Offset(0, 7),
                             ),
                           ],
                         ),
@@ -807,7 +809,7 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                         ),
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 6),
                   ],
                 ),
               ),
@@ -836,24 +838,44 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFF261048),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: LammaColors.cardBorder, width: 1.5),
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFF2E1357), Color(0xFF1D093B)],
+            ),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: const Color(0xFFA35BFF).withOpacity(0.35), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.25),
+                blurRadius: 6,
+                offset: const Offset(0, 3),
+              ),
+            ],
           ),
           child: Row(
             children: [
               Container(
-                width: 34,
-                height: 34,
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: LammaColors.violet500.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(10),
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFFFF9E40), Color(0xFFFF5400)],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFFF8A4C).withOpacity(0.35),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-                child: Icon(icon, color: LammaColors.gold300, size: 18),
+                child: Icon(icon, color: Colors.white, size: 20),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 10),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -864,10 +886,10 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.cairo(
-                        fontSize: 14,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        height: 1.2,
+                        height: 1.1,
                       ),
                     ),
                     if (_showAnswers && sampleAnswer != null)
@@ -875,8 +897,8 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                         child: Text(
                           sampleAnswer,
                           style: GoogleFonts.cairo(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
                             color: const Color(0xFF69F0AE),
                             height: 1.1,
                           ),

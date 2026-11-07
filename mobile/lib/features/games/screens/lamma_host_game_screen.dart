@@ -255,42 +255,55 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: const Color(0xFF190C36),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: LammaColors.cardBorder, width: 1.5),
+        gradient: const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF281154), Color(0xFF190838)],
+        ),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withOpacity(0.4),
+          width: 2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: LammaColors.glow.withValues(alpha: 0.35),
-            blurRadius: 30,
-            spreadRadius: 2,
+            color: const Color(0xFFF59E0B).withOpacity(0.15),
+            blurRadius: 20,
+            spreadRadius: 1,
+          ),
+          BoxShadow(
+            color: Colors.black.withOpacity(0.4),
+            blurRadius: 16,
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // شريط تنبيه المذيع
+          // شريط تنبيه المذيع الفاخر
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 decoration: BoxDecoration(
-                  color: LammaColors.orange500.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(8),
+                  color: const Color(0xFFF59E0B).withOpacity(0.18),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFF59E0B).withOpacity(0.5)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.volume_up_rounded, color: LammaColors.orange300, size: 16),
+                    const Icon(Icons.mic_rounded, color: Color(0xFFFFD166), size: 16),
                     const SizedBox(width: 6),
                     Text(
-                      'اقرأ السؤال بصوت عالي للقعدة',
+                      'اقرأ السؤال بصوت عالي للقعدة 📢',
                       style: GoogleFonts.cairo(
                         fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: LammaColors.orange300,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFFFFE59E),
                       ),
                     ),
                   ],
@@ -298,58 +311,69 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
               ),
 
               // زر إظهار/إخفاء الإجابة
-              IconButton(
-                icon: Icon(
-                  _isAnswerRevealed ? Icons.visibility_rounded : Icons.visibility_off_rounded,
-                  color: const Color(0xFFD9C2FF),
-                  size: 20,
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.08),
+                  shape: BoxShape.circle,
                 ),
-                onPressed: () => setState(() => _isAnswerRevealed = !_isAnswerRevealed),
+                child: IconButton(
+                  icon: Icon(
+                    _isAnswerRevealed ? Icons.visibility_rounded : Icons.visibility_off_rounded,
+                    color: const Color(0xFFFFD166),
+                    size: 20,
+                  ),
+                  onPressed: () => setState(() => _isAnswerRevealed = !_isAnswerRevealed),
+                ),
               ),
             ],
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // نص السؤال في كارت عريض
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 22),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 22),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [Color(0xFF26124D), Color(0xFF1E0C3F)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+              color: Colors.black.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
             ),
             child: Text(
               prompt,
               textAlign: TextAlign.center,
               style: GoogleFonts.cairo(
-                fontSize: 22,
+                fontSize: 24,
                 fontWeight: FontWeight.w900,
                 color: Colors.white,
-                height: 1.5,
+                height: 1.4,
               ),
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
 
           // صندوق الإجابة الخاص بالمذيع
           AnimatedContainer(
             duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
               color: _isAnswerRevealed
-                  ? const Color(0xFF133829).withValues(alpha: 0.8)
-                  : Colors.white.withValues(alpha: 0.04),
-              borderRadius: BorderRadius.circular(16),
+                  ? const Color(0xFF064E3B).withOpacity(0.85)
+                  : Colors.white.withOpacity(0.04),
+              borderRadius: BorderRadius.circular(18),
               border: Border.all(
-                color: _isAnswerRevealed ? LammaColors.success : Colors.white24,
-                width: 1.2,
+                color: _isAnswerRevealed ? const Color(0xFF10B981) : Colors.white24,
+                width: 1.5,
               ),
+              boxShadow: _isAnswerRevealed
+                  ? [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withOpacity(0.3),
+                        blurRadius: 12,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : null,
             ),
             child: _isAnswerRevealed
                 ? Column(
@@ -357,14 +381,21 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: LammaColors.success, size: 20),
+                          Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: const BoxDecoration(
+                              color: Color(0xFF10B981),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.check_rounded, color: Colors.white, size: 14),
+                          ),
                           const SizedBox(width: 8),
                           Text(
                             'الإجابة الصحيحة:',
                             style: GoogleFonts.cairo(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: LammaColors.successLight,
+                              color: const Color(0xFFA7F3D0),
                             ),
                           ),
                           const Spacer(),
@@ -437,43 +468,50 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
                 : Color(team['color'] as int);
             final bool justScored = _lastScoredTeam == team['name'];
 
-            return InkWell(
+            final Color bevelColor = color == const Color(0xFFA35BFF)
+                ? const Color(0xFF6B21A8)
+                : const Color(0xFFC2410C);
+
+            return GestureDetector(
               onTap: () => _scoreForTeam(i),
-              borderRadius: BorderRadius.circular(16),
               child: AnimatedContainer(
-                duration: const Duration(milliseconds: 180),
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                duration: const Duration(milliseconds: 150),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 constraints: BoxConstraints(
                   minWidth: (MediaQuery.of(context).size.width - 56) / 2,
                 ),
                 decoration: BoxDecoration(
-                  color: justScored ? color : color.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                    color: justScored ? Colors.white : color,
-                    width: justScored ? 2.0 : 1.2,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: justScored
+                        ? [color, color.withOpacity(0.8)]
+                        : [color.withOpacity(0.35), color.withOpacity(0.18)],
                   ),
-                  boxShadow: justScored
-                      ? [
-                          BoxShadow(
-                            color: color.withValues(alpha: 0.6),
-                            blurRadius: 16,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : [],
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: justScored ? Colors.white : color.withOpacity(0.8),
+                    width: justScored ? 2.0 : 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: bevelColor,
+                      offset: const Offset(0, 4),
+                      blurRadius: 0,
+                    ),
+                    BoxShadow(
+                      color: color.withOpacity(justScored ? 0.6 : 0.25),
+                      blurRadius: justScored ? 18 : 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 14,
-                      height: 14,
-                      decoration: BoxDecoration(
-                        color: color,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white, width: 1.5),
-                      ),
+                    Text(
+                      team['name'] == 'فرفوش' ? '🟣' : '🟠',
+                      style: const TextStyle(fontSize: 16),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
@@ -483,27 +521,29 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
                           Text(
                             team['name'] as String,
                             style: GoogleFonts.cairo(
-                              fontSize: 14,
+                              fontSize: 15,
                               fontWeight: FontWeight.w900,
                               color: Colors.white,
+                              height: 1.1,
                             ),
                           ),
                           Text(
                             '${team['score']} نقطة',
                             style: GoogleFonts.cairo(
                               fontSize: 12,
-                              fontWeight: FontWeight.w700,
-                              color: LammaColors.gold300,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFFFD166),
+                              height: 1.1,
                             ),
                           ),
                         ],
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
+                        color: Colors.white.withOpacity(justScored ? 0.35 : 0.18),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Text(
                         '+1',

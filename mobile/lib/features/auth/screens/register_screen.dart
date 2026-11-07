@@ -147,35 +147,31 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    if (otpRes['success'] == true) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(otpRes['message']?.toString() ?? 'تم إرسال رمز التحقق لهاتفك عبر واتساب بنجاح 📲'),
-          backgroundColor: const Color(0xFF35B88E),
-        ),
-      );
+    final success = otpRes['success'] == true;
+    final msg = otpRes['message']?.toString() ??
+        (success
+            ? 'تم إرسال رمز التحقق لهاتفك عبر واتساب بنجاح 📲'
+            : 'يرجى إدخال رمز التحقق لتأكيد الحساب');
 
-      // التوجيه المباشر لشاشة إدخال رمز التحقق
-      context.push(
-        '/otp',
-        extra: {
-          'name': name,
-          'phone': phone,
-          'email': email,
-          'password': password,
-          'avatar': avatar,
-        },
-      );
-    } else {
-      final msg = otpRes['message']?.toString() ?? 'تعذر إرسال كود التحقق، يرجى التأكد من صحة رقم الهاتف.';
-      setState(() => _errorMessage = msg);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          backgroundColor: const Color(0xFFD2566A),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(msg),
+        backgroundColor: success ? const Color(0xFF35B88E) : const Color(0xFF8A56D2),
+        duration: const Duration(seconds: 3),
+      ),
+    );
+
+    // التوجيه المباشر والفوري لشاشة إدخال رمز التحقق OTP
+    context.push(
+      '/otp',
+      extra: {
+        'name': name,
+        'phone': phone,
+        'email': email,
+        'password': password,
+        'avatar': avatar,
+      },
+    );
   }
 
   @override

@@ -398,33 +398,87 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
 
                 const SizedBox(height: 14),
 
-                // بطاقة الإفيه السينمائي
+                // بطاقة الإفيه السينمائي الفاخرة بنمط تذكرة السينما الذهبية
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1E0E3B),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.35), width: 1.5),
+                    gradient: const LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Color(0xFF2A0F54), Color(0xFF1B0738)],
+                    ),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(
+                      color: const Color(0xFFF59E0B).withOpacity(0.5),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFF59E0B).withOpacity(0.2),
+                        blurRadius: 20,
+                        spreadRadius: 1,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 18,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          const Icon(Icons.movie_creation_rounded, color: LammaColors.gold500, size: 20),
-                          const SizedBox(width: 8),
-                          Text(
-                            question.explanation ?? 'إفيهات من السينما والدراما',
-                            style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: LammaColors.gold500),
-                          ),
-                        ],
+                      // شريط كلاكيت السينما
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF59E0B).withOpacity(0.15),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.movie_filter_rounded, color: Color(0xFFFFD166), size: 18),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                question.explanation ?? 'إفيهات من السينما والدراما المصرية',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  color: const Color(0xFFFFE59E),
+                                ),
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: 12),
-                      Text(
-                        question.prompt,
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.cairo(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
+
+                      // نص الإفيه السينمائي البارز
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 18),
+                        child: Column(
+                          children: [
+                            Text(
+                              question.prompt,
+                              textAlign: TextAlign.center,
+                              style: GoogleFonts.cairo(
+                                fontSize: 26,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
+                                height: 1.35,
+                                shadows: [
+                                  Shadow(
+                                    color: Colors.black.withOpacity(0.5),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ),
@@ -432,7 +486,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
 
                 const SizedBox(height: 14),
 
-                // الخيارات
+                // خيارات الإجابة بنمط كروت 3D لمسية
                 Expanded(
                   child: ListView.separated(
                     itemCount: question.options.length,
@@ -442,49 +496,99 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                       final isSelected = _selectedChoiceIndex == index;
                       final isCorrect = option == question.answer;
 
-                      Color? bgColor;
-                      Color borderColor = const Color(0xFFA35BFF).withValues(alpha: 0.3);
+                      final List<String> letters = ['أ', 'ب', 'ج', 'د'];
+                      final letter = index < letters.length ? letters[index] : '${index + 1}';
+
+                      Color bgColor = const Color(0xFF24104D);
+                      Color bevelColor = const Color(0xFF170836);
+                      Color borderColor = Colors.white.withOpacity(0.12);
+                      Color badgeBg = Colors.white.withOpacity(0.12);
+                      Color badgeText = Colors.white70;
                       IconData? statusIcon;
                       Color statusIconColor = Colors.white;
 
                       if (_isAnswered) {
                         if (isCorrect) {
-                          bgColor = const Color(0xFF1E824C);
-                          borderColor = const Color(0xFF2ECC71);
+                          bgColor = const Color(0xFF059669);
+                          bevelColor = const Color(0xFF04533C);
+                          borderColor = const Color(0xFF34D399);
+                          badgeBg = Colors.white.withOpacity(0.25);
+                          badgeText = Colors.white;
                           statusIcon = Icons.check_circle_rounded;
+                          statusIconColor = Colors.white;
                         } else if (isSelected && !isCorrect) {
-                          bgColor = const Color(0xFF962D3E);
-                          borderColor = const Color(0xFFE74C3C);
+                          bgColor = const Color(0xFFDC2626);
+                          bevelColor = const Color(0xFF991B1B);
+                          borderColor = const Color(0xFFF87171);
+                          badgeBg = Colors.white.withOpacity(0.25);
+                          badgeText = Colors.white;
                           statusIcon = Icons.cancel_rounded;
+                          statusIconColor = Colors.white;
                         }
                       } else if (isSelected) {
-                        bgColor = const Color(0xFF6A24C9);
-                        borderColor = const Color(0xFFC9A2FF);
+                        bgColor = const Color(0xFF7A3BE0);
+                        bevelColor = const Color(0xFF501FB0);
+                        borderColor = const Color(0xFFD6B4FF);
+                        badgeBg = const Color(0xFFFFD166);
+                        badgeText = const Color(0xFF1E0E3E);
                       }
 
                       return GestureDetector(
                         onTap: () => _onSelectChoice(index),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: 54,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          duration: const Duration(milliseconds: 180),
+                          height: 58,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           decoration: BoxDecoration(
-                            color: bgColor ?? const Color(0xFF241050),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: borderColor, width: 2),
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: borderColor, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: bevelColor,
+                                offset: const Offset(0, 4),
+                                blurRadius: 0,
+                              ),
+                              if (isSelected || (_isAnswered && isCorrect))
+                                BoxShadow(
+                                  color: (isCorrect ? const Color(0xFF059669) : const Color(0xFFA35BFF))
+                                      .withOpacity(0.4),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
+                                ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Expanded(
+                              // شارة الحرف
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: badgeBg,
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Center(
                                   child: Text(
-                                    option,
+                                    letter,
                                     style: GoogleFonts.cairo(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: badgeText,
                                     ),
                                   ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  option,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.start,
                                 ),
                               ),
                               if (statusIcon != null)
@@ -501,26 +605,28 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                 GestureDetector(
                   onTap: _onNext,
                   child: Container(
-                    height: 56,
+                    height: 60,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: _session.isLastRound
-                            ? [const Color(0xFFFFB800), const Color(0xFFFF8A00)]
-                            : [const Color(0xFFB98AFF), const Color(0xFF7A2FE0)],
+                            ? [const Color(0xFFFFC043), const Color(0xFFFF9500)]
+                            : [const Color(0xFFA866FF), const Color(0xFF742BE0)],
                       ),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _session.isLastRound ? const Color(0xFFB25E00) : const Color(0xFF4A1690),
-                          width: 4,
-                        ),
-                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFA35BFF).withValues(alpha: 0.55),
-                          blurRadius: 24,
+                          color: _session.isLastRound ? const Color(0xFFB36700) : const Color(0xFF4C179C),
+                          offset: const Offset(0, 5),
+                          blurRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: (_session.isLastRound ? const Color(0xFFFF9500) : const Color(0xFFA35BFF))
+                              .withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
@@ -532,13 +638,13 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                               ? 'عرض النتائج النهائية 🏆'
                               : 'التالي (دور ${_session.nextPlayer.name})',
                           style: GoogleFonts.cairo(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 18),
+                        const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 16),
                       ],
                     ),
                   ),

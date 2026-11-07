@@ -35,3 +35,7 @@ mobile/build/
 mobile/.pub-cache/
 mobile/.pub/
 
+
+# Python cache
+__pycache__/
+*.pyc

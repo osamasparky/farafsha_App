@@ -426,10 +426,40 @@ class AuthController extends Controller
 
         // لن يُنشأ أي حساب بدون التحقق المسبق
         if (!$phoneVerified && !$emailVerified) {
+            // توليد رمز تحقق OTP عشوائي مكون من 4 أرقام وتخزينه
+            $otp = (string) random_int(1000, 9999);
+            Cache::put("otp:phone:{$normalizedPhone}", $otp, 300);
+            if (!empty($normalizedEmail)) {
+                Cache::put("otp:email:{$normalizedEmail}", $otp, 300);
+            }
+
+            // إرسال الكود فورياً عبر واتساب (WAHA) إن أمكن
+            try {
+                $wahaService = app(\App\Services\WahaMessageService::class);
+                $messageText = "مرحباً بك في منصة وتطبيق فرفشة! 🎮🥳\nرمز التحقق الخاص بك هو: *{$otp}*\nصالح لمدة 5 دقائق. لا تشارك هذا الرمز مع أحد.";
+                $wahaService->sendTextSync($normalizedPhone, $messageText);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Auto register OTP send error: ' . $e->getMessage());
+            }
+
+            // إرسال عبر البريد الإلكتروني إن توفر
+            if (!empty($normalizedEmail)) {
+                try {
+                    \Illuminate\Support\Facades\Mail::raw(
+                        "مرحباً بك في منصة وتطبيق فرفشة! 🎮\n\nرمز التحقق الخاص بك هو: {$otp}\nصالح لمدة 5 دقائق.",
+                        function ($m) use ($normalizedEmail) {
+                            $m->to($normalizedEmail)->subject('رمز التحقق OTP - فرفشة 🎮');
+                        }
+                    );
+                } catch (\Throwable $e) {}
+            }
+
             return response()->json([
                 'status' => 'error',
                 'verification_required' => true,
-                'message' => 'عذراً، يجب التحقق من رقم هاتفك أو بريدك الإلكتروني عبر رمز OTP أولاً قبل إتمام إنشاء الحساب.',
+                'otp_sent' => true,
+                'debug_otp' => app()->environment('local', 'testing') ? $otp : null,
+                'message' => 'تم إرسال رمز التحقق OTP إلى هاتفك عبر واتساب 📲، يرجى إدخال الرمز لتأكيد الحساب.',
             ], 422);
         }
 

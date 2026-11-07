@@ -322,13 +322,14 @@ class DatabaseSeeder extends Seeder
             );
         }
 
-        // بذر ميزات الإنتاج وبيانات موقع فرفشة الجديد ووسائل التواصل وباقة الإفيهات وباقة ممنوع تقول الكبرى
+        // بذر ميزات الإنتاج وبيانات موقع فرفشة الجديد ووسائل التواصل وباقة الإفيهات وباقة ممنوع تقول الكبرى وكافة تحديات الـ 100+
         $this->call([
             ProductionFeaturesSeeder::class,
             FarfashaWebSeeder::class,
             SocialProvidersSeeder::class,
             FamousQuotesPackSeeder::class,
             ForbiddenWordsCompleteSeeder::class,
+            AllGames100ChallengesSeeder::class,
         ]);
     }
 }

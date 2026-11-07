@@ -410,49 +410,90 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
 
                 const SizedBox(height: 14),
 
-                // بطاقة المثل الشعبي التراثية البردية
+                // بطاقة المثل الشعبي التراثية البردية الفاخرة
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF2A1850),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.35), width: 1.5),
+                    color: const Color(0xFF221142),
+                    borderRadius: BorderRadius.circular(26),
+                    border: Border.all(
+                      color: const Color(0xFFC5A059).withOpacity(0.4),
+                      width: 2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFFC5A059).withOpacity(0.18),
+                        blurRadius: 20,
+                        spreadRadius: 1,
+                      ),
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
                   ),
                   child: Column(
                     children: [
-                      Text(
-                        'كمّل المثل الشعبي 📜',
-                        style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
-                      ),
-                      const SizedBox(height: 10),
+                      // ترويسة البطاقة التراثية
                       Container(
-                        width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                         decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [Color(0xFFF6E3B8), Color(0xFFE8C98A)],
-                          ),
-                          borderRadius: BorderRadius.circular(14),
-                          border: Border.all(color: const Color(0xFFB88746), width: 3),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFF8C5A1E).withValues(alpha: 0.35),
-                              blurRadius: 24,
+                          color: const Color(0xFFC5A059).withOpacity(0.12),
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text('📜', style: TextStyle(fontSize: 16)),
+                            const SizedBox(width: 8),
+                            Text(
+                              'كمّل المثل الشعبي الأصيل',
+                              style: GoogleFonts.cairo(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                color: const Color(0xFFFFDF9E),
+                              ),
                             ),
                           ],
                         ),
-                        child: Center(
-                          child: Text(
-                            question.prompt,
-                            style: GoogleFonts.cairo(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w900,
-                              color: const Color(0xFF3E2410),
+                      ),
+
+                      // ورقة البردية العتيقة
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 14),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 22, horizontal: 16),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [Color(0xFFFFFDF5), Color(0xFFF7E7C4)],
                             ),
-                            textAlign: TextAlign.center,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: const Color(0xFFC59B4B), width: 2.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFF8C5A1E).withOpacity(0.2),
+                                blurRadius: 12,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: Column(
+                            children: [
+                              Text(
+                                '« ${question.prompt} »',
+                                style: GoogleFonts.cairo(
+                                  fontSize: 26,
+                                  fontWeight: FontWeight.w900,
+                                  color: const Color(0xFF381D05),
+                                  height: 1.3,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ],
                           ),
                         ),
                       ),
@@ -462,7 +503,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
 
                 const SizedBox(height: 14),
 
-                // خيارات الإجابة
+                // خيارات الإجابة بنمط كروت 3D لمسية
                 Expanded(
                   child: ListView.separated(
                     itemCount: question.options.length,
@@ -472,59 +513,99 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                       final isSelected = _selectedOptionIndex == index;
                       final isCorrect = option == question.answer;
 
-                      Color? bgColor;
-                      Color borderColor = const Color(0xFFA35BFF).withValues(alpha: 0.3);
+                      final List<String> letters = ['أ', 'ب', 'ج', 'د'];
+                      final letter = index < letters.length ? letters[index] : '${index + 1}';
+
+                      Color bgColor = const Color(0xFF27134D);
+                      Color bevelColor = const Color(0xFF190935);
+                      Color borderColor = Colors.white.withOpacity(0.12);
+                      Color badgeBg = Colors.white.withOpacity(0.12);
+                      Color badgeText = Colors.white70;
                       IconData? statusIcon;
                       Color statusIconColor = Colors.white;
 
                       if (_isAnswered) {
                         if (isCorrect) {
-                          bgColor = const Color(0xFF1E824C);
-                          borderColor = const Color(0xFF2ECC71);
+                          bgColor = const Color(0xFF059669);
+                          bevelColor = const Color(0xFF04533C);
+                          borderColor = const Color(0xFF34D399);
+                          badgeBg = Colors.white.withOpacity(0.25);
+                          badgeText = Colors.white;
                           statusIcon = Icons.check_circle_rounded;
                           statusIconColor = Colors.white;
                         } else if (isSelected && !isCorrect) {
-                          bgColor = const Color(0xFF962D3E);
-                          borderColor = const Color(0xFFE74C3C);
+                          bgColor = const Color(0xFFDC2626);
+                          bevelColor = const Color(0xFF991B1B);
+                          borderColor = const Color(0xFFF87171);
+                          badgeBg = Colors.white.withOpacity(0.25);
+                          badgeText = Colors.white;
                           statusIcon = Icons.cancel_rounded;
                           statusIconColor = Colors.white;
                         }
                       } else if (isSelected) {
-                        bgColor = const Color(0xFF6A24C9);
-                        borderColor = const Color(0xFFC9A2FF);
+                        bgColor = const Color(0xFF7A3BE0);
+                        bevelColor = const Color(0xFF501FB0);
+                        borderColor = const Color(0xFFD6B4FF);
+                        badgeBg = const Color(0xFFFFD166);
+                        badgeText = const Color(0xFF1E0E3E);
                       }
 
                       return GestureDetector(
                         onTap: () => _onSelectOption(index),
                         child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          height: 54,
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          duration: const Duration(milliseconds: 180),
+                          height: 58,
+                          padding: const EdgeInsets.symmetric(horizontal: 14),
                           decoration: BoxDecoration(
-                            color: bgColor ?? const Color(0xFF2A1850),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: borderColor, width: 2),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: const Color(0xFFA35BFF).withValues(alpha: 0.55),
-                                      blurRadius: 16,
-                                    ),
-                                  ]
-                                : null,
+                            color: bgColor,
+                            borderRadius: BorderRadius.circular(18),
+                            border: Border.all(color: borderColor, width: 1.5),
+                            boxShadow: [
+                              BoxShadow(
+                                color: bevelColor,
+                                offset: const Offset(0, 4),
+                                blurRadius: 0,
+                              ),
+                              if (isSelected || (_isAnswered && isCorrect))
+                                BoxShadow(
+                                  color: (isCorrect ? const Color(0xFF059669) : const Color(0xFFA35BFF))
+                                      .withOpacity(0.4),
+                                  blurRadius: 14,
+                                  offset: const Offset(0, 4),
+                                ),
+                            ],
                           ),
                           child: Row(
                             children: [
-                              Expanded(
+                              // شارة الحرف (أ، ب، ج)
+                              Container(
+                                width: 32,
+                                height: 32,
+                                decoration: BoxDecoration(
+                                  color: badgeBg,
+                                  shape: BoxShape.circle,
+                                ),
                                 child: Center(
                                   child: Text(
-                                    option,
+                                    letter,
                                     style: GoogleFonts.cairo(
-                                      fontSize: 17,
-                                      fontWeight: FontWeight.w800,
-                                      color: Colors.white,
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w900,
+                                      color: badgeText,
                                     ),
                                   ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(
+                                  option,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                  textAlign: TextAlign.start,
                                 ),
                               ),
                               if (statusIcon != null)
@@ -541,26 +622,28 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                 GestureDetector(
                   onTap: _onNext,
                   child: Container(
-                    height: 56,
+                    height: 60,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: _session.isLastRound
-                            ? [const Color(0xFFFFB800), const Color(0xFFFF8A00)]
-                            : [const Color(0xFFB98AFF), const Color(0xFF7A2FE0)],
+                            ? [const Color(0xFFFFC043), const Color(0xFFFF9500)]
+                            : [const Color(0xFFA866FF), const Color(0xFF742BE0)],
                       ),
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border(
-                        bottom: BorderSide(
-                          color: _session.isLastRound ? const Color(0xFFB25E00) : const Color(0xFF4A1690),
-                          width: 4,
-                        ),
-                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.3), width: 1.5),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFA35BFF).withValues(alpha: 0.55),
-                          blurRadius: 24,
+                          color: _session.isLastRound ? const Color(0xFFB36700) : const Color(0xFF4C179C),
+                          offset: const Offset(0, 5),
+                          blurRadius: 0,
+                        ),
+                        BoxShadow(
+                          color: (_session.isLastRound ? const Color(0xFFFF9500) : const Color(0xFFA35BFF))
+                              .withOpacity(0.4),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
                         ),
                       ],
                     ),
@@ -572,13 +655,13 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                               ? 'عرض النتائج النهائية 🏆'
                               : 'التالي (دور ${_session.nextPlayer.name})',
                           style: GoogleFonts.cairo(
-                            fontSize: 18,
+                            fontSize: 17,
                             fontWeight: FontWeight.w900,
                             color: Colors.white,
                           ),
                         ),
                         const SizedBox(width: 8),
-                        const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 18),
+                        const Icon(Icons.arrow_back_ios_rounded, color: Colors.white, size: 16),
                       ],
                     ),
                   ),
