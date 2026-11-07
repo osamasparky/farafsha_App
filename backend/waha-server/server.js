@@ -12,6 +12,14 @@ import {
     fetchLatestBaileysVersion,
 } from '@whiskeysockets/baileys';
 
+// Process-level uncaught exception handlers to prevent Baileys/network crashes from killing the daemon
+process.on('uncaughtException', (err) => {
+    console.error('[WAHA UncaughtException]', err?.message || err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('[WAHA UnhandledRejection]', reason?.message || reason);
+});
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -64,21 +72,43 @@ async function sendWebhook(event, sessionName, payload, extra = {}) {
 /**
  * Initialize / Start a Baileys session
  */
-async function startSession(sessionName) {
-    if (activeSessions.has(sessionName)) {
+async function startSession(sessionName, forceClean = false) {
+    if (activeSessions.has(sessionName) && !forceClean) {
         const current = activeSessions.get(sessionName);
-        if (current.status === 'WORKING' || current.status === 'STARTING') {
+        if (current.status === 'WORKING' || (current.status === 'STARTING' && current.sock)) {
             return current;
         }
     }
 
     const sessionPath = path.join(SESSIONS_DIR, sessionName);
+    if (forceClean) {
+        try {
+            fs.rmSync(sessionPath, { recursive: true, force: true });
+        } catch (e) {}
+    }
     if (!fs.existsSync(sessionPath)) {
         fs.mkdirSync(sessionPath, { recursive: true });
     }
 
-    const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
-    const { version } = await fetchLatestBaileysVersion();
+    let state, saveCreds;
+    try {
+        const auth = await useMultiFileAuthState(sessionPath);
+        state = auth.state;
+        saveCreds = auth.saveCreds;
+    } catch (e) {
+        console.error(`[WAHA] Auth state error for ${sessionName}, cleaning...`, e.message);
+        fs.rmSync(sessionPath, { recursive: true, force: true });
+        fs.mkdirSync(sessionPath, { recursive: true });
+        const auth = await useMultiFileAuthState(sessionPath);
+        state = auth.state;
+        saveCreds = auth.saveCreds;
+    }
+
+    let version = [2, 3000, 1017531287];
+    try {
+        const v = await fetchLatestBaileysVersion();
+        if (v?.version) version = v.version;
+    } catch (e) {}
 
     const sessionData = {
         name: sessionName,
@@ -98,6 +128,8 @@ async function startSession(sessionName) {
         auth: state,
         browser: ['Farfasha Platform', 'Chrome', '124.0.0.0'],
         syncFullHistory: false,
+        connectTimeoutMs: 60000,
+        defaultQueryTimeoutMs: 60000,
     });
 
     sessionData.sock = sock;
@@ -115,16 +147,20 @@ async function startSession(sessionName) {
         }
 
         if (connection === 'close') {
-            const shouldReconnect =
-                lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut;
+            const statusCode = lastDisconnect?.error?.output?.statusCode;
+            const shouldReconnect = statusCode !== DisconnectReason.loggedOut;
             sessionData.status = 'STOPPED';
             sessionData.qr = null;
-            console.log(`[WAHA] Session ${sessionName} connection closed. Reconnect: ${shouldReconnect}`);
+            console.log(`[WAHA] Session ${sessionName} connection closed (Code: ${statusCode}, Reconnect: ${shouldReconnect})`);
             sendWebhook('session.status', sessionName, { status: 'STOPPED' });
 
             if (shouldReconnect) {
-                setTimeout(() => startSession(sessionName), 3000);
+                setTimeout(() => startSession(sessionName), 5000);
             } else {
+                console.log(`[WAHA] Session ${sessionName} logged out permanently. Cleaning stale credentials.`);
+                try {
+                    fs.rmSync(sessionPath, { recursive: true, force: true });
+                } catch (e) {}
                 activeSessions.delete(sessionName);
             }
         } else if (connection === 'open') {
@@ -268,23 +304,41 @@ app.get('/api/:name/auth/qr', async (req, res) => {
     const name = req.params.name;
     let session = activeSessions.get(name);
 
-    if (!session || session.status === 'STOPPED') {
-        // Automatically start session if requested
-        session = await startSession(name);
-    }
-
-    // Wait up to 3 seconds for QR if just starting
-    let attempts = 0;
-    while (!session.qr && session.status !== 'WORKING' && attempts < 15) {
-        await new Promise((r) => setTimeout(r, 200));
-        attempts++;
-    }
-
-    if (session.status === 'WORKING') {
+    if (session && session.status === 'WORKING') {
         return res.status(200).send('Session already connected and authenticated.');
     }
 
-    if (!session.qr) {
+    if (!session || session.status === 'STOPPED' || !session.qr) {
+        if (!session || session.status === 'STOPPED') {
+            session = await startSession(name, false);
+        }
+    }
+
+    // Wait up to 5 seconds for QR or connection
+    let attempts = 0;
+    while ((!session || (!session.qr && session.status !== 'WORKING')) && attempts < 25) {
+        await new Promise((r) => setTimeout(r, 200));
+        session = activeSessions.get(name) || session;
+        attempts++;
+    }
+
+    // If still no QR and not connected, force clean stale credentials and restart to obtain QR
+    if ((!session || !session.qr) && session?.status !== 'WORKING') {
+        console.log(`[WAHA] Forcing clean start for session ${name} to generate fresh QR code...`);
+        session = await startSession(name, true);
+        attempts = 0;
+        while ((!session || (!session.qr && session.status !== 'WORKING')) && attempts < 25) {
+            await new Promise((r) => setTimeout(r, 200));
+            session = activeSessions.get(name) || session;
+            attempts++;
+        }
+    }
+
+    if (session && session.status === 'WORKING') {
+        return res.status(200).send('Session already connected and authenticated.');
+    }
+
+    if (!session || !session.qr) {
         return res.status(404).json({ error: 'QR Code not available yet, please try again in a moment.' });
     }
 

@@ -164,7 +164,25 @@ class WahaSessionResource extends Resource
                     ->modalCancelActionLabel('إغلاق')
                     ->modalContent(function (WahaSession $record, WahaClient $client) {
                         try {
+                            if ($record->status === 'WORKING' && $record->phone) {
+                                return new HtmlString("
+                                    <div class='text-center p-6 space-y-3'>
+                                        <div class='text-5xl'>✅</div>
+                                        <h3 class='text-lg font-bold text-emerald-400'>الجلسة متصلة وتعمل بالفعل!</h3>
+                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$record->phone}</span></p>
+                                    </div>
+                                ");
+                            }
                             $png = $client->qr($record->name);
+                            if (str_contains($png, 'already connected')) {
+                                return new HtmlString("
+                                    <div class='text-center p-6 space-y-3'>
+                                        <div class='text-5xl'>✅</div>
+                                        <h3 class='text-lg font-bold text-emerald-400'>الجلسة متصلة وتعمل بالفعل!</h3>
+                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$record->phone}</span></p>
+                                    </div>
+                                ");
+                            }
                             $base64 = base64_encode($png);
                             return new HtmlString("
                                 <div class='text-center p-4 space-y-4'>
