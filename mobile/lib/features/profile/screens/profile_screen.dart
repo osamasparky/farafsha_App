@@ -828,68 +828,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                 ),
 
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
 
-                // صورة الملف الشخصي ومؤشر التعديل
-                Stack(
-                  alignment: Alignment.bottomLeft,
-                  children: [
-                    GestureDetector(
-                      onTap: () => isGuest ? context.push('/login') : _showEditProfileSheet(context),
-                      child: Container(
-                        width: 110,
-                        height: 110,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isGuest ? const Color(0xFFFFD27A) : const Color(0xFFB98AFF),
-                            width: 4,
+                // كارت البروفايل الأفقي الفاخر المدمج (صورة على اليمين والبيانات على اليسار توفر مساحة كبرى)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1D0E38).withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: isGuest ? const Color(0xFFFFD27A).withValues(alpha: 0.5) : const Color(0xFFB98AFF).withValues(alpha: 0.4),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (isGuest ? const Color(0xFFFFD27A) : const Color(0xFF8F4BF0)).withValues(alpha: 0.2),
+                        blurRadius: 18,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // صورة الملف الشخصي ومؤشر التعديل (على اليمين)
+                      Stack(
+                        alignment: Alignment.bottomLeft,
+                        children: [
+                          GestureDetector(
+                            onTap: () => isGuest ? context.push('/login') : _showEditProfileSheet(context),
+                            child: Container(
+                              width: 74,
+                              height: 74,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isGuest ? const Color(0xFFFFD27A) : const Color(0xFFB98AFF),
+                                  width: 3,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: (isGuest ? const Color(0xFFFFD27A) : const Color(0xFFA35BFF)).withValues(alpha: 0.45),
+                                    blurRadius: 18,
+                                  ),
+                                ],
+                              ),
+                              child: ClipOval(
+                                child: _buildAvatarWidget(_avatar, size: 74),
+                              ),
+                            ),
                           ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: (isGuest ? const Color(0xFFFFD27A) : const Color(0xFFA35BFF)).withValues(alpha: 0.55),
-                              blurRadius: 36,
+                          GestureDetector(
+                            onTap: () => isGuest ? context.push('/login') : _showEditProfileSheet(context),
+                            child: Container(
+                              width: 26,
+                              height: 26,
+                              decoration: BoxDecoration(
+                                color: LammaColors.gold500,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: const Color(0xFF2A1458), width: 2),
+                              ),
+                              child: Icon(
+                                isGuest ? Icons.login_rounded : Icons.edit_rounded,
+                                color: const Color(0xFF2A0E35),
+                                size: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(width: 14),
+
+                      // البيانات على اليسار (الاسم، البريد، شارة المستوى، زر التعديل)
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    _userName,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                                  ),
+                                ),
+                                if (!isGuest)
+                                  GestureDetector(
+                                    onTap: () => _showEditProfileSheet(context),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF8F4BF0).withValues(alpha: 0.35),
+                                        borderRadius: BorderRadius.circular(10),
+                                        border: Border.all(color: const Color(0xFFB98AFF).withValues(alpha: 0.5)),
+                                      ),
+                                      child: const Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(Icons.edit_note_rounded, size: 14, color: Color(0xFFFFD27A)),
+                                          SizedBox(width: 3),
+                                          Text('تعديل', style: TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w700)),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 3),
+                            if (!isGuest && (auth.userEmail.isNotEmpty || auth.userPhone.isNotEmpty)) ...[
+                              Text(
+                                auth.userEmail.isNotEmpty ? auth.userEmail : auth.userPhone,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFCFC6E4)),
+                              ),
+                              const SizedBox(height: 6),
+                            ],
+                            // الشارة المدمجة
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: (isGuest ? const Color(0xFFFFD27A) : _levelColor).withValues(alpha: 0.16),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(color: isGuest ? const Color(0xFFFFD27A) : _levelColor, width: 1),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    isGuest ? Icons.theater_comedy_rounded : Icons.star_rounded,
+                                    color: isGuest ? const Color(0xFFFFD27A) : _levelColor,
+                                    size: 13,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    isGuest ? 'حساب زائر فرفشة' : 'المستوى $_levelNumber • $_levelTitle',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: isGuest ? const Color(0xFFFFD27A) : _levelColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
-                        child: ClipOval(
-                          child: _buildAvatarWidget(_avatar, size: 110),
-                        ),
                       ),
-                    ),
-                    GestureDetector(
-                      onTap: () => isGuest ? context.push('/login') : _showEditProfileSheet(context),
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: LammaColors.gold500,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: const Color(0xFF2A1458), width: 3),
-                        ),
-                        child: Icon(
-                          isGuest ? Icons.login_rounded : Icons.edit_rounded,
-                          color: const Color(0xFF2A0E35),
-                          size: 18,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 8),
-                Text(
-                  _userName,
-                  style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.white),
-                ),
-                if (!isGuest && auth.userEmail.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    auth.userEmail,
-                    style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: Color(0xFFCFC6E4)),
+                    ],
                   ),
-                ],
-                const SizedBox(height: 6),
+                ),
 
                 // شارة المستوى أو تنبيه الزائر
                 if (isGuest) ...[
@@ -951,30 +1043,35 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                 ] else ...[
-                  // شارة المستوى الديناميكية من لوحة التحكم
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(Icons.star_rounded, color: _levelColor, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        'المستوى $_levelNumber • $_levelTitle',
-                        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _levelColor),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8),
-
                   // شريط خبرة التقدم للمستوى التالي
-                  SizedBox(
-                    width: 240,
+                  Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: _levelColor.withValues(alpha: 0.3)),
+                    ),
                     child: Column(
                       children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'التقدم نحو المستوى التالي',
+                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _levelColor),
+                            ),
+                            Text(
+                              '$_pointsInLevel / $_neededForNext نقطة للترقية',
+                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white70),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
                         Container(
-                          height: 10,
+                          height: 7,
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.35),
+                            color: Colors.white.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Align(
@@ -989,11 +1086,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               ),
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '$_pointsInLevel / $_neededForNext نقطة للترقية',
-                          style: const TextStyle(fontSize: 12, color: Color(0xFFCFC6E4)),
                         ),
                       ],
                     ),

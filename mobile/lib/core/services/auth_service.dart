@@ -447,5 +447,23 @@ class AuthService extends ChangeNotifier {
 
     notifyListeners();
   }
+
+  /// تحديث بيانات المستخدم بعد تسجيل الدخول بواسطة وسائل التواصل المعتمدة
+  Future<void> updateFromSocialLogin({
+    required Map<String, dynamic> user,
+    required String token,
+    bool isNewUser = false,
+  }) async {
+    await loginUser(
+      name: user['name']?.toString() ?? 'مستخدم فرفشة',
+      email: user['email']?.toString(),
+      phone: user['phone']?.toString(),
+      avatar: user['avatar']?.toString(),
+      totalPoints: (user['total_score'] ?? user['points'] ?? 0) as int,
+      wins: (user['wins_count'] ?? 0) as int,
+      gamesPlayed: (user['games_played'] ?? 0) as int,
+      token: token,
+    );
+  }
 }
 

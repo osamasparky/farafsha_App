@@ -39,6 +39,13 @@ dependencies:
   pusher_channels_flutter: ^2.2.1
   web_socket_channel: ^3.0.1
   image_picker: ^1.1.2
+  dio: ^5.11.1
+  google_sign_in: ^6.2.2
+  sign_in_with_apple: ^7.0.1
+  flutter_facebook_auth: ^7.1.6
+  flutter_web_auth_2: ^5.1.0
+  crypto: ^3.0.8
+  flutter_secure_storage: ^10.3.4
 
 dev_dependencies:
   flutter_test:

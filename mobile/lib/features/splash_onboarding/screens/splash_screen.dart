@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/theme/app_colors.dart';
-import '../../../core/theme/app_typography.dart';
-import '../../../core/widgets/tactile_button.dart';
+import '../../../core/theme/lamma_theme.dart';
+import '../../../core/widgets/game_button.dart';
 
 class SplashScreen extends StatelessWidget {
   const SplashScreen({super.key});
@@ -10,143 +9,77 @@ class SplashScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.bgDark,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const SizedBox(height: 10),
+      backgroundColor: const Color(0xFF150A2E),
+      body: Stack(
+        fit: StackFit.expand,
+        children: [
+          // خلفية الشاشة الكاملة من الصورة الرسمية
+          Image.asset(
+            'assets/images/splash_bg.png',
+            fit: BoxFit.cover,
+            alignment: Alignment.center,
+          ),
 
-              // شعار فرفشة 3D
-              Column(
-                children: [
-                  Container(
-                    width: 130,
-                    height: 130,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppColors.brandViolet.withValues(alpha: 0.6),
-                          blurRadius: 40,
-                          spreadRadius: 8,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(30),
-                      child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'فرفشة',
-                    style: AppTypography.heading1.copyWith(
-                      fontSize: 48,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                      letterSpacing: -1,
-                    ),
-                  ),
-                  Text(
-                    'لعبة القعدة والفرفشة 🎉',
-                    style: AppTypography.heading2.copyWith(
-                      color: AppColors.accentPink,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'مجموعة ألعاب جماعية\nللمتعة والتحدي مع الأصدقاء والعائلة',
-                    textAlign: TextAlign.center,
-                    style: AppTypography.bodyMedium.copyWith(
-                      fontSize: 15,
-                      color: AppColors.textDarkSecondary,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-
-              // بطاقة الميزات والخصائص السريعة
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceDark.withValues(alpha: 0.7),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.cardDarkBorder, width: 1.2),
-                ),
-                child: Column(
-                  children: [
-                    _buildFeatureRow(Icons.phone_android_rounded, 'دعم اللعب المحلي (هاتف واحد للمجموعة)'),
-                    const Divider(color: AppColors.cardDarkBorder, height: 16),
-                    _buildFeatureRow(Icons.wifi_rounded, 'العب أونلاين مع أصدقائك عن بُعد'),
-                    const Divider(color: AppColors.cardDarkBorder, height: 16),
-                    _buildFeatureRow(Icons.cloud_sync_rounded, 'محتوى متجدد باستمرار وبلا إنترنت'),
+          // تدرج لوني سفلي ناعم لإبراز الأزرار التفاعلية
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: 0,
+            height: 240,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                  colors: [
+                    const Color(0xFF150A2E).withValues(alpha: 0.95),
+                    const Color(0xFF150A2E).withValues(alpha: 0.6),
+                    Colors.transparent,
                   ],
                 ),
               ),
+            ),
+          ),
 
-              // أزرار البداية والدخول
-              Column(
-                children: [
-                  TactileButton(
-                    text: 'ابدأ الآن',
-                    icon: Icons.play_arrow_rounded,
-                    backgroundColor: AppColors.brandViolet,
-                    shadowColor: AppColors.brandVioletDark,
-                    onPressed: () {
-                      context.push('/onboarding');
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  TextButton(
-                    onPressed: () {
-                      context.push('/login');
-                    },
-                    child: Text(
-                      'لدي حساب؟ تسجيل الدخول',
-                      style: AppTypography.bodyMedium.copyWith(
-                        color: Colors.white70,
-                        fontWeight: FontWeight.w600,
+          // أزرار البداية والانتقال للتعريف
+          SafeArea(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    GameButton(
+                      text: 'ابدأ الآن 🚀',
+                      onPressed: () => context.push('/onboarding'),
+                    ),
+                    const SizedBox(height: 12),
+                    GestureDetector(
+                      onTap: () => context.push('/login'),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        child: RichText(
+                          text: const TextSpan(
+                            style: TextStyle(fontSize: 15, color: Color(0xFFE4D9FA), fontFamily: 'Cairo'),
+                            children: [
+                              TextSpan(text: 'لديك حساب بالفعل؟ '),
+                              TextSpan(
+                                text: 'تسجيل الدخول',
+                                style: TextStyle(fontWeight: FontWeight.w900, color: LammaColors.gold300),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
-
-  Widget _buildFeatureRow(IconData icon, String title) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            color: AppColors.brandViolet.withValues(alpha: 0.2),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, color: AppColors.accentOrange, size: 20),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            title,
-            style: AppTypography.bodyMedium.copyWith(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
 }
-

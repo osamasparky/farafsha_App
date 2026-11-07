@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../authentication/presentation/widgets/social_login_row.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
@@ -112,180 +113,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       );
     }
-  }
-
-  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي مع التحقق الصارم من وجود الحساب وتصريحه
-  void _openSocialLoginModal(String provider) {
-    final emailCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-    bool isModalLoading = false;
-    String? modalError;
-    final isGoogle = provider == 'google';
-    final providerTitle = isGoogle ? 'Google' : (provider == 'apple' ? 'Apple' : 'Facebook');
-
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(
-        builder: (modalContext, setModalState) {
-          return Padding(
-            padding: EdgeInsets.only(bottom: MediaQuery.of(modalContext).viewInsets.bottom),
-            child: Container(
-              padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF24104B), Color(0xFF14072B)],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-                borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-                border: Border(top: BorderSide(color: Color(0xFFB98AFF), width: 2)),
-              ),
-              child: Form(
-                key: formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 44,
-                        height: 4,
-                        decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(999)),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        if (isGoogle)
-                          const Icon(Icons.g_mobiledata_rounded, color: Color(0xFFEA4335), size: 36)
-                        else
-                          const Icon(Icons.apple_rounded, color: Colors.white, size: 28),
-                        const SizedBox(width: 8),
-                        Text(
-                          'تسجيل الدخول عبر $providerTitle',
-                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'أدخل البريد الإلكتروني المرتبط بحسابك للتحقق من الصلاحية والمتابعة',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 13, color: Color(0xFFCFC6E4), height: 1.5),
-                    ),
-                    const SizedBox(height: 18),
-                    if (modalError != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFD2566A).withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFD2566A), width: 1.2),
-                        ),
-                        child: Text(
-                          modalError!,
-                          style: const TextStyle(color: Color(0xFFFFB3B8), fontSize: 13, fontWeight: FontWeight.w700),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                      const SizedBox(height: 14),
-                    ],
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFB98AFF), width: 1.4),
-                      ),
-                      child: TextFormField(
-                        controller: emailCtrl,
-                        keyboardType: TextInputType.emailAddress,
-                        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white),
-                        validator: (val) {
-                          if (val == null || val.trim().isEmpty) return 'يرجى إدخال البريد الإلكتروني';
-                          if (!RegExp(r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$').hasMatch(val.trim())) {
-                            return 'صيغة البريد الإلكتروني غير صحيحة';
-                          }
-                          return null;
-                        },
-                        decoration: const InputDecoration(
-                          hintText: 'example@gmail.com',
-                          hintStyle: TextStyle(color: Colors.white38, fontSize: 14),
-                          prefixIcon: Icon(Icons.email_outlined, color: Color(0xFFB98AFF)),
-                          border: InputBorder.none,
-                          contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                    GestureDetector(
-                      onTap: isModalLoading
-                          ? null
-                          : () async {
-                              setModalState(() => modalError = null);
-                              if (!formKey.currentState!.validate()) return;
-                              setModalState(() => isModalLoading = true);
-
-                              final res = await AuthService.instance.loginWithSocial(
-                                provider,
-                                email: emailCtrl.text.trim(),
-                              );
-
-                              if (!modalContext.mounted) return;
-                              setModalState(() => isModalLoading = false);
-
-                              if (res['success'] == true) {
-                                Navigator.pop(modalContext);
-                                if (!mounted) return;
-                                context.go('/home');
-                              } else {
-                                setModalState(() {
-                                  modalError = res['message']?.toString() ?? 'فشل التحقق من الحساب.';
-                                });
-                              }
-                            },
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF8F4BF0), Color(0xFF6A24C9)],
-                          ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: [
-                            BoxShadow(color: const Color(0xFF8F4BF0).withValues(alpha: 0.45), blurRadius: 12),
-                          ],
-                        ),
-                        child: Center(
-                          child: isModalLoading
-                              ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                              : const Text(
-                                  'متابعة والتحقق من الحساب 🚀',
-                                  style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w900),
-                                ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    TextButton(
-                      onPressed: () {
-                        Navigator.pop(modalContext);
-                        context.push('/register');
-                      },
-                      child: const Text(
-                        'ليس لديك حساب مسجل؟ إنشاء حساب جديد الآن',
-                        style: TextStyle(color: Color(0xFFFFD27A), fontWeight: FontWeight.w800, fontSize: 13),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
   }
 
   @override
@@ -526,66 +353,23 @@ class _LoginScreenState extends State<LoginScreen> {
                     Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.15))),
                     const Padding(
                       padding: EdgeInsets.symmetric(horizontal: 12.0),
-                      child: Text('أو الدخول عبر', style: TextStyle(color: Color(0xFFA99BC8), fontSize: 13, fontWeight: FontWeight.w700)),
+                      child: Text('أو المتابعة بوسائل التواصل', style: TextStyle(color: Color(0xFFA99BC8), fontSize: 13, fontWeight: FontWeight.w700)),
                     ),
                     Expanded(child: Container(height: 1, color: Colors.white.withValues(alpha: 0.15))),
                   ],
                 ),
                 const SizedBox(height: 14),
-                ..._socialProviders.map((provider) {
-                  final code = provider['provider']?.toString() ?? '';
-                  final isGoogle = code == 'google';
-                  final isApple = code == 'apple';
 
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 10),
-                    child: GestureDetector(
-                      onTap: _isLoading ? null : () => _openSocialLoginModal(code),
-                      child: Container(
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: isGoogle
-                              ? Colors.white
-                              : (isApple ? Colors.black : const Color(0xFF1877F2)),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isGoogle ? Colors.transparent : Colors.white24,
-                            width: 1.2,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.25),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            if (isGoogle)
-                              const Icon(Icons.g_mobiledata_rounded, color: Color(0xFFEA4335), size: 32)
-                            else if (isApple)
-                              const Icon(Icons.apple_rounded, color: Colors.white, size: 24)
-                            else
-                              const Icon(Icons.facebook_rounded, color: Colors.white, size: 24),
-                            const SizedBox(width: 8),
-                            Text(
-                              isGoogle
-                                  ? 'المتابعة بحساب Google'
-                                  : (isApple ? 'المتابعة بحساب Apple' : 'المتابعة بحساب Facebook'),
-                              style: TextStyle(
-                                color: isGoogle ? const Color(0xFF202124) : Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                }),
+                // صف أيقونات وسائل التواصل المدمج لتوفير المساحة
+                SocialLoginRow(
+                  onSuccess: () {
+                    if (!mounted) return;
+                    context.go('/home');
+                  },
+                  onError: (err) {
+                    setState(() => _errorMessage = err);
+                  },
+                ),
               ],
 
               const SizedBox(height: 14),
