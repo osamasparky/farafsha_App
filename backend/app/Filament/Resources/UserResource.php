@@ -160,19 +160,13 @@ class UserResource extends Resource
                     ])
                     ->action(function ($record, array $data) {
                         try {
-                            $cleanPhone = preg_replace('/\D+/', '', $record->phone);
                             $text = str_replace('{name}', $record->name, $data['message']);
                             $wahaService = app(\App\Services\WahaMessageService::class);
-                            $wahaService->queueText(
-                                config('waha.default_session', 'default'),
-                                $cleanPhone,
-                                $text,
-                                (string) \Illuminate\Support\Str::uuid()
-                            );
+                            $wahaService->sendTextSync($record->phone, $text);
 
                             \Filament\Notifications\Notification::make()
-                                ->title('تمت الجدولة بنجاح!')
-                                ->body("تم إرسال رسالة الواتساب إلى {$record->name} بنجاح 📲")
+                                ->title('تم الإرسال بنجاح!')
+                                ->body("تم تسليم رسالة الواتساب إلى {$record->name} بنجاح 📲")
                                 ->success()
                                 ->send();
                         } catch (\Throwable $e) {
@@ -180,6 +174,7 @@ class UserResource extends Resource
                                 ->title('تعذر إرسال الرسالة')
                                 ->body($e->getMessage())
                                 ->danger()
+                                ->persistent()
                                 ->send();
                         }
                     }),
@@ -203,28 +198,34 @@ class UserResource extends Resource
                         ])
                         ->action(function (\Illuminate\Database\Eloquent\Collection $records, array $data) {
                             $count = 0;
+                            $failures = 0;
                             $wahaService = app(\App\Services\WahaMessageService::class);
-                            $session = config('waha.default_session', 'default');
 
                             foreach ($records as $record) {
                                 if (empty($record->phone)) continue;
-                                $cleanPhone = preg_replace('/\D+/', '', $record->phone);
-                                if (strlen($cleanPhone) < 8) continue;
-
                                 $text = str_replace('{name}', $record->name, $data['message']);
                                 try {
-                                    $wahaService->queueText($session, $cleanPhone, $text, (string) \Illuminate\Support\Str::uuid());
+                                    $wahaService->sendTextSync($record->phone, $text);
                                     $count++;
                                 } catch (\Throwable $e) {
+                                    $failures++;
                                     \Illuminate\Support\Facades\Log::warning("WAHA Bulk send error for user {$record->id}: " . $e->getMessage());
                                 }
                             }
 
-                            \Filament\Notifications\Notification::make()
-                                ->title('تم الإرسال بنجاح!')
-                                ->body("تمت جدولة رسائل الواتساب بنجاح إلى {$count} لاعب.")
-                                ->success()
-                                ->send();
+                            if ($count > 0) {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('تم إرسال الرسائل الجماعية بنجاح!')
+                                    ->body("تم إرسال رسائل الواتساب بنجاح إلى {$count} لاعب." . ($failures > 0 ? " (تعذر الإرسال إلى {$failures} لاعبين)" : ''))
+                                    ->success()
+                                    ->send();
+                            } else {
+                                \Filament\Notifications\Notification::make()
+                                    ->title('تعذر إرسال الرسائل')
+                                    ->body("فشل الإرسال لجميع اللاعبين المحددين ({$failures} أخطاء). تأكد من صحة أرقام الهواتف وجلسة الواتساب.")
+                                    ->danger()
+                                    ->send();
+                            }
                         }),
 
                     Tables\Actions\DeleteBulkAction::make(),

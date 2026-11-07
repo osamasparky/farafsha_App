@@ -26,7 +26,11 @@ class WahaWebhookController
             ]);
         });
         if ($row->wasRecentlyCreated && !$row->processed_at) {
-            ProcessWahaWebhook::dispatch($row->id)->onQueue(config('waha.webhook_queue'));
+            try {
+                ProcessWahaWebhook::dispatchSync($row->id);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('WAHA Webhook sync processing notice: ' . $e->getMessage());
+            }
         }
         return response()->json(['accepted' => true], 202);
     }

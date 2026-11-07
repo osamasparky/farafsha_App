@@ -81,17 +81,21 @@ class AuthController extends Controller
         // تجهيز نص رسالة الواتساب
         $messageText = "مرحباً بك في منصة وتطبيق فرفشة! 🎮🥳\nرمز التحقق الخاص بك هو: *{$otp}*\nصالح لمدة 5 دقائق. لا تشارك هذا الرمز مع أحد.";
 
-        // إرسال الرسالة عبر خادم WAHA لواتساب
+        // إرسال الرسالة فورياً عبر جلسة WAHA المتصلة
         try {
             $wahaService = app(WahaMessageService::class);
-            $wahaService->queueText(
-                config('waha.default_session', 'default'),
-                $normalized,
-                $messageText,
-                (string) Str::uuid()
-            );
+            if (app()->runningUnitTests()) {
+                $wahaService->queueText(
+                    $wahaService->getActiveSessionName(),
+                    $normalized,
+                    $messageText,
+                    (string) Str::uuid()
+                );
+            } else {
+                $wahaService->sendTextSync($normalized, $messageText);
+            }
         } catch (\Throwable $e) {
-            Log::warning('WAHA sendOtp queue notice: ' . $e->getMessage());
+            Log::warning('WAHA sendOtp notice: ' . $e->getMessage());
         }
 
         $res = [

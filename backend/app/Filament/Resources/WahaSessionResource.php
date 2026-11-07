@@ -28,13 +28,15 @@ class WahaSessionResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Section::make('بيانات الجلسة')
+                    ->description('تنبيه: لا حاجة لإدخال رقم الهاتف يدوياً، سيتم التعرف على رقمك تلقائياً عند مسح رمز QR من هاتفك.')
                     ->schema([
                         Forms\Components\TextInput::make('name')
                             ->label('اسم الجلسة (Session Name)')
                             ->required()
                             ->maxLength(100)
                             ->regex('/^[a-zA-Z0-9_-]+$/')
-                            ->default(config('waha.default_session', 'default'))
+                            ->default('UAE')
+                            ->helperText('اختر اسماً للجلسة بالأحرف الإنجليزية (مثل: default أو UAE أو WhatsApp-Main)')
                             ->unique(ignoreRecord: true),
 
                         Forms\Components\TextInput::make('status')
@@ -44,7 +46,8 @@ class WahaSessionResource extends Resource
 
                         Forms\Components\TextInput::make('phone')
                             ->label('رقم الهاتف المتصل')
-                            ->disabled(),
+                            ->disabled()
+                            ->helperText('يُملأ تلقائياً بمجرد مسح رمز QR من واتساب في هاتفك'),
                     ])->columns(3),
             ]);
     }
@@ -61,18 +64,41 @@ class WahaSessionResource extends Resource
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('حالة الاتصال')
                     ->colors([
-                        'success' => fn ($state) => in_array($state, ['WORKING', 'CONNECTED', 'STARTING']),
-                        'warning' => fn ($state) => in_array($state, ['SCAN_QR_CODE']),
+                        'success' => fn ($state) => in_array($state, ['WORKING', 'CONNECTED']),
+                        'warning' => fn ($state) => in_array($state, ['SCAN_QR_CODE', 'STARTING']),
                         'danger' => fn ($state) => in_array($state, ['STOPPED', 'FAILED']),
                     ]),
 
                 Tables\Columns\TextColumn::make('phone')
                     ->label('رقم الحساب المتصل')
-                    ->default('غير متصل بعد'),
+                    ->icon('heroicon-m-phone')
+                    ->default('غير متصل بعد (اضغط مسح QR)'),
 
                 Tables\Columns\TextColumn::make('last_seen_at')
-                    ->label('آخر ظهور')
+                    ->label('آخر اتصال')
                     ->dateTime('d/m/Y H:i'),
+            ])
+            ->headerActions([
+                Tables\Actions\Action::make('sync_all')
+                    ->label('تحديث ومزامنة فورية 🔄')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('primary')
+                    ->action(function (WahaClient $client) {
+                        try {
+                            $remoteSessions = $client->sessions();
+                            foreach ($remoteSessions as $s) {
+                                $rawPhone = data_get($s, 'me.id');
+                                WahaSession::updateOrCreate(['name' => $s['name']], [
+                                    'status' => $s['status'] ?? 'STOPPED',
+                                    'phone' => $rawPhone ? preg_replace('/\D+/', '', $rawPhone) : null,
+                                    'last_seen_at' => ($s['status'] ?? '') === 'WORKING' ? now() : null,
+                                ]);
+                            }
+                            Notification::make()->title('تمت المزامنة بنجاح مع خادم الواتساب 🟢')->success()->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->title('تعذر الاتصال بخادم WAHA')->body($e->getMessage())->danger()->send();
+                        }
+                    }),
             ])
             ->actions([
                 Tables\Actions\Action::make('start')
@@ -118,6 +144,25 @@ class WahaSessionResource extends Resource
                         }
                     }),
 
+                Tables\Actions\Action::make('refresh_status')
+                    ->label('تحديث')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('gray')
+                    ->action(function (WahaSession $record, WahaClient $client) {
+                        try {
+                            $remote = $client->session($record->name);
+                            $rawPhone = data_get($remote, 'me.id');
+                            $record->update([
+                                'status' => $remote['status'] ?? 'UNKNOWN',
+                                'phone' => $rawPhone ? preg_replace('/\D+/', '', $rawPhone) : $record->phone,
+                                'last_seen_at' => ($remote['status'] ?? '') === 'WORKING' ? now() : $record->last_seen_at,
+                            ]);
+                            Notification::make()->title("تم تحديث حالة الجلسة '{$record->name}' إلى: {$record->status}")->success()->send();
+                        } catch (\Throwable $e) {
+                            Notification::make()->title('خطأ في الاتصال')->body($e->getMessage())->danger()->send();
+                        }
+                    }),
+
                 Tables\Actions\Action::make('stop')
                     ->label('إيقاف')
                     ->icon('heroicon-o-stop')
@@ -142,4 +187,3 @@ class WahaSessionResource extends Resource
         ];
     }
 }
-
