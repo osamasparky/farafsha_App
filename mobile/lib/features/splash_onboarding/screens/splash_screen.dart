@@ -23,20 +23,21 @@ class SplashScreen extends StatelessWidget {
               Column(
                 children: [
                   Container(
-                    width: 120,
-                    height: 120,
+                    width: 130,
+                    height: 130,
                     decoration: BoxDecoration(
-                      shape: BoxShape.circle,
+                      borderRadius: BorderRadius.circular(30),
                       boxShadow: [
                         BoxShadow(
-                          color: AppColors.brandViolet.withValues(alpha: 0.5),
+                          color: AppColors.brandViolet.withValues(alpha: 0.6),
                           blurRadius: 40,
                           spreadRadius: 8,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
                     child: ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(30),
                       child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
                     ),
                   ),

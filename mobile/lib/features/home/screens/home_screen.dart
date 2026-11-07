@@ -708,17 +708,19 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 86,
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
+                borderRadius: BorderRadius.circular(22),
+                border: Border.all(color: const Color(0xFFFFD27A), width: 2.5),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFF8F4BF0).withValues(alpha: 0.5),
+                    color: const Color(0xFF8F4BF0).withValues(alpha: 0.55),
                     blurRadius: 28,
                     spreadRadius: 2,
+                    offset: const Offset(0, 6),
                   ),
                 ],
               ),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(19),
                 child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
               ),
             ),

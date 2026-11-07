@@ -307,18 +307,19 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 124,
                   height: 124,
                   decoration: BoxDecoration(
-                    shape: BoxShape.circle,
+                    borderRadius: BorderRadius.circular(28),
                     border: Border.all(color: const Color(0xFFFFD27A), width: 3),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF8F4BF0).withValues(alpha: 0.6),
+                        color: const Color(0xFF8F4BF0).withValues(alpha: 0.65),
                         blurRadius: 40,
                         spreadRadius: 6,
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                   child: ClipRRect(
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(25),
                     child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
                   ),
                 ),
