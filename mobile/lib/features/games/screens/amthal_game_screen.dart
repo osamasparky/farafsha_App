@@ -445,10 +445,23 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            const Text('📜', style: TextStyle(fontSize: 16)),
+                            Text(
+                              _session.gameSlug == 'who-am-i'
+                                  ? '🔍'
+                                  : (_session.gameSlug == 'speed-trivia'
+                                      ? '⚡'
+                                      : (_session.gameSlug == 'two-truths-and-lie' ? '🎭' : '📜')),
+                              style: const TextStyle(fontSize: 16),
+                            ),
                             const SizedBox(width: 8),
                             Text(
-                              'كمّل المثل الشعبي الأصيل',
+                              _session.gameSlug == 'who-am-i'
+                                  ? 'حزورة الشخصيات والأشياء'
+                                  : (_session.gameSlug == 'speed-trivia'
+                                      ? 'تحدي المعرفة والسرعة'
+                                      : (_session.gameSlug == 'two-truths-and-lie'
+                                          ? 'حقيقتان وكذبة'
+                                          : 'كمّل المثل الشعبي الأصيل')),
                               style: GoogleFonts.cairo(
                                 fontSize: 13,
                                 fontWeight: FontWeight.w800,
