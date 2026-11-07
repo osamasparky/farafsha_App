@@ -1,8 +1,8 @@
 <?php
 
+use App\Http\Controllers\Api\AppContentController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\GameController;
-use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\RoomController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -36,5 +36,10 @@ Route::prefix('rooms')->group(function () {
     Route::post('/{code}/answer', [RoomController::class, 'answer']);
 });
 
-// مسارات لوحة الشرف
-Route::get('/leaderboard', [LeaderboardController::class, 'index']);
+// مسارات المحتوى والإنتاجية الجديدة
+Route::get('/banners', [AppContentController::class, 'banners']);
+Route::get('/dialects', [AppContentController::class, 'dialects']);
+Route::get('/leaderboard', [AppContentController::class, 'leaderboard']);
+Route::get('/notifications', [AppContentController::class, 'notifications']);
+Route::get('/pages/{slug}', [AppContentController::class, 'page']);
+Route::get('/contact-info', [AppContentController::class, 'contactInfo']);

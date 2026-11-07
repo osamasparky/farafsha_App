@@ -7,62 +7,91 @@ class ApiService {
   static final ApiService instance = ApiService._internal();
   ApiService._internal();
 
-  // مع adb reverse tcp:8000 tcp:8000 يعمل localhost على الهاتف المتصل بالـ USB مباشرة
-  String get baseUrl => 'http://localhost:8000/api';
-
-  String? _authToken;
-
-  void setAuthToken(String token) {
-    _authToken = token;
+  // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على الويب أو سطح المكتب localhost
+  String get baseUrl {
+    if (kIsWeb) return 'http://localhost:8000/api';
+    return 'http://127.0.0.1:8000/api';
   }
 
   Map<String, String> get _headers => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
-        if (_authToken != null) 'Authorization': 'Bearer $_authToken',
       };
 
-  /// تسجيل دخول كضيف والحصول على توكن فوري
-  Future<Map<String, dynamic>?> loginAsGuest({String? name, String? avatar}) async {
+  /// تسجيل دخول سريع كضيف (Guest) والحصول على Token
+  Future<String?> guestLogin({String name = 'لاعب لمّة'}) async {
     try {
       final res = await http
           .post(
             Uri.parse('$baseUrl/auth/guest'),
             headers: _headers,
-            body: jsonEncode({
-              'name': name ?? 'ضيف لمّة',
-              'avatar': avatar ?? 'av-ahmed.png',
-            }),
+            body: jsonEncode({'name': name}),
           )
           .timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        final data = jsonDecode(res.body) as Map<String, dynamic>;
-        _authToken = data['token'] as String?;
-        return data;
+        final data = jsonDecode(res.body);
+        return data['token'] as String?;
       }
     } catch (e) {
-      debugPrint('⚠️ Guest login offline: $e');
+      debugPrint('⚠️ Guest login failed: $e');
     }
     return null;
   }
 
-  /// جلب قائمة جميع الألعاب من الباك إند
-  Future<List<Map<String, dynamic>>> getGames({String? category, String? mode}) async {
+  /// إرسال كود OTP لرقم الهاتف
+  Future<bool> sendOtp(String phone) async {
     try {
-      var url = '$baseUrl/games';
-      final params = <String>[];
-      if (category != null && category != 'all') params.add('category=$category');
-      if (mode != null) params.add('mode=$mode');
-      if (params.isNotEmpty) url += '?${params.join('&')}';
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/send-otp'),
+            headers: _headers,
+            body: jsonEncode({'phone': phone}),
+          )
+          .timeout(const Duration(seconds: 4));
 
-      final res = await http.get(Uri.parse(url), headers: _headers).timeout(const Duration(seconds: 4));
+      return res.statusCode == 200;
+    } catch (e) {
+      debugPrint('⚠️ Send OTP failed: $e');
+      return false;
+    }
+  }
+
+  /// التحقق من رمز OTP
+  Future<Map<String, dynamic>?> verifyOtp(String phone, String code) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/verify-otp'),
+            headers: _headers,
+            body: jsonEncode({'phone': phone, 'code': code}),
+          )
+          .timeout(const Duration(seconds: 4));
+
       if (res.statusCode == 200) {
-        final decoded = jsonDecode(res.body);
-        if (decoded is Map && decoded['data'] != null) {
-          return List<Map<String, dynamic>>.from(decoded['data']);
-        } else if (decoded is List) {
-          return List<Map<String, dynamic>>.from(decoded);
+        return jsonDecode(res.body) as Map<String, dynamic>;
+      }
+    } catch (e) {
+      debugPrint('⚠️ Verify OTP failed: $e');
+    }
+    return null;
+  }
+
+  /// جلب كافة الألعاب المتاحة من السيرفر (مع fallback محلي)
+  Future<List<Map<String, dynamic>>> getGames({String? category}) async {
+    try {
+      final uri = Uri.parse('$baseUrl/games').replace(
+        queryParameters: category != null && category != 'all' ? {'category': category} : null,
+      );
+
+      final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        } else if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
         }
       }
     } catch (e) {
@@ -72,28 +101,23 @@ class ApiService {
     return _loadSeedGames();
   }
 
-  /// جلب تفاصيل لعبة محددة
+  /// جلب لعبة محددة بالـ slug
   Future<Map<String, dynamic>?> getGameBySlug(String slug) async {
     try {
       final res = await http.get(Uri.parse('$baseUrl/games/$slug'), headers: _headers).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
-        final decoded = jsonDecode(res.body);
-        if (decoded is Map && decoded['data'] != null) {
-          return decoded['data'] as Map<String, dynamic>;
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] != null) {
+          return data['data'] as Map<String, dynamic>;
         }
       }
     } catch (e) {
-      debugPrint('⚠️ Fetching game details failed ($e). Loading from local seeds...');
+      debugPrint('⚠️ Fetching game by slug failed ($e)');
     }
-
-    final all = await _loadSeedGames();
-    return all.firstWhere(
-      (g) => g['slug'] == slug,
-      orElse: () => all.isNotEmpty ? all.first : {},
-    );
+    return null;
   }
 
-  /// جلب بطاقات لعبة محددة مع إمكانية العمل بلا إنترنت (Offline fallback)
+  /// جلب كروت وأسئلة اللعبة من السيرفر (مع fallback محلي)
   Future<List<Map<String, dynamic>>> getGameCards(String slug) async {
     try {
       final res = await http
@@ -114,8 +138,111 @@ class ApiService {
       debugPrint('⚠️ Fetching online cards failed ($e). Loading local seed data...');
     }
 
-    // بديل محلي دون إنترنت من ملف assets/data/seed_games.json
     return _loadSeedCards(slug);
+  }
+
+  /// جلب البنرات الإعلانية والترويجية
+  Future<List<Map<String, dynamic>>> getBanners() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/banners'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching banners failed: $e');
+    }
+    return [];
+  }
+
+  /// جلب اللهجات المتاحة من السيرفر
+  Future<List<Map<String, dynamic>>> getDialects() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/dialects'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching dialects failed: $e');
+    }
+    return [
+      {'name': 'لهجة مصرية', 'code': 'egyptian', 'icon': '🇪🇬'},
+      {'name': 'لهجة خليجية', 'code': 'gulf', 'icon': '🇸🇦'},
+      {'name': 'لهجة شامية', 'code': 'levantine', 'icon': '🇱🇧'},
+      {'name': 'لهجة مغاربية', 'code': 'maghrebi', 'icon': '🇲🇦'},
+    ];
+  }
+
+  /// جلب لوحة الترتيب والمتصدرين حسب الفترة (weekly, monthly, all_time)
+  Future<Map<String, dynamic>?> getLeaderboardData({String period = 'weekly'}) async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/leaderboard?period=$period'), headers: _headers)
+          .timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching leaderboard failed: $e');
+    }
+    return null;
+  }
+
+  /// جلب قائمة الإشعارات
+  Future<List<Map<String, dynamic>>> getNotifications() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/notifications'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is List) {
+          return List<Map<String, dynamic>>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching notifications failed: $e');
+    }
+    return [];
+  }
+
+  /// جلب صفحة محتوى ثابتة (سياسة الخصوصية، الشروط، المساعدة)
+  Future<Map<String, dynamic>?> getPage(String slug) async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/pages/$slug'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching page $slug failed: $e');
+    }
+    return null;
+  }
+
+  /// جلب معلومات التواصل والدعم
+  Future<Map<String, dynamic>?> getContactInfo() async {
+    try {
+      final res = await http.get(Uri.parse('$baseUrl/contact-info'), headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return data['data'] as Map<String, dynamic>;
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching contact info failed: $e');
+    }
+    return null;
   }
 
   /// إنشاء غرفة ألعاب أونلاين جديدة
@@ -130,7 +257,13 @@ class ApiService {
           .timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200 || res.statusCode == 201) {
-        return jsonDecode(res.body) as Map<String, dynamic>;
+        final decoded = jsonDecode(res.body);
+        if (decoded is Map<String, dynamic>) {
+          if (decoded['data'] is Map<String, dynamic>) {
+            return decoded['data'] as Map<String, dynamic>;
+          }
+          return decoded;
+        }
       }
     } catch (e) {
       debugPrint('⚠️ Create room failed: $e');
@@ -158,23 +291,6 @@ class ApiService {
     return null;
   }
 
-  /// جلب لوحة الترتيب حسب الفترة
-  Future<List<Map<String, dynamic>>> getLeaderboard({String period = 'week'}) async {
-    try {
-      final res = await http
-          .get(Uri.parse('$baseUrl/leaderboard?period=$period'), headers: _headers)
-          .timeout(const Duration(seconds: 3));
-
-      if (res.statusCode == 200) {
-        final data = jsonDecode(res.body);
-        if (data is List) return List<Map<String, dynamic>>.from(data);
-      }
-    } catch (e) {
-      debugPrint('⚠️ Leaderboard fetch failed: $e');
-    }
-    return [];
-  }
-
   /// قراءة الألعاب المحلية المرفقة في التطبيق لحالة الـ Offline
   Future<List<Map<String, dynamic>>> _loadSeedGames() async {
     try {
@@ -198,7 +314,7 @@ class ApiService {
         (g) => g['slug'] == slug,
         orElse: () => games.first,
       );
-      if (match != null && match['cards'] != null) {
+      if (match != null && match['cards'] is List) {
         return List<Map<String, dynamic>>.from(match['cards']);
       }
     } catch (e) {

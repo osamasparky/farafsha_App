@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+import '../../../core/network/api_service.dart';
+import '../../../core/services/settings_service.dart';
+import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -10,7 +14,88 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
-  bool _hasUnread = true;
+  bool _isLoading = false;
+  List<Map<String, dynamic>> _notifications = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchNotifications();
+  }
+
+  Future<void> _fetchNotifications() async {
+    setState(() => _isLoading = true);
+    final notifs = await ApiService.instance.getNotifications();
+    if (mounted) {
+      setState(() {
+        _notifications = notifs.isNotEmpty ? notifs : _fallbackNotifications();
+        _isLoading = false;
+      });
+    }
+  }
+
+  List<Map<String, dynamic>> _fallbackNotifications() {
+    return [
+      {
+        'id': 1,
+        'title': 'أهلاً بك في لمّـة! 🎉',
+        'message': 'استمتع بألعاب القعدة والتحدي مع أصحابك وعائلتك محلياً وأونلاين وبطريقة اللمّة.',
+        'type': 'info',
+        'is_read': false,
+        'created_at': 'منذ ساعة',
+      },
+      {
+        'id': 2,
+        'title': 'تحدي الأسبوع بدأ! 🏆',
+        'message': 'العب الآن واحصد نقاطاً مضاعفة لتصعد إلى قمة لوحة الترتيب.',
+        'type': 'reward',
+        'is_read': false,
+        'created_at': 'منذ يوم',
+      },
+    ];
+  }
+
+  void _markAllAsRead() {
+    SettingsService.instance.triggerHaptic();
+    SoundService.instance.playClick();
+    setState(() {
+      for (var n in _notifications) {
+        n['is_read'] = true;
+      }
+    });
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('تم تمييز جميع الإشعارات كمقروءة ✅'),
+        backgroundColor: Color(0xFF2A1050),
+      ),
+    );
+  }
+
+  IconData _getIconForType(String type) {
+    switch (type) {
+      case 'reward':
+        return Icons.emoji_events_rounded;
+      case 'update':
+        return Icons.auto_awesome_rounded;
+      case 'game':
+        return Icons.sports_esports_rounded;
+      default:
+        return Icons.notifications_active_rounded;
+    }
+  }
+
+  Color _getColorForType(String type) {
+    switch (type) {
+      case 'reward':
+        return LammaColors.gold500;
+      case 'update':
+        return const Color(0xFF35B88E);
+      case 'game':
+        return const Color(0xFFFF8A4C);
+      default:
+        return const Color(0xFFA35BFF);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,287 +116,139 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           ),
         ),
         child: SafeArea(
-          child: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-            children: [
-              // الشريط العلوي
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  IconButton(
-                    icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 24),
-                    onPressed: () => context.pop(),
-                  ),
-                  const Text(
-                    'الإشعارات',
-                    style: TextStyle(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      setState(() => _hasUnread = false);
-                    },
-                    child: const Text(
-                      'قراءة الكل',
-                      style: TextStyle(color: LammaColors.gold500, fontSize: 13, fontWeight: FontWeight.w800),
-                    ),
-                  ),
-                ],
-              ),
-
-              const SizedBox(height: 12),
-
-              // النهارده
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8.0, right: 4.0),
-                child: Text('النهارده', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFC9A2FF))),
-              ),
-
-              // كارت دعوة الغرفة النشطة
-              Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFF8F3BD0).withValues(alpha: 0.5),
-                      const Color(0xFF4A1E9A).withValues(alpha: 0.4),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: const Color(0xFFB98AFF), width: 1.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFA35BFF).withValues(alpha: 0.3),
-                      blurRadius: 20,
-                    ),
-                  ],
-                ),
-                child: Column(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 12.0),
+            child: Column(
+              children: [
+                // الشريط العلوي
+                Row(
                   children: [
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            border: Border.all(color: LammaColors.gold500, width: 2.5),
-                          ),
-                          child: ClipOval(
-                            child: Image.asset('assets/images/av-ahmed.png', fit: BoxFit.cover),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'أحمد بيعزمك على غرفة «ممنوع تقول»',
-                                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
-                              ),
-                              SizedBox(height: 2),
-                              Text(
-                                'من دقيقتين · 3 لاعبين مستنيين',
-                                style: TextStyle(fontSize: 12, color: Color(0xFFCFC6E4)),
-                              ),
-                            ],
-                          ),
-                        ),
-                        if (_hasUnread)
-                          Container(
-                            width: 10,
-                            height: 10,
-                            margin: const EdgeInsets.only(top: 6),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFF2569A),
-                            ),
-                          ),
-                      ],
+                    IconButton(
+                      icon: const Icon(Icons.arrow_forward_ios_rounded, color: Colors.white, size: 20),
+                      onPressed: () => context.pop(),
                     ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () => context.push('/online-room'),
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                gradient: LammaGradients.ctaPrimary,
-                                borderRadius: BorderRadius.circular(999),
-                                border: const Border(bottom: BorderSide(color: Color(0xFFB83A72), width: 3)),
-                              ),
-                              child: const Center(
-                                child: Text('انضم', style: TextStyle(color: Color(0xFF2A0E35), fontWeight: FontWeight.w900, fontSize: 15)),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: GestureDetector(
-                            onTap: () {},
-                            child: Container(
-                              height: 44,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(999),
-                                border: Border.all(color: Colors.white.withValues(alpha: 0.25), width: 1.5),
-                              ),
-                              child: const Center(
-                                child: Text('بعدين', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 15)),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                    Expanded(
+                      child: Text(
+                        'الإشعارات والتنبيهات 🔔',
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
+                      ),
+                    ),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: _markAllAsRead,
+                      child: Text(
+                        'قراءة الكل',
+                        style: GoogleFonts.cairo(color: LammaColors.gold500, fontSize: 13, fontWeight: FontWeight.w800),
+                      ),
                     ),
                   ],
                 ),
-              ),
 
-              const SizedBox(height: 10),
+                const SizedBox(height: 10),
 
-              // كارت محتوى جديد
-              _buildNotificationItem(
-                title: '50 مثل جديد نزلوا في «أمثال شعبية»',
-                time: 'من ساعة',
-                iconAsset: 'assets/images/ic-quote.png',
-                iconGradient: [const Color(0xFFD2566A), const Color(0xFF8E2A4E)],
-                hasUnreadDot: _hasUnread,
-              ),
+                // قائمة الإشعارات
+                Expanded(
+                  child: _isLoading
+                      ? const Center(child: CircularProgressIndicator(color: LammaColors.violet500))
+                      : _notifications.isEmpty
+                          ? Center(
+                              child: Text(
+                                'لا توجد إشعارات جديدة حالياً 📭',
+                                style: GoogleFonts.cairo(color: Colors.white54, fontSize: 15),
+                              ),
+                            )
+                          : ListView.separated(
+                              physics: const BouncingScrollPhysics(),
+                              itemCount: _notifications.length,
+                              separatorBuilder: (_, __) => const SizedBox(height: 10),
+                              itemBuilder: (context, index) {
+                                final notif = _notifications[index];
+                                final isRead = notif['is_read'] == true;
+                                final type = notif['type']?.toString() ?? 'info';
+                                final color = _getColorForType(type);
+                                final icon = _getIconForType(type);
 
-              const SizedBox(height: 10),
-
-              // كارت وسام مبروك
-              _buildNotificationItem(
-                title: 'مبروك! خدت وسام «ملك الأمثال»',
-                time: 'من 3 ساعات · +100 نقطة خبرة',
-                iconData: Icons.emoji_events_rounded,
-                iconGradient: [const Color(0xFFE0A92E), const Color(0xFF9C6A10)],
-                hasUnreadDot: false,
-              ),
-
-              const SizedBox(height: 16),
-
-              // الأسبوع ده
-              const Padding(
-                padding: EdgeInsets.only(bottom: 8.0, right: 4.0),
-                child: Text('الأسبوع ده', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFFC9A2FF))),
-              ),
-
-              _buildSimpleItem(
-                title: 'سارة عدّتك في الترتيب الأسبوعي',
-                time: 'الثلاثاء',
-                avatarAsset: 'assets/images/av-sara.png',
-              ),
-
-              const SizedBox(height: 10),
-
-              _buildNotificationItem(
-                title: 'تحدي الويك إند بدأ!',
-                time: 'الخميس',
-                iconAsset: 'assets/images/ic-dice.png',
-                iconGradient: [const Color(0xFF8C3468), const Color(0xFF531B44)],
-                hasUnreadDot: false,
-              ),
-
-              const SizedBox(height: 20),
-            ],
+                                return Container(
+                                  padding: const EdgeInsets.all(14),
+                                  decoration: BoxDecoration(
+                                    color: isRead ? const Color(0xFF1E103B) : const Color(0xFF2C1555),
+                                    borderRadius: BorderRadius.circular(18),
+                                    border: Border.all(
+                                      color: isRead ? Colors.white10 : color.withValues(alpha: 0.6),
+                                      width: isRead ? 1.0 : 1.5,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Container(
+                                        width: 44,
+                                        height: 44,
+                                        decoration: BoxDecoration(
+                                          color: color.withValues(alpha: 0.18),
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: Center(
+                                          child: Icon(icon, color: color, size: 22),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Column(
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    notif['title'] ?? '',
+                                                    style: GoogleFonts.cairo(
+                                                      fontSize: 15,
+                                                      fontWeight: isRead ? FontWeight.w700 : FontWeight.w900,
+                                                      color: Colors.white,
+                                                    ),
+                                                  ),
+                                                ),
+                                                if (!isRead)
+                                                  Container(
+                                                    width: 8,
+                                                    height: 8,
+                                                    decoration: const BoxDecoration(
+                                                      color: Color(0xFFFF568A),
+                                                      shape: BoxShape.circle,
+                                                    ),
+                                                  ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              notif['message'] ?? '',
+                                              style: GoogleFonts.cairo(
+                                                fontSize: 13,
+                                                color: const Color(0xFFCFC6E4),
+                                                height: 1.35,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-
-  Widget _buildNotificationItem({
-    required String title,
-    required String time,
-    String? iconAsset,
-    IconData? iconData,
-    required List<Color> iconGradient,
-    required bool hasUnreadDot,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.25),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFA35BFF).withValues(alpha: 0.3)),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(colors: iconGradient),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Center(
-              child: iconAsset != null
-                  ? Image.asset(iconAsset, width: 34, height: 32, fit: BoxFit.contain)
-                  : Icon(iconData, color: const Color(0xFFFFF1C7), size: 26),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white)),
-                const SizedBox(height: 2),
-                Text(time, style: const TextStyle(fontSize: 12, color: Color(0xFFCFC6E4))),
-              ],
-            ),
-          ),
-          if (hasUnreadDot)
-            Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                shape: BoxShape.circle,
-                color: Color(0xFFF2569A),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSimpleItem({
-    required String title,
-    required String time,
-    required String avatarAsset,
-  }) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 24,
-            backgroundImage: AssetImage(avatarAsset),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-                const SizedBox(height: 2),
-                Text(time, style: const TextStyle(fontSize: 12, color: Color(0xFFCFC6E4))),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
-

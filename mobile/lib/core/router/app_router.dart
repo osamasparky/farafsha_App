@@ -54,8 +54,20 @@ final appRouter = GoRouter(
       builder: (context, state) => const ModeSelectionScreen(),
     ),
     GoRoute(
+      path: '/mode-selection',
+      builder: (context, state) => const ModeSelectionScreen(),
+    ),
+    GoRoute(
       path: '/home',
       builder: (context, state) => const HomeScreen(),
+    ),
+    GoRoute(
+      path: '/game-setup',
+      builder: (context, state) {
+        final gameData = state.extra as Map<String, dynamic>?;
+        final gameId = gameData?['slug']?.toString() ?? 'amthal-shaabiya';
+        return GameSetupScreen(gameId: gameId, initialGameData: gameData);
+      },
     ),
     GoRoute(
       path: '/game-setup/:id',

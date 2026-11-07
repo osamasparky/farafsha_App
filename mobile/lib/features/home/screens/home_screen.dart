@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/settings_service.dart';
+import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
@@ -14,25 +17,58 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: المفضلة
-  int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب (الوسطى), 3: الترتيب, 4: الملف
+  int _currentNavIndex = 2; // 0: الرئيسية, 1: الأصدقاء, 2: الألعاب, 3: الترتيب, 4: الملف
   bool _isLoading = false;
   List<Map<String, dynamic>> _games = [];
+  List<Map<String, dynamic>> _banners = [];
+  int _currentBannerIndex = 0;
+  final PageController _bannerController = PageController();
 
   @override
   void initState() {
     super.initState();
-    _fetchGames();
+    _fetchData();
   }
 
-  Future<void> _fetchGames() async {
+  @override
+  void dispose() {
+    _bannerController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _fetchData() async {
     setState(() => _isLoading = true);
-    final games = await ApiService.instance.getGames();
+    final results = await Future.wait([
+      ApiService.instance.getGames(),
+      ApiService.instance.getBanners(),
+    ]);
+
     if (mounted) {
+      final games = results[0];
+      final banners = results[1];
       setState(() {
         _games = games.isNotEmpty ? games : _fallbackGames();
+        _banners = banners.isNotEmpty ? banners : _fallbackBanners();
         _isLoading = false;
       });
     }
+  }
+
+  List<Map<String, dynamic>> _fallbackBanners() {
+    return [
+      {
+        'id': 1,
+        'title': 'بطولة لمّة الأسبوعية الكبرى 🏆',
+        'image': 'assets/images/crowd.png',
+        'external_url': 'https://lammah.app/tournament',
+      },
+      {
+        'id': 2,
+        'title': 'كروت جديدة وإفيهات حصرية 🔥',
+        'image': 'assets/images/local.png',
+        'external_url': null,
+      },
+    ];
   }
 
   List<Map<String, dynamic>> _fallbackGames() {
@@ -79,45 +115,37 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       {
         'id': 6,
-        'slug': 'draw-guess',
-        'name': 'خمن الصورة',
-        'subtitle': 'ارسم وخمّن',
-        'category': 'رسم',
-        'icon': 'assets/images/ic-photo.png',
-      },
-      {
-        'id': 7,
         'slug': 'who-am-i',
         'name': 'مين أنا؟',
-        'subtitle': 'شخصيات وأشياء',
+        'subtitle': 'شخصيات وأشياء بأسئلة نعم/لا',
         'category': 'تخمين',
         'icon': 'assets/images/ic-mask.png',
-      },
-      {
-        'id': 8,
-        'slug': 'random-challenge',
-        'name': 'تحديات عشوائية',
-        'subtitle': 'مفاجآت كل جولة',
-        'category': 'تحدي',
-        'icon': 'assets/images/ic-dice.png',
       },
     ];
   }
 
-  List<Color> _getGameColors(String slug) {
+  List<Map<String, dynamic>> get _filteredGames {
+    if (_selectedTabIndex == 1) {
+      return _games.where((g) => g['is_featured'] == true || g['id'] % 2 == 1).toList();
+    } else if (_selectedTabIndex == 2) {
+      return _games.take(3).toList();
+    }
+    return _games;
+  }
+
+  List<Color> _getGameGradient(String slug) {
     switch (slug) {
       case 'amthal-shaabiya':
-        return const [Color(0xFFD2566A), Color(0xFF8E2A4E)];
+        return const [Color(0xFF8C3468), Color(0xFF531B44)];
       case 'famous-quotes':
-        return const [Color(0xFF8F3BD0), Color(0xFF561C94)];
+        return const [Color(0xFF5C299A), Color(0xFF331560)];
       case 'forbidden-words':
-        return const [Color(0xFF4846BE), Color(0xFF2B2580)];
+      case 'taboo-words':
+        return const [Color(0xFF2C3E8A), Color(0xFF192458)];
       case 'speed-trivia':
-        return const [Color(0xFF2F6E7A), Color(0xFF1B3F52)];
-      case 'guess-song':
-        return const [Color(0xFFB23A72), Color(0xFF6E1C4E)];
-      case 'draw-guess':
-        return const [Color(0xFF4740B0), Color(0xFF28226E)];
+        return const [Color(0xFF1E6C68), Color(0xFF104240)];
+      case 'two-truths-and-lie':
+        return const [Color(0xFF6B2B70), Color(0xFF3E1542)];
       case 'who-am-i':
         return const [Color(0xFF7A6A3A), Color(0xFF3F3420)];
       default:
@@ -138,15 +166,48 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _onBannerTap(Map<String, dynamic> banner) async {
+    SettingsService.instance.triggerHaptic();
+    SoundService.instance.playClick();
+
+    final urlStr = banner['external_url']?.toString();
+    if (urlStr != null && urlStr.isNotEmpty) {
+      try {
+        final uri = Uri.parse(urlStr);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (e) {
+        debugPrint('Error launching banner url: $e');
+      }
+    }
+
+    if (!mounted) return;
+
+    // إذا كان بدون رابط خارجي، نظهر إشعاراً تشجيعياً
+    ScaffoldMessenger.of(context).clearSnackBars();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          banner['title'] ?? 'فعالية خاصة بتطبيق لمّـة! 🎮',
+          style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+        ),
+        backgroundColor: const Color(0xFF4A1E9A),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return LammaScaffold(
       showBokeh: false,
       body: Column(
         children: [
-          // 1. الهيدر (Header) الترحيب + الصورة + جرس الإشعارات
+          // 1. الشريط العلوي (الهيدر)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12.0),
+            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 10.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -165,7 +226,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                       child: const CircleAvatar(
-                        radius: 22,
+                        radius: 20,
                         backgroundImage: AssetImage('assets/images/av-ahmed.png'),
                       ),
                     ),
@@ -175,41 +236,40 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Text(
                           'مساء الخير',
-                          style: GoogleFonts.cairo(fontSize: 13, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
+                          style: GoogleFonts.cairo(fontSize: 12, color: const Color(0xFFCFC6E4), fontWeight: FontWeight.w600),
                         ),
                         Text(
                           'أهلاً يا أسامة',
-                          style: GoogleFonts.cairo(fontSize: 19, fontWeight: FontWeight.w900, color: Colors.white),
+                          style: GoogleFonts.cairo(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.white),
                         ),
                       ],
                     ),
                   ],
                 ),
                 GestureDetector(
-                  onTap: () => context.push('/notifs'),
+                  onTap: () {
+                    SoundService.instance.playClick();
+                    context.push('/notifications');
+                  },
                   child: Container(
-                    width: 46,
-                    height: 46,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(14),
                       border: Border.all(color: LammaColors.cardBorder),
                     ),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
-                        const Icon(Icons.notifications_none_rounded, color: Colors.white, size: 24),
+                        const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
                         Positioned(
                           top: 10,
                           left: 10,
                           child: Container(
-                            width: 10,
-                            height: 10,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: LammaColors.pink500,
-                              border: Border.all(color: const Color(0xFF2A1656), width: 2),
-                            ),
+                            width: 8,
+                            height: 8,
+                            decoration: const BoxDecoration(color: Color(0xFFFF568A), shape: BoxShape.circle),
                           ),
                         ),
                       ],
@@ -220,148 +280,222 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
 
-          // 2. شريط التبويبات الثلاثي المستدير (الألعاب / التحديات / المفضلة)
+          // 2. البنر الإعلاني الترويجي (Banner Carousel)
+          if (_banners.isNotEmpty) ...[
+            _buildBannerSection(),
+            const SizedBox(height: 10),
+          ],
+
+          // 3. التبويبات (الألعاب - التحديات - المفضلة)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 20.0),
             child: Container(
-              padding: const EdgeInsets.all(4),
+              height: 44,
+              padding: const EdgeInsets.all(3.5),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.25),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: LammaColors.cardBorder),
               ),
               child: Row(
                 children: [
-                  _buildTab('الألعاب', 0),
-                  _buildTab('التحديات', 1),
-                  _buildTab('المفضلة', 2),
+                  _buildTabItem(title: 'الألعاب', index: 0),
+                  _buildTabItem(title: 'التحديات', index: 1),
+                  _buildTabItem(title: 'المفضلة', index: 2),
                 ],
               ),
             ),
           ),
 
-          const SizedBox(height: 14),
+          const SizedBox(height: 10),
 
-          // 3. شبكة الألعاب من الباك إند
+          // 4. شبكة الألعاب (Grid of Games)
           Expanded(
             child: _isLoading
-                ? const Center(
-                    child: CircularProgressIndicator(color: LammaColors.violet500),
-                  )
-                : RefreshIndicator(
-                    onRefresh: _fetchGames,
-                    color: LammaColors.violet500,
-                    child: GridView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 2,
-                        childAspectRatio: 1.15,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
+                ? const Center(child: CircularProgressIndicator(color: LammaColors.violet500))
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18.0),
+                    child: RefreshIndicator(
+                      onRefresh: _fetchData,
+                      color: LammaColors.violet500,
+                      child: GridView.builder(
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 90),
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 12,
+                          mainAxisSpacing: 12,
+                          childAspectRatio: 0.94,
+                        ),
+                        itemCount: _filteredGames.length,
+                        itemBuilder: (context, index) {
+                          final game = _filteredGames[index];
+                          return _buildGameCard(game);
+                        },
                       ),
-                      itemCount: _games.length,
-                      itemBuilder: (context, index) {
-                        final g = _games[index];
-                        return _buildGameTile(g);
-                      },
                     ),
                   ),
           ),
         ],
       ),
-
-      // 4. شريط التنقل السفلي مع زر الألعاب المرفوع المجسم (Raised Center Game Button)
-      bottomNavigationBar: Container(
-        height: 82,
-        decoration: BoxDecoration(
-          color: const Color(0xFF130928).withValues(alpha: 0.96),
-          border: const Border(top: BorderSide(color: Color(0x33A35BFF), width: 1.2)),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.5),
-              blurRadius: 20,
-              offset: const Offset(0, -6),
-            ),
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(0, 'الرئيسية', Icons.home_rounded, onTap: () {}),
-            _buildNavItem(1, 'طريقة اللعب', Icons.gamepad_rounded, onTap: () => context.push('/mode-select')),
-            // الزر الأوسط المرفوع للألعاب
-            Transform.translate(
-              offset: const Offset(0, -18),
-              child: GestureDetector(
-                onTap: _fetchGames,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 58,
-                      height: 58,
-                      decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFA35BFF), Color(0xFF7A2FE0)],
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                        ),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          width: 1.5,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: LammaColors.violet500.withValues(alpha: 0.7),
-                            blurRadius: 24,
-                            spreadRadius: 2,
-                          ),
-                        ],
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.sports_esports_rounded, color: Colors.white, size: 30),
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      'الألعاب',
-                      style: GoogleFonts.cairo(fontSize: 11, fontWeight: FontWeight.w900, color: Colors.white),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            _buildNavItem(3, 'الترتيب', Icons.leaderboard_rounded, onTap: () => context.push('/leaderboard')),
-            _buildNavItem(4, 'الملف', Icons.person_rounded, onTap: () => context.push('/profile')),
-          ],
-        ),
-      ),
+      bottomNavigationBar: _buildBottomNavigationBar(),
     );
   }
 
-  Widget _buildTab(String title, int index) {
+  Widget _buildBannerSection() {
+    return Column(
+      children: [
+        SizedBox(
+          height: 110,
+          child: PageView.builder(
+            controller: _bannerController,
+            onPageChanged: (idx) => setState(() => _currentBannerIndex = idx),
+            itemCount: _banners.length,
+            itemBuilder: (context, idx) {
+              final banner = _banners[idx];
+              final imgUrl = banner['image_url']?.toString() ?? '';
+              final title = banner['title']?.toString() ?? '';
+              final hasUrl = banner['external_url'] != null && banner['external_url'].toString().isNotEmpty;
+
+              return GestureDetector(
+                onTap: () => _onBannerTap(banner),
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 20),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF5A2A9E), Color(0xFF2E115B)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF5A2A9E).withValues(alpha: 0.35),
+                        blurRadius: 16,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(20),
+                    child: Stack(
+                      children: [
+                        // صورة البنر
+                        Positioned.fill(
+                          child: imgUrl.startsWith('http')
+                              ? Image.network(
+                                  imgUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) => Image.asset('assets/images/crowd.png', fit: BoxFit.cover),
+                                )
+                              : Image.asset(
+                                  banner['image'] ?? 'assets/images/crowd.png',
+                                  fit: BoxFit.cover,
+                                ),
+                        ),
+                        // طبقة تظليل لضمان وضوح النص
+                        Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.bottomCenter,
+                              end: Alignment.topCenter,
+                              colors: [
+                                Colors.black.withValues(alpha: 0.8),
+                                Colors.black.withValues(alpha: 0.1),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // نص البنر مع شارة الرابط إن وجد
+                        Positioned(
+                          bottom: 10,
+                          left: 12,
+                          right: 12,
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  title,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                              if (hasUrl)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: LammaColors.orange500,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Text(
+                                        'تفاصيل',
+                                        style: GoogleFonts.cairo(fontSize: 10, fontWeight: FontWeight.w900, color: Colors.white),
+                                      ),
+                                      const SizedBox(width: 3),
+                                      const Icon(Icons.open_in_new_rounded, size: 11, color: Colors.white),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+        if (_banners.length > 1) ...[
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: List.generate(_banners.length, (i) {
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: _currentBannerIndex == i ? 16 : 6,
+                height: 5,
+                decoration: BoxDecoration(
+                  color: _currentBannerIndex == i ? LammaColors.gold500 : Colors.white24,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              );
+            }),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildTabItem({required String title, required int index}) {
     final bool isSelected = _selectedTabIndex == index;
     return Expanded(
       child: GestureDetector(
-        onTap: () => setState(() => _selectedTabIndex = index),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 180),
-          height: 40,
+        onTap: () {
+          SettingsService.instance.triggerHaptic();
+          SoundService.instance.playClick();
+          setState(() => _selectedTabIndex = index);
+        },
+        child: Container(
           decoration: BoxDecoration(
-            gradient: isSelected
-                ? const LinearGradient(
-                    colors: [Color(0xFFA35BFF), Color(0xFF7A2FE0)],
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                  )
-                : null,
+            gradient: isSelected ? LammaGradients.ctaSecondary : null,
             borderRadius: BorderRadius.circular(999),
             boxShadow: isSelected
                 ? [
                     BoxShadow(
                       color: LammaColors.violet500.withValues(alpha: 0.6),
-                      blurRadius: 18,
+                      blurRadius: 14,
                     ),
                   ]
                 : [],
@@ -370,7 +504,7 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Text(
               title,
               style: GoogleFonts.cairo(
-                fontSize: 15,
+                fontSize: 14,
                 fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
                 color: isSelected ? Colors.white : const Color(0xFFCFC6E4),
               ),
@@ -381,108 +515,184 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildGameTile(Map<String, dynamic> game) {
-    final slug = (game['slug'] ?? game['id'] ?? 'amthal-shaabiya').toString();
-    final name = (game['name'] ?? 'لعبة لمّة').toString();
-    final subtitle = (game['subtitle'] ?? game['sub'] ?? '').toString();
-    final List<Color> colors = _getGameColors(slug);
-    final iconAsset = _getGameIcon(slug);
-    final coverUrl = game['cover_image_url'] as String?;
+  Widget _buildGameCard(Map<String, dynamic> game) {
+    final slug = game['slug']?.toString() ?? 'amthal-shaabiya';
+    final colors = _getGameGradient(slug);
+    final fallbackIcon = _getGameIcon(slug);
+    final coverImageUrl = game['cover_image_url']?.toString();
 
     return GestureDetector(
-      onTap: () => context.push('/game-setup/$slug', extra: game),
+      onTap: () {
+        SettingsService.instance.triggerHaptic();
+        SoundService.instance.playClick();
+        context.push('/game-setup', extra: game);
+      },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           gradient: LinearGradient(
             colors: colors,
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.18), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.18),
+            width: 1.2,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 16,
-              offset: const Offset(0, 6),
+              color: colors.first.withValues(alpha: 0.45),
+              offset: const Offset(0, 10),
+              blurRadius: 20,
+              spreadRadius: -2,
             ),
           ],
         ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (coverUrl != null && coverUrl.isNotEmpty)
-              ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Image.network(
-                  coverUrl,
-                  width: 58,
-                  height: 48,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, __, ___) => Image.asset(iconAsset, width: 58, height: 48, fit: BoxFit.contain),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                width: 52,
+                height: 52,
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
-              )
-            else
-              Image.asset(
-                iconAsset,
-                width: 58,
-                height: 48,
-                fit: BoxFit.contain,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: coverImageUrl != null && coverImageUrl.isNotEmpty
+                      ? Image.network(
+                          coverImageUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Image.asset(fallbackIcon, fit: BoxFit.contain),
+                        )
+                      : Image.asset(fallbackIcon, fit: BoxFit.contain),
+                ),
               ),
-            const SizedBox(height: 4),
-            Text(
-              name,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.cairo(
-                fontSize: 16,
-                fontWeight: FontWeight.w900,
-                color: Colors.white,
-                shadows: const [Shadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2))],
+              const SizedBox(height: 10),
+              Text(
+                game['name'] ?? '',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cairo(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
               ),
-            ),
-            Text(
-              subtitle,
-              textAlign: TextAlign.center,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.cairo(
-                fontSize: 11,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.88),
+              const SizedBox(height: 2),
+              Text(
+                game['subtitle'] ?? '',
+                textAlign: TextAlign.center,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: GoogleFonts.cairo(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFFE2D9F3),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, String label, IconData icon, {required VoidCallback onTap}) {
+  Widget _buildBottomNavigationBar() {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Color(0xFF130924),
+        border: Border(top: BorderSide(color: Color(0xFF2E1C55), width: 1.2)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 68,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(icon: Icons.home_filled, label: 'الرئيسية', index: 0, route: '/home'),
+              _buildNavItem(icon: Icons.sports_esports_rounded, label: 'طريقة اللعب', index: 1, route: '/mode-selection'),
+              _buildCenterGameIcon(),
+              _buildNavItem(icon: Icons.leaderboard_rounded, label: 'الترتيب', index: 3, route: '/leaderboard'),
+              _buildNavItem(icon: Icons.person_rounded, label: 'الملف', index: 4, route: '/profile'),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem({required IconData icon, required String label, required int index, required String route}) {
     final bool isSelected = _currentNavIndex == index;
     return GestureDetector(
       onTap: () {
+        SettingsService.instance.triggerHaptic();
+        SoundService.instance.playClick();
         setState(() => _currentNavIndex = index);
-        onTap();
+        if (route != '/home') {
+          context.push(route);
+        }
       },
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Icon(
             icon,
+            color: isSelected ? const Color(0xFFB98AFF) : const Color(0xFF8B7AA8),
             size: 24,
-            color: isSelected ? Colors.white : const Color(0xFFCFC6E4),
           ),
-          const SizedBox(height: 3),
+          const SizedBox(height: 4),
           Text(
             label,
             style: GoogleFonts.cairo(
               fontSize: 11,
-              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w700,
-              color: isSelected ? Colors.white : const Color(0xFFCFC6E4),
+              fontWeight: isSelected ? FontWeight.w900 : FontWeight.w600,
+              color: isSelected ? Colors.white : const Color(0xFF8B7AA8),
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildCenterGameIcon() {
+    return GestureDetector(
+      onTap: () {
+        SettingsService.instance.triggerHaptic();
+        SoundService.instance.playClick();
+        context.push('/mode-selection');
+      },
+      child: Container(
+        width: 52,
+        height: 52,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: const RadialGradient(
+            colors: [Color(0xFFB98AFF), Color(0xFF7524E4)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: const Color(0xFFA35BFF).withValues(alpha: 0.65),
+              blurRadius: 18,
+              spreadRadius: 2,
+            ),
+          ],
+        ),
+        child: const Center(
+          child: Icon(Icons.videogame_asset_rounded, color: Colors.white, size: 28),
+        ),
       ),
     );
   }

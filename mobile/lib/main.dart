@@ -3,12 +3,15 @@ import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/router/app_router.dart';
+import 'core/services/settings_service.dart';
 import 'core/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // ضبط شريط الحالة والتحكم ليتماشى مع الوضع الليلي الفاخر
+  // تهيئة إعدادات المستخدم والخدمات الأساسية
+  await SettingsService.instance.init();
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -30,28 +33,35 @@ class LammahApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      title: 'لمّة - لعبة الجماعة',
-      debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
-      routerConfig: appRouter,
-      
-      // إعدادات التوطين واللغة العربية الافتراضية بنظام RTL
-      locale: const Locale('ar', 'EG'),
-      supportedLocales: const [
-        Locale('ar', 'EG'),
-        Locale('ar', 'SA'),
-        Locale('en', 'US'),
-      ],
-      localizationsDelegates: const [
-        GlobalMaterialLocalizations.delegate,
-        GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
-      ],
-      builder: (context, child) {
-        return Directionality(
-          textDirection: TextDirection.rtl,
-          child: child!,
+    return ListenableBuilder(
+      listenable: SettingsService.instance,
+      builder: (context, _) {
+        final isDarkMode = SettingsService.instance.isDarkMode;
+
+        return MaterialApp.router(
+          title: 'لمّـة - لعبة الجماعة',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: isDarkMode ? ThemeMode.dark : ThemeMode.light,
+          routerConfig: appRouter,
+          locale: const Locale('ar', 'EG'),
+          supportedLocales: const [
+            Locale('ar', 'EG'),
+            Locale('ar', 'SA'),
+            Locale('en', 'US'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, child) {
+            return Directionality(
+              textDirection: TextDirection.rtl,
+              child: child!,
+            );
+          },
         );
       },
     );

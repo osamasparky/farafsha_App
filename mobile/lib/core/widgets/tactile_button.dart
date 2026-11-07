@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../services/settings_service.dart';
+import '../services/sound_service.dart';
 import '../theme/app_colors.dart';
 import '../theme/app_typography.dart';
 
@@ -47,7 +48,8 @@ class _TactileButtonState extends State<TactileButton> {
     return GestureDetector(
       onTapDown: isEnabled
           ? (_) {
-              HapticFeedback.lightImpact();
+              SettingsService.instance.triggerHaptic();
+              SoundService.instance.playClick();
               setState(() => _isPressed = true);
             }
           : null,

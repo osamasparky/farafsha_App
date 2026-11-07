@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/settings_service.dart';
+import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
@@ -93,7 +94,8 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
   }
 
   void _scoreForTeam(int teamIndex) {
-    HapticFeedback.heavyImpact();
+    SettingsService.instance.triggerHaptic(isHeavy: true);
+    SoundService.instance.playCorrect();
     setState(() {
       _teams[teamIndex]['score'] = (_teams[teamIndex]['score'] as int) + 1;
       _lastScoredTeam = _teams[teamIndex]['name'] as String;
@@ -120,10 +122,12 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
   }
 
   void _nextQuestion() {
-    HapticFeedback.lightImpact();
+    SettingsService.instance.triggerHaptic();
     if (_currentIndex + 1 >= _questions.length || _currentIndex + 1 >= widget.totalQuestions) {
+      SoundService.instance.playWin();
       setState(() => _isGameOver = true);
     } else {
+      SoundService.instance.playClick();
       setState(() {
         _currentIndex++;
         _lastScoredTeam = null;

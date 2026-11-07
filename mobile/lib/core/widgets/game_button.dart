@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../services/settings_service.dart';
+import '../services/sound_service.dart';
 import '../theme/lamma_theme.dart';
 
 enum GameButtonVariant { primary, secondary }
@@ -40,7 +41,6 @@ class _GameButtonState extends State<GameButton> {
     final bool isPrimary = widget.variant == GameButtonVariant.primary;
     final bool isEnabled = widget.onPressed != null && !widget.isLoading;
 
-    // ألوان التدرج والحدود السفلية المجسمة
     final Gradient bgGradient = isPrimary
         ? LammaGradients.ctaPrimary
         : LammaGradients.ctaSecondary;
@@ -74,7 +74,8 @@ class _GameButtonState extends State<GameButton> {
     return GestureDetector(
       onTapDown: isEnabled
           ? (_) {
-              HapticFeedback.lightImpact();
+              SettingsService.instance.triggerHaptic();
+              SoundService.instance.playClick();
               setState(() => _isPressed = true);
             }
           : null,
@@ -165,4 +166,3 @@ class _GameButtonState extends State<GameButton> {
     );
   }
 }
-
