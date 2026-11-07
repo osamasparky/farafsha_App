@@ -45,7 +45,7 @@ class TabooGameScreen extends StatefulWidget {
   State<TabooGameScreen> createState() => _TabooGameScreenState();
 }
 
-class _TabooGameScreenState extends State<TabooGameScreen> {
+class _TabooGameScreenState extends State<TabooGameScreen> with SingleTickerProviderStateMixin {
   late GameSession _session;
   static const int _turnDurationSeconds = 60;
   int _secondsLeft = _turnDurationSeconds;
@@ -246,21 +246,19 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
     setState(() {
       _turnCorrectCount++;
-      // إضافة نقطة للاعب والفريق
       _session.activePlayer.score += 1;
       _session.activePlayer.correctAnswers += 1;
       _currentCardIndex++;
     });
   }
 
-  /// عند نطق كلمة ممنوعة: خصم 1 نقطة (أو حسب القواعد) + كارت جديد فوراً
+  /// عند نطق كلمة ممنوعة: خصم 1 نقطة + كارت جديد فوراً
   void _onFoul() {
     HapticFeedback.vibrate();
     SoundService.instance.playWrong();
 
     setState(() {
       _turnFoulCount++;
-      // خصم نقطة من رصيد اللاعب بحيث لا يقل عن 0
       _session.activePlayer.score = max(0, _session.activePlayer.score - 1);
       _currentCardIndex++;
     });
@@ -289,10 +287,10 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
     final activePlayer = _session.activePlayer;
     final isFarfoosh = activePlayer.teamName == 'فرفوش';
     final teamColor = isFarfoosh ? const Color(0xFFA35BFF) : const Color(0xFFFF8A4C);
+    final isLastTurn = _session.isLastRound;
 
     final farfooshScore = _session.teamScores['فرفوش'] ?? 0;
     final qafooshScore = _session.teamScores['قفوش'] ?? 0;
-    final isLastTurn = _session.isLastRound;
 
     showDialog(
       context: context,
@@ -300,15 +298,19 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
       builder: (dialogCtx) {
         return AlertDialog(
           backgroundColor: const Color(0xFF241050),
+          insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
             side: BorderSide(color: teamColor.withOpacity(0.5), width: 2),
           ),
+          titlePadding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
+          contentPadding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           title: Column(
             children: [
               Container(
-                width: 60,
-                height: 60,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: teamColor.withOpacity(0.2),
@@ -316,15 +318,15 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                 child: Center(
                   child: Text(
                     isFarfoosh ? '🟣' : '🟠',
-                    style: const TextStyle(fontSize: 28),
+                    style: const TextStyle(fontSize: 26),
                   ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
               Text(
                 'انتهى الوقت! ⏰',
                 style: GoogleFonts.cairo(
-                  fontSize: 20,
+                  fontSize: 19,
                   fontWeight: FontWeight.w900,
                   color: Colors.white,
                 ),
@@ -332,122 +334,151 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
               Text(
                 'جولة فريق ${activePlayer.teamName} (${activePlayer.name})',
                 style: GoogleFonts.cairo(
-                  fontSize: 14,
+                  fontSize: 13,
                   fontWeight: FontWeight.w700,
                   color: teamColor,
                 ),
               ),
             ],
           ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // إحصائيات هذه الجولة
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          '+$_turnCorrectCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF4FD1A5),
-                          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // إحصائيات هذه الجولة
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.06),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              '+$_turnCorrectCount',
+                              style: GoogleFonts.cairo(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFF4FD1A5),
+                              ),
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'صح ✅',
+                                style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'صح ✅',
-                          style: GoogleFonts.cairo(fontSize: 12, color: Colors.white70),
+                      ),
+                      Container(width: 1, height: 32, color: Colors.white12),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              '-$_turnFoulCount',
+                              style: GoogleFonts.cairo(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: const Color(0xFFFF5252),
+                              ),
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'مخالفات 🚫',
+                                style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70),
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    Container(width: 1, height: 35, color: Colors.white12),
-                    Column(
-                      children: [
-                        Text(
-                          '-$_turnFoulCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFFFF5252),
-                          ),
+                      ),
+                      Container(width: 1, height: 32, color: Colors.white12),
+                      Expanded(
+                        child: Column(
+                          children: [
+                            Text(
+                              '${max(0, _turnCorrectCount - _turnFoulCount)}',
+                              style: GoogleFonts.cairo(
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                                color: LammaColors.gold300,
+                              ),
+                            ),
+                            FittedBox(
+                              fit: BoxFit.scaleDown,
+                              child: Text(
+                                'صافي النقاط ⭐️',
+                                style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70),
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'مخالفات 🚫',
-                          style: GoogleFonts.cairo(fontSize: 12, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                    Container(width: 1, height: 35, color: Colors.white12),
-                    Column(
-                      children: [
-                        Text(
-                          '${max(0, _turnCorrectCount - _turnFoulCount)}',
-                          style: GoogleFonts.cairo(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            color: LammaColors.gold300,
-                          ),
-                        ),
-                        Text(
-                          'صافي النقاط ⭐️',
-                          style: GoogleFonts.cairo(fontSize: 12, color: Colors.white70),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 16),
-
-              // النتيجة الإجمالية للفريقين
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFA35BFF).withOpacity(0.15),
-                      const Color(0xFFFF8A4C).withOpacity(0.15),
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white10),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '🟣 فرفوش: $farfooshScore',
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFD6B4FF),
+
+                const SizedBox(height: 12),
+
+                // النتيجة الإجمالية للفريقين
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFA35BFF).withOpacity(0.15),
+                        const Color(0xFFFF8A4C).withOpacity(0.15),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.white10),
+                  ),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: FittedBox(
+                          alignment: Alignment.centerRight,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            '🟣 فرفوش: $farfooshScore',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFD6B4FF),
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
-                    Text(
-                      'الجولة ${_session.currentRoundNumber} من ${_session.totalRounds}',
-                      style: GoogleFonts.cairo(fontSize: 11, color: Colors.white38),
-                    ),
-                    Text(
-                      'قفوش: $qafooshScore 🟠',
-                      style: GoogleFonts.cairo(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFFFFBE99),
+                      const SizedBox(width: 6),
+                      Text(
+                        'الجولة ${_session.currentRoundNumber}/${_session.totalRounds}',
+                        style: GoogleFonts.cairo(fontSize: 11, color: Colors.white38),
                       ),
-                    ),
-                  ],
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: FittedBox(
+                          alignment: Alignment.centerLeft,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            'قفوش: $qafooshScore 🟠',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: const Color(0xFFFFBE99),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
           actionsAlignment: MainAxisAlignment.center,
           actions: [
@@ -536,428 +567,791 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
     final isFarfoosh = activePlayer.teamName == 'فرفوش';
     final teamColor = isFarfoosh ? const Color(0xFFA35BFF) : const Color(0xFFFF8A4C);
 
+    // حساب نقاط الفريقين
+    final farfooshScore = _session.teamScores['فرفوش'] ?? 0;
+    final qafooshScore = _session.teamScores['قفوش'] ?? 0;
+
+    // ألوان المؤقت الديناميكية بحسب الوقت المتبقي
+    final Color timerColor = _secondsLeft <= 10
+        ? const Color(0xFFFF3B30)
+        : _secondsLeft <= 20
+            ? const Color(0xFFFF9500)
+            : const Color(0xFFFFCC00);
+
     return Scaffold(
+      backgroundColor: const Color(0xFF13092A),
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: RadialGradient(
-            center: Alignment(0.0, -0.4),
-            radius: 1.0,
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
             colors: [
-              Color(0xFF3A2CA0),
-              Color(0xFF201460),
-              Color(0xFF120A30),
+              Color(0xFF26124B),
+              Color(0xFF180A35),
+              Color(0xFF0F0622),
             ],
-            stops: [0.0, 0.55, 1.0],
+            stops: [0.0, 0.45, 1.0],
           ),
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 14.0),
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
             child: Column(
               children: [
-                // الشريط العلوي (زر الإيقاف + من يشرح وفريقه + الجولة)
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: _openPauseModal,
-                      child: Container(
-                        width: 44,
-                        height: 44,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.08),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: Colors.white12),
-                        ),
-                        child: const Icon(Icons.pause_rounded, color: Colors.white, size: 24),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: teamColor.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(color: teamColor.withOpacity(0.7)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundImage: AssetImage(activePlayer.avatar),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${activePlayer.name} بيشرح · ${activePlayer.teamName}',
-                            style: GoogleFonts.cairo(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.08),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        'جولة ${_session.currentRoundNumber}/${_session.totalRounds}',
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: const Color(0xFFD6C8F5),
-                        ),
-                      ),
-                    ),
-                  ],
+                // 1. الشريط العلوي (HUD Header)
+                _buildHeader(teamColor, isFarfoosh, activePlayer),
+
+                const SizedBox(height: 10),
+
+                // 2. لوحة المؤقت والمواجهة الحية (فرفوش ضد قفوش)
+                _buildLiveRivalryBar(
+                  farfooshScore: farfooshScore,
+                  qafooshScore: qafooshScore,
+                  progress: progress,
+                  timerColor: timerColor,
+                ),
+
+                const SizedBox(height: 10),
+
+                // 3. كارت التابو الأسطوري بتصميم بطاقة لعب فيزيائية
+                Expanded(
+                  child: _buildTabooCard(card, teamColor, isFarfoosh),
                 ),
 
                 const SizedBox(height: 12),
 
-                // صف العداد والإحصائيات الحية
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // عداد الإجابات الصحيحة
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_turnCorrectCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF4FD1A5),
-                          ),
-                        ),
-                        Text(
-                          'صح (+1)',
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFCFC6E4),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(width: 24),
+                // 4. منطقة التحكم والأزرار التفاعلية المعاد تصميمها كلياً
+                _buildActionControlPanel(),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 
-                    // الدائرة التنازلية للوقت
-                    SizedBox(
-                      width: 90,
-                      height: 90,
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          CircularProgressIndicator(
-                            value: progress,
-                            strokeWidth: 7,
-                            backgroundColor: const Color(0xFF1A0F40),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _secondsLeft <= 10 ? const Color(0xFFFF5252) : const Color(0xFFFF9E4C),
-                            ),
-                          ),
-                          Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                '$_secondsLeft',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                'ثانية',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFFCFC6E4),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 24),
-
-                    // عداد المخالفات
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_turnFoulCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFFFF5252),
-                          ),
-                        ),
-                        Text(
-                          'مخالفة (-1)',
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFCFC6E4),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+  /// 1. الشريط العلوي: زر الإيقاف + هوية الشارح + رقم الجولة
+  Widget _buildHeader(Color teamColor, bool isFarfoosh, GamePlayer activePlayer) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        // زر الإيقاف المؤقت
+        GestureDetector(
+          onTap: _openPauseModal,
+          child: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.08),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: Colors.white.withOpacity(0.12)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.2),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
                 ),
+              ],
+            ),
+            child: const Icon(Icons.pause_rounded, color: Colors.white, size: 22),
+          ),
+        ),
 
-                const SizedBox(height: 14),
-
-                // كارت التابو المائل
-                Expanded(
-                  child: Center(
-                    child: Transform.rotate(
-                      angle: -0.015,
-                      child: Container(
-                        width: double.infinity,
-                        constraints: const BoxConstraints(maxWidth: 360),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: [
-                            BoxShadow(
-                              color: teamColor.withOpacity(0.35),
-                              blurRadius: 16,
-                              spreadRadius: 2,
-                            ),
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
-                              blurRadius: 25,
-                              offset: const Offset(0, 10),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // رأس الكارت مع الكلمة الرئيسية
-                            Container(
-                              width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  colors: isFarfoosh
-                                      ? [const Color(0xFF6A5AF0), const Color(0xFF3B2CB0)]
-                                      : [const Color(0xFFFF7A3D), const Color(0xFFD64D12)],
-                                ),
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                              ),
-                              child: Column(
-                                children: [
-                                  Text(
-                                    'اشرح الكلمة دي لفريقك:',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFF1EDFF),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    card.prompt,
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
-                                    ),
-                                    textAlign: TextAlign.center,
-                                  ),
-                                ],
-                              ),
-                            ),
-
-                            // قائمة الكلمات الممنوعة
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Row(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      const Icon(Icons.block_rounded, color: Color(0xFFA3264F), size: 18),
-                                      const SizedBox(width: 6),
-                                      Text(
-                                        'ممنوع تقول (الكلمات المحظورة):',
-                                        style: GoogleFonts.cairo(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w900,
-                                          color: const Color(0xFFA3264F),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 8),
-                                  ...card.forbiddenWords.map(
-                                    (word) => Container(
-                                      margin: const EdgeInsets.only(bottom: 6),
-                                      height: 36,
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFDE3EE),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: const Color(0xFFFFCADB)),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          word,
-                                          style: GoogleFonts.cairo(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color(0xFF8E1F4E),
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+        // بادج اللاعب الذي يشرح الآن
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          decoration: BoxDecoration(
+            color: teamColor.withOpacity(0.15),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(color: teamColor.withOpacity(0.6), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: teamColor.withOpacity(0.25),
+                blurRadius: 12,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircleAvatar(
+                radius: 13,
+                backgroundImage: AssetImage(activePlayer.avatar),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                '${activePlayer.name} بيشرح',
+                style: GoogleFonts.cairo(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w900,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: teamColor,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  activePlayer.teamName,
+                  style: GoogleFonts.cairo(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
                   ),
                 ),
+              ),
+            ],
+          ),
+        ),
 
-                const SizedBox(height: 12),
+        // مؤشر رقم الجولة
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(
+            color: Colors.white.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: Colors.white.withOpacity(0.12)),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.style_rounded, size: 14, color: Color(0xFFD6C8F5)),
+              const SizedBox(width: 4),
+              Text(
+                '${_session.currentRoundNumber}/${_session.totalRounds}',
+                style: GoogleFonts.cairo(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w800,
+                  color: const Color(0xFFE4DAFF),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-                // صف أزرار التحكم (تخطي، قال ممنوعة، صح!)
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
+  /// 2. لوحة النتائج المباشرة والمؤقت التنازلي التفاعلي
+  Widget _buildLiveRivalryBar({
+    required int farfooshScore,
+    required int qafooshScore,
+    required double progress,
+    required Color timerColor,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: const Color(0xFF1F113D).withOpacity(0.85),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          // فريق فرفوش (النقاط)
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFA35BFF).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFA35BFF).withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🟣', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 6),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'فرفوش',
+                        style: GoogleFonts.cairo(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFD6B4FF),
+                          height: 1.1,
+                        ),
+                      ),
+                      Text(
+                        '$farfooshScore',
+                        style: GoogleFonts.cairo(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          // عداد الوقت الدائري التنازلي في المنتصف
+          SizedBox(
+            width: 76,
+            height: 76,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 6,
+                  backgroundColor: const Color(0xFF2C1656),
+                  valueColor: AlwaysStoppedAnimation<Color>(timerColor),
+                ),
+                Container(
+                  width: 58,
+                  height: 58,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: const Color(0xFF13092A),
+                    boxShadow: [
+                      BoxShadow(
+                        color: timerColor.withOpacity(0.3),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        '$_secondsLeft',
+                        style: GoogleFonts.cairo(
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                          color: timerColor,
+                          height: 1.0,
+                        ),
+                      ),
+                      Text(
+                        'ثانية',
+                        style: GoogleFonts.cairo(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white60,
+                          height: 1.0,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(width: 10),
+
+          // فريق قفوش (النقاط)
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFF8A4C).withOpacity(0.12),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0xFFFF8A4C).withOpacity(0.3)),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🟠', style: TextStyle(fontSize: 14)),
+                  const SizedBox(width: 6),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'قفوش',
+                        style: GoogleFonts.cairo(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFFFBE99),
+                          height: 1.1,
+                        ),
+                      ),
+                      Text(
+                        '$qafooshScore',
+                        style: GoogleFonts.cairo(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 3. كارت التابو الأسطوري
+  Widget _buildTabooCard(TabooCardItem card, Color teamColor, bool isFarfoosh) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 250),
+      transitionBuilder: (child, animation) {
+        return ScaleTransition(
+          scale: CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          child: FadeTransition(opacity: animation, child: child),
+        );
+      },
+      child: Container(
+        key: ValueKey<int>(_currentCardIndex),
+        width: double.infinity,
+        constraints: const BoxConstraints(maxWidth: 390),
+        decoration: BoxDecoration(
+          color: const Color(0xFFFFFFFF),
+          borderRadius: BorderRadius.circular(28),
+          border: Border.all(
+            color: isFarfoosh ? const Color(0xFFC49BFD) : const Color(0xFFFFB88E),
+            width: 3,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: teamColor.withOpacity(0.4),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.5),
+              blurRadius: 30,
+              offset: const Offset(0, 15),
+            ),
+          ],
+        ),
+        child: Column(
+          children: [
+            // ترويسة الكارت الفاخرة (الكلمة المستهدفة للشرح)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isFarfoosh
+                      ? [const Color(0xFF7A42E4), const Color(0xFF4C1D95)]
+                      : [const Color(0xFFFF7235), const Color(0xFFC2410C)],
+                ),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.lightbulb_outline_rounded, size: 14, color: Colors.amber),
+                        const SizedBox(width: 4),
+                        Text(
+                          'اشرح الكلمة دي لفريقك بدون ما تقول المحظورات',
+                          style: GoogleFonts.cairo(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFF3EDFF),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      card.prompt,
+                      style: GoogleFonts.cairo(
+                        fontSize: 30,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: -0.5,
+                        shadows: [
+                          Shadow(
+                            color: Colors.black.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // قسم الكلمات المحظورة "ممنوع تقول"
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+                child: Column(
                   children: [
-                    // زر تخطي
-                    Expanded(
-                      flex: 1,
-                      child: GestureDetector(
-                        onTap: _skipsLeft > 0 ? _onSkip : null,
-                        child: AnimatedOpacity(
-                          duration: const Duration(milliseconds: 200),
-                          opacity: _skipsLeft > 0 ? 1.0 : 0.4,
-                          child: Container(
-                            height: 64,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white24),
+                    // شريط التحذير
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFEE2E2),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFFCA5A5)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.cancel_rounded, color: Color(0xFFDC2626), size: 16),
+                          const SizedBox(width: 6),
+                          Text(
+                            'ممنوع تقول (الكلمات المحظورة):',
+                            style: GoogleFonts.cairo(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w900,
+                              color: const Color(0xFF991B1B),
                             ),
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.skip_next_rounded, color: Colors.white, size: 22),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'تخطي ($_skipsLeft)',
-                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // الكلمات الممنوعة الخمس في كروت خطر واضحة وأنيقة
+                    Expanded(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                        children: card.forbiddenWords.map((word) {
+                          return Container(
+                            width: double.infinity,
+                            padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 14),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFF1F2), Color(0xFFFFE4E6)],
+                              ),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: const Color(0xFFFDA4AF), width: 1.2),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: const Color(0xFFE11D48).withOpacity(0.06),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 2),
                                 ),
                               ],
                             ),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // زر قال ممنوعة (مخالفة)
-                    Expanded(
-                      flex: 1,
-                      child: GestureDetector(
-                        onTap: _onFoul,
-                        child: Container(
-                          height: 64,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFFE0566B), Color(0xFFB23A50)],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: const Border(
-                              bottom: BorderSide(color: Color(0xFF7A2236), width: 4),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFFE0566B).withOpacity(0.3),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.close_rounded, color: Colors.white, size: 24),
-                              const SizedBox(height: 2),
-                              Text(
-                                'قال ممنوعة (-1)',
-                                style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-
-                    // زر صح! (الكبير والأخضر)
-                    Expanded(
-                      flex: 2,
-                      child: GestureDetector(
-                        onTap: _onCorrect,
-                        child: Container(
-                          height: 72,
-                          decoration: BoxDecoration(
-                            gradient: const LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [Color(0xFF4FD1A5), Color(0xFF2E9D7B)],
-                            ),
-                            borderRadius: BorderRadius.circular(22),
-                            border: const Border(
-                              bottom: BorderSide(color: Color(0xFF1A6B52), width: 5),
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: const Color(0xFF4FD1A5).withOpacity(0.4),
-                                blurRadius: 20,
-                                offset: const Offset(0, 6),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.check_rounded, color: Color(0xFF0E2A22), size: 28),
-                              const SizedBox(height: 2),
-                              Text(
-                                'صح! (+1)',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0E2A22),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 22,
+                                  height: 22,
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF43F5E).withOpacity(0.15),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Center(
+                                    child: Icon(Icons.close_rounded, size: 13, color: Color(0xFFE11D48)),
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    word,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w900,
+                                      color: const Color(0xFF881337),
+                                      height: 1.1,
+                                    ),
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }).toList(),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 4. منطقة التحكم والأزرار التفاعلية المعاد تصميمها كلياً
+  Widget _buildActionControlPanel() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        // زر التخطي كشريط ذكي وأنيق يوضح الفرص المتبقية
+        GestureDetector(
+          onTap: _skipsLeft > 0 ? _onSkip : null,
+          child: AnimatedOpacity(
+            duration: const Duration(milliseconds: 200),
+            opacity: _skipsLeft > 0 ? 1.0 : 0.45,
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.07),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: _skipsLeft > 0 ? Colors.white.withOpacity(0.2) : Colors.white10,
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.fast_forward_rounded,
+                        color: _skipsLeft > 0 ? const Color(0xFFFFD166) : Colors.white38,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'تخطي الكارت الحالية',
+                        style: GoogleFonts.cairo(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w800,
+                          color: _skipsLeft > 0 ? Colors.white : Colors.white54,
+                        ),
+                      ),
+                    ],
+                  ),
+                  // مؤشرات محاولات التخطي المتبقية
+                  Row(
+                    children: [
+                      Text(
+                        'متبقي ($_skipsLeft/3)',
+                        style: GoogleFonts.cairo(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFFFFD166),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      ...List.generate(3, (index) {
+                        final isAvailable = index < _skipsLeft;
+                        return Container(
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.only(left: 4),
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: isAvailable ? const Color(0xFFFFD166) : Colors.white24,
+                            boxShadow: isAvailable
+                                ? [
+                                    BoxShadow(
+                                      color: const Color(0xFFFFD166).withOpacity(0.6),
+                                      blurRadius: 4,
+                                    ),
+                                  ]
+                                : null,
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+
+        const SizedBox(height: 10),
+
+        // زرا التحكم الرئيسيان في اللعبة (صح! على اليمين + قال ممنوع! على اليسار)
+        Row(
+          children: [
+            // زر "صح! (+1)" - الزر الإيجابي الرئيسي على اليمين
+            Expanded(
+              flex: 1,
+              child: _TactileActionButton(
+                title: 'صح! 🎉',
+                subtitle: '+1 نقطة',
+                gradientColors: const [Color(0xFF34D399), Color(0xFF059669)],
+                shadowColor: const Color(0xFF059669),
+                bevelColor: const Color(0xFF065F46),
+                icon: Icons.check_circle_rounded,
+                onPressed: _onCorrect,
+              ),
+            ),
+
+            const SizedBox(width: 12),
+
+            // زر "قال ممنوع! (-1)" - زر المخالفة / البازر على اليسار
+            Expanded(
+              flex: 1,
+              child: _TactileActionButton(
+                title: 'قال ممنوع!',
+                subtitle: '-1 مخالفة',
+                gradientColors: const [Color(0xFFFF4D4D), Color(0xFFDC2626)],
+                shadowColor: const Color(0xFFDC2626),
+                bevelColor: const Color(0xFF991B1B),
+                icon: Icons.cancel_rounded,
+                onPressed: _onFoul,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// ودجت الزر الفيزيائي التفاعلي الممتع (3D Tactile Button)
+class _TactileActionButton extends StatefulWidget {
+  final String title;
+  final String subtitle;
+  final List<Color> gradientColors;
+  final Color shadowColor;
+  final Color bevelColor;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _TactileActionButton({
+    required this.title,
+    required this.subtitle,
+    required this.gradientColors,
+    required this.shadowColor,
+    required this.bevelColor,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  @override
+  State<_TactileActionButton> createState() => _TactileActionButtonState();
+}
+
+class _TactileActionButtonState extends State<_TactileActionButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onPressed();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 60),
+        height: 70,
+        transform: Matrix4.translationValues(0, _isPressed ? 4 : 0, 0),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: widget.gradientColors,
+          ),
+          borderRadius: BorderRadius.circular(22),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.35),
+            width: 1.5,
+          ),
+          boxShadow: _isPressed
+              ? [
+                  BoxShadow(
+                    color: widget.shadowColor.withOpacity(0.3),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: widget.bevelColor,
+                    offset: const Offset(0, 5),
+                    blurRadius: 0,
+                  ),
+                  BoxShadow(
+                    color: widget.shadowColor.withOpacity(0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 7),
+                  ),
+                ],
+        ),
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 10),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.25),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(widget.icon, color: Colors.white, size: 22),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Flexible(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.title,
+                          style: GoogleFonts.cairo(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            color: Colors.white,
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          widget.subtitle,
+                          style: GoogleFonts.cairo(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white.withOpacity(0.95),
+                            height: 1.1,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),

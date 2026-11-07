@@ -58,6 +58,9 @@ class SoundService {
     }
   }
 
+  Future<void> playError() => playWrong();
+  Future<void> playTimeout() => playWrong();
+
   Future<void> playTick() async {
     if (!_isEnabled) return;
     try {
