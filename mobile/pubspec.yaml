@@ -48,6 +48,8 @@ dependencies:
   flutter_secure_storage: ^10.3.4
   video_player: ^2.9.5
   livekit_client: ^2.3.6
+  qr_flutter: ^4.1.0
+  app_links: ^6.4.1
 
 dev_dependencies:
   flutter_test:
@@ -56,6 +58,7 @@ dev_dependencies:
 
 dependency_overrides:
   path_provider_android: 2.2.15
+  flutter_webrtc: 1.6.3
 
 flutter:
   uses-material-design: true

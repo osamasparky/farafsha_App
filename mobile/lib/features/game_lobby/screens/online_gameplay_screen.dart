@@ -417,24 +417,26 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                 if (_hasSubmitted)
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
-                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.symmetric(vertical: 7, horizontal: 14),
+                    margin: const EdgeInsets.only(bottom: 8),
                     decoration: BoxDecoration(
                       color: const Color(0xFF25D366).withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFF25D366), width: 1.5),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFF25D366), width: 1.2),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check_circle_rounded, color: Color(0xFF25D366), size: 22),
+                        const Icon(Icons.check_circle_rounded, color: Color(0xFF25D366), size: 18),
                         const SizedBox(width: 8),
-                        Text(
-                          'تم تسجيل إجابتك بنجاح! في انتظار باقي اللاعبين...',
-                          style: GoogleFonts.cairo(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
+                        Flexible(
+                          child: Text(
+                            'تم تسجيل إجابتك بنجاح! في انتظار باقي اللاعبين...',
+                            style: GoogleFonts.cairo(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ],
@@ -445,9 +447,9 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.45,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: 1.55,
                     physics: const NeverScrollableScrollPhysics(),
                     children: List.generate(_choices.length, (index) {
                       final choice = _choices[index];

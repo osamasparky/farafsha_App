@@ -185,5 +185,26 @@ class DownloadController extends Controller
             ],
         ], 200, ['Content-Type' => 'application/json']);
     }
+
+    /**
+     * صفحة هبوط الانضمام الذكي للغرفة المباشرة (Deep Link & Web Join Landing)
+     */
+    public function joinRoomLanding(Request $request, string $code): View
+    {
+        $cleanCode = preg_replace('/\D/', '', $code);
+        
+        $room = \App\Models\Room::where('code', $cleanCode)->first();
+        $game = $room ? \App\Models\Game::find($room->game_id) : null;
+        $playersCount = $room ? \App\Models\RoomPlayer::where('room_id', $room->id)->where('connection_status', 'online')->count() : 0;
+        
+        return view('join_landing', [
+            'code' => $cleanCode,
+            'room' => $room,
+            'game' => $game,
+            'playersCount' => $playersCount,
+            'deepLink' => "farafsha://join/{$cleanCode}",
+            'universalLink' => url("/join/{$cleanCode}"),
+        ]);
+    }
 }
 

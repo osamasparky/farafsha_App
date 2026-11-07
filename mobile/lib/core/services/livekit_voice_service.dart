@@ -13,6 +13,7 @@ class LiveKitVoiceService extends ChangeNotifier {
   bool _isConnected = false;
   bool _isConnecting = false;
   bool _isMuted = false;
+  bool _isSpeakerMuted = false;
   String? _currentRoomCode;
   List<String> _activeSpeakers = [];
   int _participantCount = 0;
@@ -20,9 +21,22 @@ class LiveKitVoiceService extends ChangeNotifier {
   bool get isConnected => _isConnected;
   bool get isConnecting => _isConnecting;
   bool get isMuted => _isMuted;
+  bool get isSpeakerMuted => _isSpeakerMuted;
   String? get currentRoomCode => _currentRoomCode;
   List<String> get activeSpeakers => _activeSpeakers;
   int get participantCount => _participantCount;
+
+  /// تشغيل أو إيقاف الصوت تماماً بزر واحد
+  Future<void> toggleVoiceConnection({
+    required String roomCode,
+    String? playerToken,
+  }) async {
+    if (_isConnected && _currentRoomCode == roomCode) {
+      await leaveVoiceRoom();
+    } else {
+      await joinVoiceRoom(roomCode: roomCode, playerToken: playerToken);
+    }
+  }
 
   /// الانضمام إلى الغرفة الصوتية المباشرة
   Future<bool> joinVoiceRoom({
@@ -58,7 +72,9 @@ class LiveKitVoiceService extends ChangeNotifier {
 
       _listener!
         ..on<ActiveSpeakersChangedEvent>((event) {
-          _activeSpeakers = event.speakers.map((s) => s.name.isNotEmpty ? s.name : s.identity).toList();
+          _activeSpeakers = event.speakers
+              .map((s) => s.name.isNotEmpty ? s.name : s.identity)
+              .toList();
           notifyListeners();
         })
         ..on<ParticipantConnectedEvent>((_) {
@@ -67,6 +83,11 @@ class LiveKitVoiceService extends ChangeNotifier {
         ..on<ParticipantDisconnectedEvent>((_) {
           _updateCounts();
         })
+        ..on<TrackSubscribedEvent>((event) {
+          if (event.track is RemoteAudioTrack && _isSpeakerMuted) {
+            (event.track as RemoteAudioTrack).mediaStreamTrack.enabled = false;
+          }
+        })
         ..on<RoomDisconnectedEvent>((_) {
           _handleDisconnect();
         });
@@ -74,12 +95,15 @@ class LiveKitVoiceService extends ChangeNotifier {
       // 4. الاتصال بالسيرفر
       await _room!.connect(serverUrl, token);
 
-      // 5. تفعيل الميكروفون تلقائياً (صوت فقط)
-      await _room!.localParticipant?.setMicrophoneEnabled(true);
-
-      _isConnected = true;
-      _isConnecting = false;
-      _isMuted = false;
+      // 5. تفعيل الميكروفون افتراضياً مع معالجة استثناءات إذن المايك
+      try {
+        await _room!.localParticipant?.setMicrophoneEnabled(true);
+        _isMuted = false;
+      } catch (micErr) {
+        debugPrint('⚠️ Initial mic enable warning (device might start muted): $micErr');
+        _isMuted = true;
+      }
+      _isSpeakerMuted = false;
       _currentRoomCode = roomCode;
       _updateCounts();
 
@@ -92,7 +116,7 @@ class LiveKitVoiceService extends ChangeNotifier {
     }
   }
 
-  /// كتم أو تشغيل الميكروفون
+  /// كتم أو تشغيل الميكروفون (Mute / Unmute Mic)
   Future<void> toggleMute() async {
     if (_room == null || !_isConnected) return;
 
@@ -106,7 +130,24 @@ class LiveKitVoiceService extends ChangeNotifier {
     }
   }
 
-  /// مغادرة الغرفة الصوتية
+  /// كتم أو تشغيل صوت السماعة (Mute / Unmute Speaker)
+  Future<void> toggleSpeakerMute() async {
+    if (_room == null || !_isConnected) return;
+
+    try {
+      _isSpeakerMuted = !_isSpeakerMuted;
+      for (final participant in _room!.remoteParticipants.values) {
+        for (final pub in participant.audioTrackPublications) {
+          pub.track?.mediaStreamTrack.enabled = !_isSpeakerMuted;
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('⚠️ Error toggling speaker mute: $e');
+    }
+  }
+
+  /// مغادرة الغرفة الصوتية وإيقاف الصوت
   Future<void> leaveVoiceRoom() async {
     try {
       await _room?.disconnect();
@@ -129,6 +170,7 @@ class LiveKitVoiceService extends ChangeNotifier {
     _isConnected = false;
     _isConnecting = false;
     _isMuted = false;
+    _isSpeakerMuted = false;
     _currentRoomCode = null;
     _activeSpeakers = [];
     _participantCount = 0;

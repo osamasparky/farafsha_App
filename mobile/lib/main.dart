@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/network/api_service.dart';
 import 'core/router/app_router.dart';
 import 'core/services/auth_service.dart';
+import 'core/services/deep_link_service.dart';
 import 'core/services/settings_service.dart';
 import 'core/theme/app_theme.dart';
 
@@ -17,7 +18,6 @@ void main() async {
   // تهيئة إعدادات المستخدم والمصادقة والخدمات الأساسية
   await SettingsService.instance.init();
   await AuthService.instance.init();
-
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -32,6 +32,11 @@ void main() async {
       child: LammahApp(),
     ),
   );
+
+  // تهيئة الاستماع للـ Deep Links بعد تشغيل التطبيق وربط الـ Activity
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    DeepLinkService.instance.init();
+  });
 }
 
 class LammahApp extends StatelessWidget {

@@ -216,7 +216,10 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/join-room',
-      builder: (context, state) => const JoinRoomScreen(),
+      builder: (context, state) {
+        final code = state.uri.queryParameters['code'] ?? (state.extra as String?);
+        return JoinRoomScreen(initialCode: code);
+      },
     ),
     GoRoute(
       path: '/online-gameplay',

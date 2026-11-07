@@ -13,6 +13,7 @@ Route::get('/games', [GameController::class, 'index'])->name('games.index');
 Route::get('/games/amthal', [GameController::class, 'amthalDemo'])->name('games.amthal');
 Route::get('/games/{slug}', [GameController::class, 'show'])->name('games.show');
 Route::get('/download', [DownloadController::class, 'index'])->name('download');
+Route::get('/join/{code}', [DownloadController::class, 'joinRoomLanding'])->name('join.room');
 
 // الصفحات التعريفية والمعلوماتية
 Route::get('/about', [PageController::class, 'about'])->name('about');

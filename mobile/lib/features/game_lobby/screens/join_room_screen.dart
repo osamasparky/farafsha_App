@@ -7,7 +7,9 @@ import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
 class JoinRoomScreen extends StatefulWidget {
-  const JoinRoomScreen({super.key});
+  final String? initialCode;
+
+  const JoinRoomScreen({super.key, this.initialCode});
 
   @override
   State<JoinRoomScreen> createState() => _JoinRoomScreenState();
@@ -25,6 +27,14 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
     super.initState();
     final currentUserName = ApiService.instance.currentUser?['name']?.toString() ?? '';
     _nameController = TextEditingController(text: currentUserName);
+
+    // ملء رمز الغرفة تلقائياً في حال الدخول عبر ديب لينك (Deep Link) أو مسح QR كود
+    if (widget.initialCode != null && widget.initialCode!.isNotEmpty) {
+      final clean = widget.initialCode!.replaceAll(RegExp(r'\D'), '');
+      for (int i = 0; i < 6 && i < clean.length; i++) {
+        _controllers[i].text = clean[i];
+      }
+    }
   }
 
   @override

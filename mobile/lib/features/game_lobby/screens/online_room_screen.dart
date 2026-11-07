@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
@@ -129,16 +130,115 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
   }
 
   void _shareInvite() {
-    final text = 'يلا نلعب سوا في فرفشة! 🎉\nرمز الغرفة: $_code\nادخل التطبيق واضغط "انضمام لغرفة" واكتب الرمز!';
+    final joinUrl = 'https://farafsha.com/join/$_code';
+    final text = 'يلا نلعب سوا في فرفشة! 🎉\nرمز الغرفة: $_code\nاضغط على الرابط للانضمام مباشرة أو تحميل التطبيق:\n$joinUrl';
     Clipboard.setData(ClipboardData(text: text));
     HapticFeedback.selectionClick();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'تم نسخ نص الدعوة مع الرمز بنجاح! شاركه على واتساب 📲',
+          'تم نسخ رابط الدعوة مع الرمز بنجاح! شاركه على واتساب 📲',
           style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
         ),
         backgroundColor: const Color(0xFF25D366),
+      ),
+    );
+  }
+
+  void _showExpandedQrDialog(BuildContext context) {
+    final joinUrl = 'https://farafsha.com/join/$_code';
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1E0E3D),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: const BorderSide(color: Color(0xFFA35BFF), width: 1.5),
+        ),
+        title: Column(
+          children: [
+            Text(
+              'امسح الرمز للدخول 📱',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 20,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'وجّه كاميرا هاتفك نحو الرمز للانضمام فوراً',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(
+                fontSize: 12,
+                color: const Color(0xFFC7B8E8),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFFA35BFF).withValues(alpha: 0.35),
+                    blurRadius: 20,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: QrImageView(
+                data: joinUrl,
+                version: QrVersions.auto,
+                size: 200.0,
+                backgroundColor: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFF2C1656),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.6)),
+              ),
+              child: Text(
+                _code.split('').join('  '),
+                style: GoogleFonts.cairo(
+                  fontSize: 26,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4,
+                  color: LammaColors.gold500,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(ClipboardData(text: joinUrl));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  backgroundColor: const Color(0xFF25D366),
+                  content: Text('تم نسخ رابط الغرفة بنجاح 📋', style: GoogleFonts.cairo(color: Colors.white)),
+                ),
+              );
+            },
+            child: Text('نسخ الرابط 📋', style: GoogleFonts.cairo(color: LammaColors.gold500, fontWeight: FontWeight.bold)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text('إغلاق', style: GoogleFonts.cairo(color: Colors.white70)),
+          ),
+        ],
       ),
     );
   }
@@ -356,18 +456,29 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
                           ],
                         ),
                       ),
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: const Center(
-                          child: Icon(
-                            Icons.qr_code_2_rounded,
-                            size: 68,
-                            color: Color(0xFF21143F),
+                      GestureDetector(
+                        onTap: () => _showExpandedQrDialog(context),
+                        child: Container(
+                          width: 80,
+                          height: 80,
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(0xFFA35BFF).withValues(alpha: 0.25),
+                                blurRadius: 10,
+                                offset: const Offset(0, 3),
+                              ),
+                            ],
+                          ),
+                          child: QrImageView(
+                            data: 'https://farafsha.com/join/$_code',
+                            version: QrVersions.auto,
+                            size: 68.0,
+                            backgroundColor: Colors.white,
+                            padding: EdgeInsets.zero,
                           ),
                         ),
                       ),
