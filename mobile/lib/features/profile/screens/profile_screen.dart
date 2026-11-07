@@ -872,6 +872,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: TextField(
                         controller: currentPassCtrl,
                         obscureText: obscureCurrent,
+                        textInputAction: TextInputAction.next,
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                         decoration: InputDecoration(
                           hintText: '•••••••• (اتركها فارغة إذا لم تعين كلمة مرور مسبقاً)',
@@ -904,6 +905,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: TextField(
                         controller: newPassCtrl,
                         obscureText: obscureNew,
+                        textInputAction: TextInputAction.next,
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                         decoration: InputDecoration(
                           hintText: 'أدخل كلمة المرور الجديدة',
@@ -936,6 +938,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: TextField(
                         controller: confirmPassCtrl,
                         obscureText: obscureConfirm,
+                        textInputAction: TextInputAction.done,
                         style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: Colors.white),
                         decoration: InputDecoration(
                           hintText: 'أعد كتابة كلمة المرور الجديدة',

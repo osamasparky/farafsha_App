@@ -552,3 +552,4 @@ class EgyptianProverbsEncyclopediaSeeder extends Seeder
         }
     }
 }
+
