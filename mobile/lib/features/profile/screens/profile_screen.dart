@@ -1130,11 +1130,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       else
                         _buildNavigationRow(
                           icon: Icons.logout_rounded,
-                          title: 'تسجيل الخروج (التحويل لزائر)',
+                          title: 'تسجيل الخروج',
                           count: '',
                           onTap: () async {
                             await auth.logout();
-                            _fetchProfile();
+                            if (context.mounted) {
+                              context.go('/login');
+                            }
                           },
                           hasDivider: false,
                         ),

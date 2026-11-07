@@ -9,13 +9,16 @@ use Illuminate\Support\Facades\Route;
 
 // مسارات المصادقة والهاتف واللعب كضيف ووسائل التواصل
 Route::prefix('auth')->group(function () {
+    Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+    Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
+    Route::post('/social-login', [AuthController::class, 'socialLogin']);
     Route::post('/guest', [AuthController::class, 'guestLogin']);
     Route::post('/send-otp', [AuthController::class, 'sendOtp']);
     Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
     Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
-    Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
-    Route::post('/social-login', [AuthController::class, 'socialLogin']);
-    Route::post('/register', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
+    Route::post('/register-profile', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 });
 

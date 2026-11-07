@@ -14,6 +14,7 @@ class AuthService extends ChangeNotifier {
   String _userPhone = '01012345678';
   String _userEmail = 'osama@farfasha.app';
   String _userDialect = 'مصري';
+  String? _authToken;
   int _totalPoints = 4320;
 
   // اللعبتان المتاحتان للزائر فقط (وفق طلب المستخدم)
@@ -29,19 +30,21 @@ class AuthService extends ChangeNotifier {
   String get userPhone => _userPhone;
   String get userEmail => _userEmail;
   String get userDialect => _userDialect;
+  String? get authToken => _authToken;
   int get totalPoints => _totalPoints;
 
   /// تهيئة الخدمة وقراءة الحالة المحفوظة
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      _isLoggedIn = prefs.getBool('auth_is_logged_in') ?? true;
+      _isLoggedIn = prefs.getBool('auth_is_logged_in') ?? false;
       _isGuest = prefs.getBool('auth_is_guest') ?? false;
-      _userName = prefs.getString('auth_user_name') ?? (_isGuest ? 'زائر فرفشة' : 'أسامة صبري');
+      _userName = prefs.getString('auth_user_name') ?? (_isGuest ? 'زائر فرفشة' : '');
       _userAvatar = prefs.getString('auth_user_avatar') ?? (_isGuest ? 'assets/images/farfasha_logo.png' : 'assets/images/av-ahmed.png');
-      _userPhone = prefs.getString('auth_user_phone') ?? '01012345678';
-      _userEmail = prefs.getString('auth_user_email') ?? 'osama@farfasha.app';
+      _userPhone = prefs.getString('auth_user_phone') ?? '';
+      _userEmail = prefs.getString('auth_user_email') ?? '';
       _userDialect = prefs.getString('auth_user_dialect') ?? 'مصري';
+      _authToken = prefs.getString('auth_token');
       notifyListeners();
     } catch (e) {
       debugPrint('⚠️ Error initializing AuthService: $e');
@@ -122,6 +125,138 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// تسجيل الدخول بالمعرف (بريد أو هاتف) وكلمة المرور عبر السيرفر
+  Future<Map<String, dynamic>> loginWithCredentials({
+    required String identifier,
+    required String password,
+  }) async {
+    final res = await ApiService.instance.login(
+      identifier: identifier,
+      password: password,
+    );
+
+    if (res['success'] == true) {
+      final user = res['user'] as Map<String, dynamic>?;
+      _authToken = res['token']?.toString();
+      _isLoggedIn = true;
+      _isGuest = false;
+      _userName = user?['name'] ?? 'لاعب فرفشة';
+      _userEmail = user?['email'] ?? '';
+      _userPhone = user?['phone'] ?? '';
+      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.png';
+      _totalPoints = user?['total_points'] ?? 100;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auth_is_logged_in', true);
+      await prefs.setBool('auth_is_guest', false);
+      await prefs.setString('auth_user_name', _userName);
+      await prefs.setString('auth_user_email', _userEmail);
+      await prefs.setString('auth_user_phone', _userPhone);
+      await prefs.setString('auth_user_avatar', _userAvatar);
+      if (_authToken != null) {
+        await prefs.setString('auth_token', _authToken!);
+      }
+
+      notifyListeners();
+      return {'success': true, 'message': res['message']};
+    }
+
+    return {'success': false, 'message': res['message']};
+  }
+
+  /// إنشاء حساب جديد في قاعدة البيانات بالاسم والهاتف والبريد وكلمة المرور
+  Future<Map<String, dynamic>> registerUser({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    String? avatar,
+  }) async {
+    final res = await ApiService.instance.register(
+      name: name,
+      phone: phone,
+      email: email,
+      password: password,
+      avatar: avatar,
+    );
+
+    if (res['success'] == true) {
+      final user = res['user'] as Map<String, dynamic>?;
+      _authToken = res['token']?.toString();
+      _isLoggedIn = true;
+      _isGuest = false;
+      _userName = user?['name'] ?? name;
+      _userEmail = user?['email'] ?? email;
+      _userPhone = user?['phone'] ?? phone;
+      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
+      _totalPoints = user?['total_points'] ?? 100;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auth_is_logged_in', true);
+      await prefs.setBool('auth_is_guest', false);
+      await prefs.setString('auth_user_name', _userName);
+      await prefs.setString('auth_user_email', _userEmail);
+      await prefs.setString('auth_user_phone', _userPhone);
+      await prefs.setString('auth_user_avatar', _userAvatar);
+      if (_authToken != null) {
+        await prefs.setString('auth_token', _authToken!);
+      }
+
+      notifyListeners();
+      return {'success': true, 'message': res['message']};
+    }
+
+    return {'success': false, 'message': res['message']};
+  }
+
+  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook) مع التحقق من الاسم والهاتف والإيميل
+  Future<Map<String, dynamic>> loginWithSocial(
+    String provider, {
+    required String name,
+    required String email,
+    String? phone,
+    String? avatar,
+  }) async {
+    final res = await ApiService.instance.socialLogin(
+      provider: provider,
+      name: name,
+      email: email,
+      phone: phone,
+      avatar: avatar,
+    );
+
+    if (res != null && res['status'] == 'success') {
+      final user = res['user'] as Map<String, dynamic>?;
+      _authToken = res['token']?.toString();
+      _isLoggedIn = true;
+      _isGuest = false;
+      _userName = user?['name'] ?? name;
+      _userEmail = user?['email'] ?? email;
+      _userPhone = user?['phone'] ?? (phone ?? '');
+      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
+      _totalPoints = user?['total_points'] ?? 100;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auth_is_logged_in', true);
+      await prefs.setBool('auth_is_guest', false);
+      await prefs.setString('auth_user_name', _userName);
+      await prefs.setString('auth_user_email', _userEmail);
+      await prefs.setString('auth_user_phone', _userPhone);
+      await prefs.setString('auth_user_avatar', _userAvatar);
+      if (_authToken != null) {
+        await prefs.setString('auth_token', _authToken!);
+      }
+
+      notifyListeners();
+      return {'success': true, 'message': res['message'] ?? 'تم تسجيل الدخول بنجاح'};
+    }
+
+    return {
+      'success': false,
+      'message': res?['message'] ?? 'فشل تسجيل الدخول عبر وسيلة التواصل المحددة.',
+    };
+  }
+
   /// تسجيل الدخول المباشر بالبريد الإلكتروني
   Future<bool> loginWithEmail(String email, {String? name}) async {
     final res = await ApiService.instance.loginByEmail(email, name: name);
@@ -131,28 +266,6 @@ class AuthService extends ChangeNotifier {
       email: email,
       phone: _userPhone,
       avatar: res?['user']?['avatar'] ?? _userAvatar,
-    );
-    return true;
-  }
-
-  /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
-  Future<bool> loginWithSocial(String provider, {String? email, String? name, String? avatar}) async {
-    final res = await ApiService.instance.socialLogin(
-      provider: provider,
-      email: email,
-      name: name,
-      avatar: avatar,
-    );
-    final user = res?['user'] as Map<String, dynamic>?;
-    final finalName = user?['name'] ?? name ?? 'مستخدم $provider';
-    final finalEmail = user?['email'] ?? email ?? '$provider@farfasha.app';
-    final finalAvatar = user?['avatar'] ?? avatar ?? _userAvatar;
-
-    await loginUser(
-      name: finalName,
-      email: finalEmail,
-      phone: _userPhone,
-      avatar: finalAvatar,
     );
     return true;
   }
@@ -201,9 +314,31 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// تسجيل الخروج
+  /// تسجيل الخروج (بدون تحويل كـ زائر، خروج كلي إلى شاشة تسجيل الدخول)
   Future<void> logout() async {
-    await loginAsGuest();
+    try {
+      await ApiService.instance.logout(_authToken);
+    } catch (_) {}
+
+    _isLoggedIn = false;
+    _isGuest = false;
+    _userName = '';
+    _userEmail = '';
+    _userPhone = '';
+    _userAvatar = 'assets/images/farfasha_logo.png';
+    _totalPoints = 0;
+    _authToken = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('auth_is_logged_in', false);
+    await prefs.setBool('auth_is_guest', false);
+    await prefs.remove('auth_user_name');
+    await prefs.remove('auth_user_phone');
+    await prefs.remove('auth_user_email');
+    await prefs.remove('auth_user_avatar');
+    await prefs.remove('auth_token');
+
+    notifyListeners();
   }
 }
 

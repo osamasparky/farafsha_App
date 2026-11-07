@@ -365,11 +365,106 @@ class ApiService {
     ];
   }
 
+  /// تسجيل الدخول بالمعرف (بريد أو هاتف) وكلمة المرور
+  Future<Map<String, dynamic>> login({
+    required String identifier,
+    required String password,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/login'),
+            headers: _headers,
+            body: jsonEncode({
+              'identifier': identifier.trim(),
+              'password': password,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'token': data['token'],
+          'user': data['user'],
+          'message': data['message'] ?? 'تم تسجيل الدخول بنجاح',
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'بيانات الدخول غير صحيحة، يرجى التأكد من البريد أو رقم الهاتف وكلمة المرور.',
+        };
+      }
+    } catch (e) {
+      debugPrint('⚠️ Login API error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر. يرجى التحقق من اتصال الإنترنت والمحاولة مجدداً.',
+      };
+    }
+  }
+
+  /// إنشاء حساب جديد في قاعدة البيانات بالاسم والهاتف والبريد وكلمة المرور
+  Future<Map<String, dynamic>> register({
+    required String name,
+    required String phone,
+    required String email,
+    required String password,
+    String? avatar,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/register'),
+            headers: _headers,
+            body: jsonEncode({
+              'name': name.trim(),
+              'phone': phone.trim(),
+              'email': email.trim(),
+              'password': password,
+              if (avatar != null) 'avatar': avatar,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'token': data['token'],
+          'user': data['user'],
+          'message': data['message'] ?? 'تم إنشاء الحساب بنجاح',
+        };
+      } else {
+        String msg = data['message'] ?? 'فشل إنشاء الحساب، يرجى التأكد من البيانات المدخلة.';
+        if (data['errors'] is Map) {
+          final errMap = data['errors'] as Map<String, dynamic>;
+          final firstKey = errMap.keys.firstOrNull;
+          if (firstKey != null && errMap[firstKey] is List && errMap[firstKey].isNotEmpty) {
+            msg = errMap[firstKey][0].toString();
+          }
+        }
+        return {
+          'success': false,
+          'message': msg,
+        };
+      }
+    } catch (e) {
+      debugPrint('⚠️ Register API error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر أثناء إنشاء الحساب.',
+      };
+    }
+  }
+
   /// تسجيل الدخول عبر وسائل التواصل الاجتماعي (Google, Apple, Facebook)
   Future<Map<String, dynamic>?> socialLogin({
     required String provider,
-    String? email,
-    String? name,
+    required String name,
+    required String email,
+    String? phone,
     String? avatar,
     String? providerId,
   }) async {
@@ -380,13 +475,14 @@ class ApiService {
             headers: _headers,
             body: jsonEncode({
               'provider': provider,
-              if (email != null) 'email': email,
-              if (name != null) 'name': name,
+              'name': name.trim(),
+              'email': email.trim(),
+              if (phone != null && phone.trim().isNotEmpty) 'phone': phone.trim(),
               if (avatar != null) 'avatar': avatar,
               if (providerId != null) 'provider_id': providerId,
             }),
           )
-          .timeout(const Duration(seconds: 6));
+          .timeout(const Duration(seconds: 8));
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }
@@ -394,6 +490,23 @@ class ApiService {
       debugPrint('⚠️ Social login error: $e');
     }
     return null;
+  }
+
+  /// تسجيل الخروج من السيرفر
+  Future<void> logout(String? token) async {
+    try {
+      if (token != null && token.isNotEmpty) {
+        await http
+            .post(
+              Uri.parse('$baseUrl/auth/logout'),
+              headers: {
+                ..._headers,
+                'Authorization': 'Bearer $token',
+              },
+            )
+            .timeout(const Duration(seconds: 4));
+      }
+    } catch (_) {}
   }
 
   /// تسجيل الدخول المباشر بالبريد الإلكتروني
