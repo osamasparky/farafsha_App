@@ -13,6 +13,7 @@ class Banner extends Model
         'title',
         'image',
         'external_url',
+        'video_url',
         'is_active',
         'sort_order',
     ];

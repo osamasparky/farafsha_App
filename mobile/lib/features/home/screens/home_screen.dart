@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/settings_service.dart';
@@ -9,6 +8,7 @@ import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
+import '../widgets/banner_curtain_modal.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -165,50 +165,35 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  String _getGameIcon(String slug) {
+  String _getGameCover(String slug) {
     switch (slug) {
-      case 'amthal-shaabiya': return 'assets/images/ic-quote.png';
-      case 'famous-quotes': return 'assets/images/ic-film.png';
-      case 'forbidden-words': return 'assets/images/ic-a.png';
-      case 'speed-trivia': return 'assets/images/ic-bulb.png';
-      case 'guess-song': return 'assets/images/ic-music.png';
-      case 'draw-guess': return 'assets/images/ic-photo.png';
-      case 'who-am-i': return 'assets/images/ic-mask.png';
-      default: return 'assets/images/ic-dice.png';
+      case 'amthal-shaabiya':
+        return 'assets/images/proverb.png';
+      case 'famous-quotes':
+        return 'assets/images/popcorn.png';
+      case 'forbidden-words':
+      case 'taboo-words':
+        return 'assets/images/walk_2.png';
+      case 'speed-trivia':
+        return 'assets/images/walk_4.png';
+      case 'who-am-i':
+        return 'assets/images/walk_3.png';
+      case 'autobus-complete':
+        return 'assets/images/walk_1.png';
+      case 'acting-drawing':
+      case 'draw-guess':
+        return 'assets/images/walk_5.png';
+      default:
+        return 'assets/images/crowd.png';
     }
   }
 
-  void _onBannerTap(Map<String, dynamic> banner) async {
+  void _onBannerTap(Map<String, dynamic> banner) {
     SettingsService.instance.triggerHaptic();
     SoundService.instance.playClick();
 
-    final urlStr = banner['external_url']?.toString();
-    if (urlStr != null && urlStr.isNotEmpty) {
-      try {
-        final uri = Uri.parse(urlStr);
-        if (await canLaunchUrl(uri)) {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-          return;
-        }
-      } catch (e) {
-        debugPrint('Error launching banner url: $e');
-      }
-    }
-
-    if (!mounted) return;
-
-    // إذا كان بدون رابط خارجي، نظهر إشعاراً تشجيعياً
-    ScaffoldMessenger.of(context).clearSnackBars();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          banner['title'] ?? 'فعالية خاصة بتطبيق لمّـة! 🎮',
-          style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
-        ),
-        backgroundColor: const Color(0xFF4A1E9A),
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    // عرض الستارة التفاعلية الناعمة للبنر (صور وفيديو وروابط وزر إغلاق)
+    BannerCurtainModal.show(context, banner);
   }
 
   @override
@@ -549,9 +534,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildGameCard(Map<String, dynamic> game) {
     final slug = game['slug']?.toString() ?? 'amthal-shaabiya';
     final colors = _getGameGradient(slug);
-    final fallbackIcon = _getGameIcon(slug);
+    final fallbackCover = _getGameCover(slug);
     final coverImageUrl = game['cover_image_url']?.toString();
     final isUnlocked = AuthService.instance.isGameUnlocked(slug);
+    final badgeText = game['badge_text']?.toString();
 
     return GestureDetector(
       onTap: () {
@@ -565,125 +551,180 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: isUnlocked
-                ? colors
-                : [colors.first.withValues(alpha: 0.55), colors.last.withValues(alpha: 0.45)],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
             color: isUnlocked
-                ? Colors.white.withValues(alpha: 0.18)
-                : const Color(0xFFFFD27A).withValues(alpha: 0.4),
-            width: isUnlocked ? 1.2 : 1.6,
+                ? Colors.white.withValues(alpha: 0.22)
+                : const Color(0xFFFFD27A).withValues(alpha: 0.45),
+            width: isUnlocked ? 1.4 : 1.8,
           ),
           boxShadow: [
             BoxShadow(
-              color: colors.first.withValues(alpha: isUnlocked ? 0.45 : 0.2),
-              offset: const Offset(0, 10),
-              blurRadius: 20,
+              color: colors.first.withValues(alpha: isUnlocked ? 0.4 : 0.2),
+              offset: const Offset(0, 8),
+              blurRadius: 18,
               spreadRadius: -2,
             ),
           ],
         ),
-        child: Stack(
-          children: [
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 10.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    width: 52,
-                    height: 52,
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16),
-                      child: coverImageUrl != null && coverImageUrl.isNotEmpty
-                          ? Image.network(
-                              coverImageUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Image.asset(fallbackIcon, fit: BoxFit.contain),
-                            )
-                          : Image.asset(fallbackIcon, fit: BoxFit.contain),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    game['name'] ?? '',
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: GoogleFonts.cairo(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: Colors.white,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  if (isUnlocked)
-                    Text(
-                      game['subtitle'] ?? '',
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: GoogleFonts.cairo(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFFE2D9F3),
-                      ),
-                    )
-                  else
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.lock_rounded, size: 12, color: Color(0xFFFFD27A)),
-                        const SizedBox(width: 4),
-                        Flexible(
-                          child: Text(
-                            'سجل دخول عشان تفرفش',
-                            textAlign: TextAlign.center,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.cairo(
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
-                              color: const Color(0xFFFFD27A),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(23),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              // 1. الصورة كخلفية كاملة للكارت (Full Background Image)
+              Positioned.fill(
+                child: coverImageUrl != null && coverImageUrl.isNotEmpty
+                    ? Image.network(
+                        coverImageUrl,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Image.asset(fallbackCover, fit: BoxFit.cover),
+                      )
+                    : Image.asset(fallbackCover, fit: BoxFit.cover),
               ),
-            ),
-            if (!isUnlocked)
-              Positioned(
-                top: 10,
-                left: 10,
+
+              // 2. تدرج لوني خفيف لحماية التباين اللوني
+              Positioned.fill(
                 child: Container(
-                  padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.65),
-                    shape: BoxShape.circle,
-                    border: Border.all(color: const Color(0xFFFFD27A), width: 1.2),
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.15),
+                        Colors.black.withValues(alpha: isUnlocked ? 0.45 : 0.65),
+                      ],
+                    ),
                   ),
-                  child: const Icon(Icons.lock_rounded, size: 13, color: Color(0xFFFFD27A)),
                 ),
               ),
-          ],
+
+              // 3. طبقة داكنة تحت النصوص لإظهار الكلام بوضوح تام (Text Layer)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0, vertical: 10.0),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.transparent,
+                        Colors.black.withValues(alpha: 0.78),
+                        Colors.black.withValues(alpha: 0.95),
+                      ],
+                      stops: const [0.0, 0.42, 1.0],
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Text(
+                        game['name'] ?? '',
+                        textAlign: TextAlign.center,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.cairo(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.white,
+                          shadows: const [
+                            Shadow(color: Colors.black, blurRadius: 6, offset: Offset(0, 1)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      if (isUnlocked)
+                        Text(
+                          game['subtitle'] ?? '',
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: GoogleFonts.cairo(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFFFFD27A),
+                            shadows: const [
+                              Shadow(color: Colors.black, blurRadius: 4, offset: Offset(0, 1)),
+                            ],
+                          ),
+                        )
+                      else
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.lock_rounded, size: 12, color: Color(0xFFFFD27A)),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                'سجل دخول عشان تفرفش',
+                                textAlign: TextAlign.center,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.cairo(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFFFFD27A),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // 4. شارة مميزة في الزاوية العلوية (إن وُجدت)
+              if (badgeText != null && badgeText.isNotEmpty)
+                Positioned(
+                  top: 9,
+                  right: 9,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFF9E40), Color(0xFFFF5400)],
+                      ),
+                      borderRadius: BorderRadius.circular(10),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black45, blurRadius: 4, offset: Offset(0, 2)),
+                      ],
+                    ),
+                    child: Text(
+                      badgeText,
+                      style: GoogleFonts.cairo(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+
+              // 5. أيقونة القفل للحسابات غير المسجلة (Guest)
+              if (!isUnlocked)
+                Positioned(
+                  top: 9,
+                  left: 9,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.black.withValues(alpha: 0.7),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: const Color(0xFFFFD27A), width: 1.2),
+                      boxShadow: const [
+                        BoxShadow(color: Colors.black45, blurRadius: 4),
+                      ],
+                    ),
+                    child: const Icon(Icons.lock_rounded, size: 13, color: Color(0xFFFFD27A)),
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );

@@ -78,7 +78,6 @@ class BadgeResource extends Resource
                             ->directory('badges')
                             ->visibility('public')
                             ->image()
-                            ->fetchFileInformation(false)
                             ->helperText('إذا تم رفع صورة ستظهر بدلاً من الأيقونة الافتراضية'),
 
                         Forms\Components\Toggle::make('is_active')

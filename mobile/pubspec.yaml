@@ -46,6 +46,7 @@ dependencies:
   flutter_web_auth_2: ^5.1.0
   crypto: ^3.0.8
   flutter_secure_storage: ^10.3.4
+  video_player: ^2.9.5
 
 dev_dependencies:
   flutter_test:

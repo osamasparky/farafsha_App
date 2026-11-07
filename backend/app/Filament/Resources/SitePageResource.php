@@ -74,7 +74,6 @@ class SitePageResource extends Resource
                                             ->disk('public')
                                             ->directory('pages-og')
                                             ->visibility('public')
-                                            ->fetchFileInformation(false)
                                             ->columnSpanFull(),
                                     ]),
                             ]),

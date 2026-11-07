@@ -174,7 +174,7 @@ class GameResource extends Resource
                                     ->disk('public')
                                     ->directory('games')
                                     ->visibility('public')
-                                    ->fetchFileInformation(false)
+                                    ->maxSize(10240)
                                     ->columnSpanFull(),
 
                                 Forms\Components\Select::make('icon')
@@ -270,8 +270,7 @@ class GameResource extends Resource
                                     ->image()
                                     ->disk('public')
                                     ->directory('seo')
-                                    ->visibility('public')
-                                    ->fetchFileInformation(false),
+                                    ->visibility('public'),
                             ]),
                     ])
                     ->columnSpanFull(),

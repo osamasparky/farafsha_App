@@ -91,11 +91,13 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
 
     _letterAnimController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: const Duration(milliseconds: 400),
     );
-    _letterScaleAnim = CurvedAnimation(
-      parent: _letterAnimController,
-      curve: Curves.elasticOut,
+    _letterScaleAnim = Tween<double>(begin: 0.85, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _letterAnimController,
+        curve: Curves.easeOutBack,
+      ),
     );
     _letterAnimController.forward();
 
@@ -610,32 +612,41 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                       ),
                       child: Row(
                         children: [
-                          // الحرف بحجم ضخم وحركة ارتداد
+                          // الحرف بحجم متناسق داخل حدود الإطار
                           ScaleTransition(
                             scale: _letterScaleAnim,
-                            child: Container(
-                              width: 76,
-                              height: 76,
-                              decoration: BoxDecoration(
-                                gradient: const LinearGradient(
-                                  colors: [Color(0xFFFF9E40), Color(0xFFFF5400)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
+                            child: ClipRRect(
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                width: 68,
+                                height: 68,
+                                decoration: BoxDecoration(
+                                  gradient: const LinearGradient(
+                                    colors: [Color(0xFFFF9E40), Color(0xFFFF5400)],
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(color: Colors.white, width: 2),
+                                  boxShadow: const [
+                                    BoxShadow(color: Colors.black38, blurRadius: 8, offset: Offset(0, 3)),
+                                  ],
                                 ),
-                                borderRadius: BorderRadius.circular(22),
-                                border: Border.all(color: Colors.white, width: 2),
-                                boxShadow: const [
-                                  BoxShadow(color: Colors.black45, blurRadius: 10, offset: Offset(0, 4)),
-                                ],
-                              ),
-                              alignment: Alignment.center,
-                              child: Text(
-                                _currentLetter,
-                                style: GoogleFonts.cairo(
-                                  fontSize: 42,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
-                                  height: 1.1,
+                                alignment: Alignment.center,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(4.0),
+                                    child: Text(
+                                      _currentLetter,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 40,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                        height: 1.1,
+                                      ),
+                                    ),
+                                  ),
                                 ),
                               ),
                             ),
@@ -810,7 +821,7 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
       physics: const BouncingScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        childAspectRatio: 2.3,
+        childAspectRatio: 2.05,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
       ),
@@ -825,24 +836,24 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
         }
 
         return Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
           decoration: BoxDecoration(
             color: const Color(0xFF261048),
-            borderRadius: BorderRadius.circular(18),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(color: LammaColors.cardBorder, width: 1.5),
           ),
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 34,
+                height: 34,
                 decoration: BoxDecoration(
                   color: LammaColors.violet500.withValues(alpha: 0.25),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(icon, color: LammaColors.gold300, size: 20),
+                child: Icon(icon, color: LammaColors.gold300, size: 18),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -850,22 +861,28 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                   children: [
                     Text(
                       category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: GoogleFonts.cairo(
-                        fontSize: 15,
+                        fontSize: 14,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
+                        height: 1.2,
                       ),
                     ),
                     if (_showAnswers && sampleAnswer != null)
-                      Text(
-                        sampleAnswer,
-                        style: GoogleFonts.cairo(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF69F0AE),
+                      Flexible(
+                        child: Text(
+                          sampleAnswer,
+                          style: GoogleFonts.cairo(
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.bold,
+                            color: const Color(0xFF69F0AE),
+                            height: 1.1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
                       ),
                   ],
                 ),

@@ -382,10 +382,22 @@ app.listen(PORT, '0.0.0.0', () => {
     console.log(`[Farfasha WAHA Embedded Server] Listening on http://0.0.0.0:${PORT}`);
     console.log(`[Farfasha WAHA Embedded Server] Webhook target: ${WEBHOOK_URL}`);
 
-    // Auto-start default session if existing auth credentials exist
-    const defaultSessionPath = path.join(SESSIONS_DIR, 'default');
-    if (fs.existsSync(defaultSessionPath) && fs.readdirSync(defaultSessionPath).length > 0) {
-        console.log('[Farfasha WAHA] Restoring saved session: default');
-        startSession('default');
+    // Auto-start all saved sessions if existing auth credentials exist
+    try {
+        const dirs = fs.readdirSync(SESSIONS_DIR);
+        for (const dir of dirs) {
+            const dirPath = path.join(SESSIONS_DIR, dir);
+            if (fs.statSync(dirPath).isDirectory()) {
+                const credsFile = path.join(dirPath, 'creds.json');
+                if (fs.existsSync(credsFile)) {
+                    console.log(`[Farfasha WAHA] Restoring saved session: ${dir}`);
+                    startSession(dir).catch(err => {
+                        console.error(`[Farfasha WAHA] Failed to restore session ${dir}:`, err.message);
+                    });
+                }
+            }
+        }
+    } catch (err) {
+        console.error('[Farfasha WAHA] Error reading sessions directory:', err.message);
     }
 });

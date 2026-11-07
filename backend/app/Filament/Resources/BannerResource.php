@@ -37,7 +37,6 @@ class BannerResource extends Resource
                             ->directory('banners')
                             ->visibility('public')
                             ->image()
-                            ->fetchFileInformation(false)
                             ->required(),
 
                         Forms\Components\TextInput::make('external_url')
@@ -45,6 +44,13 @@ class BannerResource extends Resource
                             ->placeholder('https://example.com أو اتركه فارغاً')
                             ->url()
                             ->maxLength(255),
+
+                        Forms\Components\TextInput::make('video_url')
+                            ->label('رابط فيديو ترويجي (اختياري - MP4 / رابط مباشر)')
+                            ->placeholder('https://assets.example.com/promo.mp4 أو اتركه فارغاً')
+                            ->url()
+                            ->maxLength(255)
+                            ->helperText('إذا أضفت رابط فيديو، سيتم تشغيله تلقائياً في ستارة العرض عند نقر البنر!'),
 
                         Forms\Components\Grid::make(2)
                             ->schema([
