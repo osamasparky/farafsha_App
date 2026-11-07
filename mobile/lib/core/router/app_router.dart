@@ -42,7 +42,14 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/otp',
       builder: (context, state) {
-        final phone = state.extra as String? ?? '01012345678';
+        if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          return OtpScreen(
+            phoneNumber: data['phone']?.toString() ?? '',
+            registrationData: data,
+          );
+        }
+        final phone = state.extra as String? ?? '';
         return OtpScreen(phoneNumber: phone);
       },
     ),

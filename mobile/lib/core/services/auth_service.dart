@@ -198,6 +198,46 @@ class AuthService extends ChangeNotifier {
     return {'success': false, 'message': res['message']};
   }
 
+  /// إرسال كود OTP لرقم الهاتف (والبريد الإلكتروني إن توفر)
+  Future<Map<String, dynamic>> sendOtp({
+    required String phone,
+    String? email,
+  }) async {
+    return await ApiService.instance.sendOtp(phone, email: email);
+  }
+
+  /// التحقق من كود OTP وتأكيد رقم الهاتف
+  Future<Map<String, dynamic>> verifyOtp({
+    required String phone,
+    required String code,
+    String? email,
+  }) async {
+    final res = await ApiService.instance.verifyOtp(phone, code, email: email);
+    if (res['success'] == true && res['token'] != null) {
+      final user = res['user'] as Map<String, dynamic>?;
+      _authToken = res['token']?.toString();
+      _isLoggedIn = true;
+      _isGuest = false;
+      _userName = user?['name'] ?? _userName;
+      _userEmail = user?['email'] ?? _userEmail;
+      _userPhone = user?['phone'] ?? phone;
+      _userAvatar = user?['avatar'] ?? _userAvatar;
+
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('auth_is_logged_in', true);
+      await prefs.setBool('auth_is_guest', false);
+      await prefs.setString('auth_user_name', _userName);
+      await prefs.setString('auth_user_email', _userEmail);
+      await prefs.setString('auth_user_phone', _userPhone);
+      await prefs.setString('auth_user_avatar', _userAvatar);
+      if (_authToken != null) {
+        await prefs.setString('auth_token', _authToken!);
+      }
+      notifyListeners();
+    }
+    return res;
+  }
+
   /// إنشاء حساب جديد في قاعدة البيانات بالاسم والهاتف والبريد وكلمة المرور
   Future<Map<String, dynamic>> registerUser({
     required String name,
@@ -205,6 +245,7 @@ class AuthService extends ChangeNotifier {
     required String email,
     required String password,
     String? avatar,
+    String? otp,
   }) async {
     final res = await ApiService.instance.register(
       name: name,
@@ -212,6 +253,7 @@ class AuthService extends ChangeNotifier {
       email: email,
       password: password,
       avatar: avatar,
+      otp: otp,
     );
 
     if (res['success'] == true) {

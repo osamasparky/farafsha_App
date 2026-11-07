@@ -64,6 +64,7 @@ class AuthController extends Controller
         $validated = $request->validate([
             'phone' => 'required|string',
             'country_code' => 'nullable|string',
+            'email' => 'nullable|email|max:150',
         ]);
 
         $normalized = $this->normalizePhone($validated['phone'], $validated['country_code'] ?? '+20');
@@ -98,6 +99,22 @@ class AuthController extends Controller
             Log::warning('WAHA sendOtp notice: ' . $e->getMessage());
         }
 
+        // إذا تم إدخال بريد إلكتروني، نرسل أيضاً الرمز إلى البريد
+        if ($request->filled('email')) {
+            $normalizedEmail = strtolower(trim($request->email));
+            Cache::put("otp:email:{$normalizedEmail}", $otp, 300);
+            try {
+                \Illuminate\Support\Facades\Mail::raw(
+                    "مرحباً بك في منصة وتطبيق فرفشة! 🎮\n\nرمز التحقق الخاص بك هو: {$otp}\nصالح لمدة 5 دقائق.",
+                    function ($m) use ($normalizedEmail) {
+                        $m->to($normalizedEmail)->subject('رمز التحقق OTP - فرفشة 🎮');
+                    }
+                );
+            } catch (\Throwable $e) {
+                Log::warning('sendOtp email notice: ' . $e->getMessage());
+            }
+        }
+
         $res = [
             'status' => 'success',
             'message' => 'تم إرسال رمز التحقق لهاتفك عبر واتساب بنجاح 📲',
@@ -117,10 +134,15 @@ class AuthController extends Controller
      */
     public function verifyOtp(Request $request): JsonResponse
     {
+        if ($request->has('code') && !$request->has('otp')) {
+            $request->merge(['otp' => $request->input('code')]);
+        }
+
         $validated = $request->validate([
             'phone' => 'required|string',
             'otp' => 'required|string|size:4',
             'country_code' => 'nullable|string',
+            'email' => 'nullable|email|max:150',
         ]);
 
         $normalized = $this->normalizePhone($validated['phone'], $validated['country_code'] ?? '+20');
@@ -140,6 +162,12 @@ class AuthController extends Controller
         Cache::forget("otp:phone:{$normalized}");
         Cache::put("verified_phone:{$normalized}", true, 3600); // موثق لمدة ساعة لإتمام التسجيل
         Cache::put("verified_phone:{$validated['phone']}", true, 3600);
+
+        if ($request->filled('email')) {
+            $normalizedEmail = strtolower(trim($request->email));
+            Cache::put("verified_email:{$normalizedEmail}", true, 3600);
+            Cache::forget("otp:email:{$normalizedEmail}");
+        }
 
         // هل المستخدم مسجل مسبقاً بهذا الهاتف؟
         $user = User::where('phone', $normalized)
@@ -376,9 +404,15 @@ class AuthController extends Controller
         // إذا تم إرسال كود OTP مع طلب التسجيل مباشرة، نتحقق منه فوراً
         if (!$phoneVerified && !empty($request->otp)) {
             $cachedPhoneOtp = Cache::get("otp:phone:{$normalizedPhone}");
-            if (($cachedPhoneOtp && $cachedPhoneOtp === (string)$request->otp) || ((string)$request->otp === '1234' && app()->environment('local', 'testing'))) {
+            $cachedEmailOtp = Cache::get("otp:email:{$normalizedEmail}");
+            $inputOtp = (string) $request->otp;
+            if (($cachedPhoneOtp && $cachedPhoneOtp === $inputOtp) ||
+                ($cachedEmailOtp && $cachedEmailOtp === $inputOtp) ||
+                ($inputOtp === '1234' && app()->environment('local', 'testing'))) {
                 $phoneVerified = true;
+                $emailVerified = true;
                 Cache::forget("otp:phone:{$normalizedPhone}");
+                Cache::forget("otp:email:{$normalizedEmail}");
             }
         }
 

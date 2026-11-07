@@ -45,42 +45,80 @@ class ApiService {
     return null;
   }
 
-  /// إرسال كود OTP لرقم الهاتف
-  Future<bool> sendOtp(String phone) async {
+  /// إرسال كود OTP لرقم الهاتف والبريد
+  Future<Map<String, dynamic>> sendOtp(String phone, {String? email}) async {
     try {
       final res = await http
           .post(
             Uri.parse('$baseUrl/auth/send-otp'),
             headers: _headers,
-            body: jsonEncode({'phone': phone}),
+            body: jsonEncode({
+              'phone': phone.trim(),
+              if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+            }),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 8));
 
-      return res.statusCode == 200;
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم إرسال رمز التحقق بنجاح 📲',
+          'debug_otp': data['debug_otp'],
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'تعذر إرسال رمز التحقق، يرجى مراجعة الرقم.',
+        };
+      }
     } catch (e) {
       debugPrint('⚠️ Send OTP failed: $e');
-      return false;
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر لإرسال رمز التحقق.',
+      };
     }
   }
 
   /// التحقق من رمز OTP
-  Future<Map<String, dynamic>?> verifyOtp(String phone, String code) async {
+  Future<Map<String, dynamic>> verifyOtp(String phone, String code, {String? email}) async {
     try {
       final res = await http
           .post(
             Uri.parse('$baseUrl/auth/verify-otp'),
             headers: _headers,
-            body: jsonEncode({'phone': phone, 'code': code}),
+            body: jsonEncode({
+              'phone': phone.trim(),
+              'otp': code.trim(),
+              'code': code.trim(),
+              if (email != null && email.trim().isNotEmpty) 'email': email.trim(),
+            }),
           )
-          .timeout(const Duration(seconds: 4));
+          .timeout(const Duration(seconds: 8));
 
-      if (res.statusCode == 200) {
-        return jsonDecode(res.body) as Map<String, dynamic>;
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم التحقق بنجاح! 🎉',
+          'token': data['token'],
+          'user': data['user'],
+          'is_new_user': data['is_new_user'] ?? false,
+        };
+      } else {
+        return {
+          'success': false,
+          'message': data['message'] ?? 'رمز التحقق غير صحيح أو انتهت صلاحيته.',
+        };
       }
     } catch (e) {
       debugPrint('⚠️ Verify OTP failed: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر للتحقق من الرمز.',
+      };
     }
-    return null;
   }
 
   /// جلب كافة الألعاب المتاحة من السيرفر (مع fallback محلي)
@@ -421,6 +459,7 @@ class ApiService {
     required String email,
     required String password,
     String? avatar,
+    String? otp,
   }) async {
     try {
       final res = await http
@@ -433,6 +472,7 @@ class ApiService {
               'email': email.trim(),
               'password': password,
               if (avatar != null) 'avatar': avatar,
+              if (otp != null && otp.isNotEmpty) 'otp': otp.trim(),
             }),
           )
           .timeout(const Duration(seconds: 8));

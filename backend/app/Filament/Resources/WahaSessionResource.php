@@ -84,6 +84,21 @@ class WahaSessionResource extends Resource
                 Tables\Columns\TextColumn::make('last_seen_at')
                     ->label('آخر اتصال')
                     ->dateTime('d/m/Y H:i'),
+
+                Tables\Columns\IconColumn::make('is_otp_default')
+                    ->label('مرسل OTP الرئيسي')
+                    ->getStateUsing(function (WahaSession $record) {
+                        $default = \App\Models\SiteSetting::get('whatsapp_otp_session');
+                        if (!empty($default)) {
+                            return $default === $record->name;
+                        }
+                        return $record->name === 'UAE';
+                    })
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-badge')
+                    ->falseIcon('heroicon-o-minus')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
             ])
             ->headerActions([
                 Tables\Actions\Action::make('sync_all')
@@ -206,6 +221,24 @@ class WahaSessionResource extends Resource
                             ->send();
                     }),
 
+                Tables\Actions\Action::make('set_as_otp_default')
+                    ->label('اعتماد كمرسل OTP ⭐')
+                    ->icon('heroicon-o-check-badge')
+                    ->color('warning')
+                    ->visible(function (WahaSession $record) {
+                        $default = \App\Models\SiteSetting::get('whatsapp_otp_session');
+                        $current = !empty($default) ? $default : 'UAE';
+                        return $current !== $record->name;
+                    })
+                    ->action(function (WahaSession $record) {
+                        \App\Models\SiteSetting::set('whatsapp_otp_session', $record->name, 'whatsapp');
+                        Notification::make()
+                            ->title('تم تعيين الجلسة كمرسل افتراضي للـ OTP 🚀')
+                            ->body("أصبحت جلسة '{$record->name}' هي الجلسة المعتمدة لإرسال كود التحقق للمستخدمين الجدد.")
+                            ->success()
+                            ->send();
+                    }),
+
                 Tables\Actions\Action::make('stop')
                     ->label('إيقاف')
                     ->icon('heroicon-o-stop')
@@ -219,24 +252,6 @@ class WahaSessionResource extends Resource
                         } catch (\Throwable $e) {
                             Notification::make()->title('خطأ أثناء إيقاف الجلسة')->body($e->getMessage())->danger()->send();
                         }
-                    }),
-
-                Tables\Actions\Action::make('clear_all_system_messages')
-                    ->label('تفريغ كافة الرسائل 🗑️')
-                    ->icon('heroicon-o-trash')
-                    ->color('danger')
-                    ->requiresConfirmation()
-                    ->modalHeading('تفريغ كافة رسائل الواتساب')
-                    ->modalDescription('هل أنت متأكد من حذف جميع رسائل الواتساب الصادرة والواردة لجميع الجلسات نهائياً من قاعدة البيانات؟')
-                    ->modalSubmitActionLabel('نعم، تفريغ كافة الرسائل 🗑️')
-                    ->action(function () {
-                        $count = \App\Models\WahaMessage::count();
-                        \App\Models\WahaMessage::truncate();
-                        Notification::make()
-                            ->title('تم تفريغ كافة الرسائل بنجاح')
-                            ->body("تم حذف {$count} رسالة من قاعدة البيانات.")
-                            ->success()
-                            ->send();
                     }),
             ]);
     }
