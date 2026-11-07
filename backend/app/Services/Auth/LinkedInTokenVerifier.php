@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Models\SocialProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
@@ -9,8 +10,9 @@ class LinkedInTokenVerifier
 {
     public function verify(string $code, string $redirectUri): array
     {
-        $clientId = config('services.linkedin.client_id', env('LINKEDIN_CLIENT_ID', ''));
-        $clientSecret = config('services.linkedin.client_secret', env('LINKEDIN_CLIENT_SECRET', ''));
+        $provider = SocialProvider::where('provider', 'linkedin')->first();
+        $clientId = $provider?->client_id ?: config('services.linkedin.client_id', env('LINKEDIN_CLIENT_ID', ''));
+        $clientSecret = $provider?->client_secret ?: config('services.linkedin.client_secret', env('LINKEDIN_CLIENT_SECRET', ''));
 
         $tokenResponse = Http::asForm()->timeout(12)->post('https://www.linkedin.com/oauth/v2/accessToken', [
             'grant_type' => 'authorization_code',

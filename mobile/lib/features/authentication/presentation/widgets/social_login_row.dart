@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/network/api_service.dart';
 import '../../data/repositories/auth_repository_impl.dart';
 
 class SocialLoginRow extends StatefulWidget {
+  final List<Map<String, dynamic>>? providers;
   final VoidCallback? onSuccess;
   final Function(String message)? onError;
 
   const SocialLoginRow({
     super.key,
+    this.providers,
     this.onSuccess,
     this.onError,
   });
@@ -19,6 +22,45 @@ class SocialLoginRow extends StatefulWidget {
 class _SocialLoginRowState extends State<SocialLoginRow> {
   final AuthRepositoryImpl _authRepo = AuthRepositoryImpl();
   String? _activeProviderLoading;
+  List<Map<String, dynamic>> _loadedProviders = [];
+  bool _isLoadingProviders = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.providers != null) {
+      _loadedProviders = widget.providers!.where((p) => p['is_enabled'] == true).toList();
+    } else {
+      _fetchProviders();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant SocialLoginRow oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.providers != null && widget.providers != oldWidget.providers) {
+      setState(() {
+        _loadedProviders = widget.providers!.where((p) => p['is_enabled'] == true).toList();
+      });
+    }
+  }
+
+  Future<void> _fetchProviders() async {
+    setState(() => _isLoadingProviders = true);
+    try {
+      final list = await ApiService.instance.getSocialProviders();
+      if (mounted) {
+        setState(() {
+          _loadedProviders = list.where((p) => p['is_enabled'] == true).toList();
+          _isLoadingProviders = false;
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isLoadingProviders = false);
+      }
+    }
+  }
 
   Future<void> _handleProviderLogin(String provider) async {
     if (_activeProviderLoading != null) return;
@@ -108,66 +150,107 @@ class _SocialLoginRowState extends State<SocialLoginRow> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // Google
-        _buildSocialIconBtn(
+  Widget? _buildProviderWidget(String key) {
+    switch (key.toLowerCase()) {
+      case 'google':
+        return _buildSocialIconBtn(
           providerKey: 'google',
           bgColor: Colors.white,
           borderColor: const Color(0xFFDADCE0),
           glowColor: const Color(0xFF4285F4),
           icon: const Icon(Icons.g_mobiledata_rounded, color: Color(0xFFEA4335), size: 36),
-        ),
-        const SizedBox(width: 14),
-
-        // Apple
-        _buildSocialIconBtn(
+        );
+      case 'apple':
+        return _buildSocialIconBtn(
           providerKey: 'apple',
           bgColor: const Color(0xFF000000),
           borderColor: const Color(0xFF333333),
           glowColor: Colors.white24,
           icon: const Icon(Icons.apple_rounded, color: Colors.white, size: 26),
-        ),
-        const SizedBox(width: 14),
-
-        // Facebook
-        _buildSocialIconBtn(
+        );
+      case 'facebook':
+        return _buildSocialIconBtn(
           providerKey: 'facebook',
           bgColor: const Color(0xFF1877F2),
           borderColor: const Color(0xFF2E89FF),
           glowColor: const Color(0xFF1877F2),
           icon: const Icon(Icons.facebook_rounded, color: Colors.white, size: 26),
-        ),
-        const SizedBox(width: 14),
-
-        // X (Twitter)
-        _buildSocialIconBtn(
+        );
+      case 'twitter':
+      case 'x':
+        return _buildSocialIconBtn(
           providerKey: 'twitter',
           bgColor: const Color(0xFF14171A),
           borderColor: const Color(0xFF2C3238),
           glowColor: const Color(0xFF1DA1F2),
           icon: const Text(
             '𝕏',
-            style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-        ),
-        const SizedBox(width: 14),
-
-        // LinkedIn
-        _buildSocialIconBtn(
+        );
+      case 'linkedin':
+        return _buildSocialIconBtn(
           providerKey: 'linkedin',
           bgColor: const Color(0xFF0A66C2),
-          borderColor: const Color(0xFF1B82E8),
+          borderColor: const Color(0xFF1B84EC),
           glowColor: const Color(0xFF0A66C2),
           icon: const Text(
             'in',
-            style: TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.w900, fontFamily: 'Arial'),
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 22,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'serif',
+            ),
+          ),
+        );
+      default:
+        return null;
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoadingProviders) {
+      return const SizedBox(
+        height: 52,
+        child: Center(
+          child: SizedBox(
+            width: 24,
+            height: 24,
+            child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFFFFD27A)),
           ),
         ),
-      ],
+      );
+    }
+
+    if (_loadedProviders.isEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    final widgets = <Widget>[];
+    for (int i = 0; i < _loadedProviders.length; i++) {
+      final providerKey = _loadedProviders[i]['provider']?.toString() ?? '';
+      final w = _buildProviderWidget(providerKey);
+      if (w != null) {
+        if (widgets.isNotEmpty) {
+          widgets.add(const SizedBox(width: 14));
+        }
+        widgets.add(w);
+      }
+    }
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      physics: const BouncingScrollPhysics(),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: widgets,
+      ),
     );
   }
 }

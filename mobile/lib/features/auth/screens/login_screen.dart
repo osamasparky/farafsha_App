@@ -362,6 +362,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // صف أيقونات وسائل التواصل المدمج لتوفير المساحة
                 SocialLoginRow(
+                  providers: _socialProviders,
                   onSuccess: () {
                     if (!mounted) return;
                     context.go('/home');

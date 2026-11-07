@@ -286,7 +286,11 @@ class AuthController extends Controller
                     'name' => $p->name,
                     'is_enabled' => (bool) $p->is_enabled,
                     'client_id' => $p->client_id,
+                    'client_token' => $p->client_token,
+                    'redirect_url' => $p->redirect_url,
+                    'scopes' => $p->scopes,
                     'icon' => $p->icon,
+                    'sort_order' => (int) $p->sort_order,
                 ];
             }),
         ]);

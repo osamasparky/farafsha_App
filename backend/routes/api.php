@@ -59,6 +59,7 @@ Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
 
 // Social Authentication Architecture (v1 API)
 Route::prefix('v1/auth')->group(function () {
+    Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
     Route::post('/social/{provider}', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'authenticate']);
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'me']);

@@ -368,6 +368,9 @@ class ApiService {
     return [
       {'provider': 'google', 'name': 'تسجيل الدخول بحساب Google', 'is_enabled': true, 'icon': 'google'},
       {'provider': 'apple', 'name': 'تسجيل الدخول بحساب Apple', 'is_enabled': true, 'icon': 'apple'},
+      {'provider': 'facebook', 'name': 'تسجيل الدخول بحساب Facebook', 'is_enabled': true, 'icon': 'facebook'},
+      {'provider': 'twitter', 'name': 'تسجيل الدخول بحساب X (Twitter)', 'is_enabled': true, 'icon': 'twitter'},
+      {'provider': 'linkedin', 'name': 'تسجيل الدخول بحساب LinkedIn', 'is_enabled': true, 'icon': 'linkedin'},
     ];
   }
 

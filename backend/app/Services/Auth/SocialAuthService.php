@@ -3,6 +3,7 @@
 namespace App\Services\Auth;
 
 use App\Models\SocialAccount;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -24,6 +25,14 @@ class SocialAuthService
      */
     public function authenticate(string $provider, array $payload, ?User $authenticatedUser = null): array
     {
+        // التحقق من تفعيل الوسيلة في لوحة التحكم
+        $providerConfig = SocialProvider::where('provider', $provider)->first();
+        if ($providerConfig && !$providerConfig->is_enabled) {
+            throw ValidationException::withMessages([
+                'provider' => ["تسجيل الدخول بواسطة {$providerConfig->name} معطّل حالياً من إدارة التطبيق."],
+            ]);
+        }
+
         $verifiedData = $this->verifyProviderCredential($provider, $payload);
 
         $providerUserId = $verifiedData['provider_user_id'];

@@ -2,6 +2,7 @@
 
 namespace App\Services\Auth;
 
+use App\Models\SocialProvider;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Validation\ValidationException;
 
@@ -9,8 +10,9 @@ class TwitterTokenVerifier
 {
     public function verify(string $code, string $codeVerifier, string $redirectUri): array
     {
-        $clientId = config('services.twitter.client_id', env('TWITTER_CLIENT_ID', ''));
-        $clientSecret = config('services.twitter.client_secret', env('TWITTER_CLIENT_SECRET', ''));
+        $provider = SocialProvider::where('provider', 'twitter')->first();
+        $clientId = $provider?->client_id ?: config('services.twitter.client_id', env('TWITTER_CLIENT_ID', ''));
+        $clientSecret = $provider?->client_secret ?: config('services.twitter.client_secret', env('TWITTER_CLIENT_SECRET', ''));
 
         $request = Http::asForm()->timeout(12);
         if (!empty($clientSecret)) {

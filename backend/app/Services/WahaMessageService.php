@@ -35,11 +35,20 @@ class WahaMessageService
     }
 
     /**
-     * اكتشاف اسم جلسة واتساب المتصلة والنشطة تلقائياً
+     * اكتشاف اسم جلسة واتساب المتصلة والنشطة تلقائياً (مع احترام الجلسة المحددة في الإعدادات)
      */
     public function getActiveSessionName(): string
     {
-        // 1. البحث عن جلسة بحالة WORKING في قاعدة البيانات المحلية
+        // 1. فحص إذا تم تحديد جلسة مخصصة لـ OTP في لوحة التحكم
+        $designated = \App\Models\SiteSetting::get('whatsapp_otp_session');
+        if (!empty($designated)) {
+            $session = WahaSession::where('name', $designated)->first();
+            if ($session && $session->status === 'WORKING') {
+                return $session->name;
+            }
+        }
+
+        // 2. البحث عن أي جلسة بحالة WORKING في قاعدة البيانات المحلية
         $activeInDb = WahaSession::where('status', 'WORKING')->latest()->first();
         if ($activeInDb) {
             return $activeInDb->name;

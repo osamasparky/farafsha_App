@@ -15,15 +15,20 @@ class SocialProvider extends Model
         'is_enabled',
         'client_id',
         'client_secret',
+        'client_token',
+        'team_id',
+        'key_id',
         'redirect_url',
+        'scopes',
         'icon',
         'sort_order',
         'notes',
+        'extra_config',
     ];
 
     protected $casts = [
         'is_enabled' => 'boolean',
         'sort_order' => 'integer',
+        'extra_config' => 'array',
     ];
 }
-
