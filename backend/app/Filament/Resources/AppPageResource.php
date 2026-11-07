@@ -14,11 +14,11 @@ class AppPageResource extends Resource
 {
     protected static ?string $model = AppPage::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
-    protected static ?string $navigationGroup = 'إعدادات التطبيق والدعم';
-    protected static ?string $modelLabel = 'صفحة محتوى';
-    protected static ?string $pluralModelLabel = 'صفحات الدعم والسياسات (Pages)';
-    protected static ?int $navigationSort = 7;
+    protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $navigationGroup = 'الإعدادات والنظام';
+    protected static ?string $modelLabel = 'صفحة سياسة / شروط';
+    protected static ?string $pluralModelLabel = 'سياسات وشروط التطبيق';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

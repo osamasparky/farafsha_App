@@ -14,9 +14,9 @@ class WahaMessageResource extends Resource
     protected static ?string $model = WahaMessage::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
-    protected static ?string $navigationGroup = 'خدمات واتساب (WhatsApp)';
+    protected static ?string $navigationGroup = 'التواصل والتسويق';
     protected static ?string $modelLabel = 'رسالة واتساب';
-    protected static ?string $pluralModelLabel = 'سجل رسائل الواتساب (Messages)';
+    protected static ?string $pluralModelLabel = 'سجل رسائل الواتساب';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

@@ -15,10 +15,10 @@ class AppNotificationResource extends Resource
     protected static ?string $model = AppNotification::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-bell';
-    protected static ?string $navigationGroup = 'التنبيهات والإشعارات';
+    protected static ?string $navigationGroup = 'التواصل والتسويق';
     protected static ?string $modelLabel = 'إشعار';
-    protected static ?string $pluralModelLabel = 'الإشعارات والتنبيهات';
-    protected static ?int $navigationSort = 6;
+    protected static ?string $pluralModelLabel = 'التنبيهات والإشعارات';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

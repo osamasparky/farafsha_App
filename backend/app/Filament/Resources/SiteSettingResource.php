@@ -14,11 +14,11 @@ class SiteSettingResource extends Resource
 {
     protected static ?string $model = SiteSetting::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-cog-6-tooth';
-    protected static ?string $navigationGroup = 'موقع فرفشة والمحتوى';
-    protected static ?string $modelLabel = 'إعداد للموقع';
-    protected static ?string $pluralModelLabel = 'إعدادات وأصول فرفوش (Settings)';
-    protected static ?int $navigationSort = 6;
+    protected static ?string $navigationIcon = 'heroicon-o-paint-brush';
+    protected static ?string $navigationGroup = 'الإعدادات والنظام';
+    protected static ?string $modelLabel = 'إعداد';
+    protected static ?string $pluralModelLabel = 'الهوية وأصول فرفوش';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {

@@ -52,4 +52,9 @@ class User extends Authenticatable implements FilamentUser
         // By default allow all users in local development or check is_admin
         return true;
     }
+
+    public function socialAccounts()
+    {
+        return $this->hasMany(SocialAccount::class);
+    }
 }

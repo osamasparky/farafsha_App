@@ -15,9 +15,9 @@ class LevelResource extends Resource
     protected static ?string $model = Level::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-academic-cap';
-    protected static ?string $navigationGroup = 'المستخدمين والملف الشخصي';
+    protected static ?string $navigationGroup = 'اللاعبون والمجتمع';
     protected static ?string $modelLabel = 'مستوى ورتبة';
-    protected static ?string $pluralModelLabel = 'المستويات والرتب (Levels)';
+    protected static ?string $pluralModelLabel = 'المستويات والرتب';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

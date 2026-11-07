@@ -14,10 +14,10 @@ class TestimonialResource extends Resource
 {
     protected static ?string $model = Testimonial::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-chat-bubble-left-right';
+    protected static ?string $navigationIcon = 'heroicon-o-heart';
     protected static ?string $navigationGroup = 'موقع فرفشة والمحتوى';
-    protected static ?string $modelLabel = 'رأي مستخدم';
-    protected static ?string $pluralModelLabel = 'آراء ومراجعات المستخدمين';
+    protected static ?string $modelLabel = 'رأي لاعب';
+    protected static ?string $pluralModelLabel = 'آراء وتقييمات اللاعبين';
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form

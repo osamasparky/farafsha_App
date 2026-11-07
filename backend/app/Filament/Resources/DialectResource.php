@@ -15,9 +15,9 @@ class DialectResource extends Resource
     protected static ?string $model = Dialect::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-language';
-    protected static ?string $navigationGroup = 'إدارة المحتوى والألعاب';
-    protected static ?string $modelLabel = 'لهجة محتوى';
-    protected static ?string $pluralModelLabel = 'اللهجات المدعومة (Dialects)';
+    protected static ?string $navigationGroup = 'الألعاب والمحتوى';
+    protected static ?string $modelLabel = 'لهجة';
+    protected static ?string $pluralModelLabel = 'اللهجات المدعومة';
     protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form

@@ -18,7 +18,7 @@ class SitePageResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-document-duplicate';
     protected static ?string $navigationGroup = 'موقع فرفشة والمحتوى';
     protected static ?string $modelLabel = 'صفحة موقع';
-    protected static ?string $pluralModelLabel = 'صفحات الموقع (Pages)';
+    protected static ?string $pluralModelLabel = 'صفحات الموقع التعريفي';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

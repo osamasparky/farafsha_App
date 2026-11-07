@@ -14,11 +14,22 @@ class RoomResource extends Resource
 {
     protected static ?string $model = Room::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
-    protected static ?string $navigationGroup = 'النشاط المباشر والغرف';
-    protected static ?string $modelLabel = 'غرفة أونلاين';
+    protected static ?string $navigationIcon = 'heroicon-o-play-circle';
+    protected static ?string $navigationGroup = 'اللعب والمنافسات';
+    protected static ?string $modelLabel = 'غرفة لعب مباشر';
     protected static ?string $pluralModelLabel = 'غرف اللعب المباشر';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::where('status', 'active')->count();
+        return $count > 0 ? (string) $count : null;
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'success';
+    }
 
     public static function form(Form $form): Form
     {

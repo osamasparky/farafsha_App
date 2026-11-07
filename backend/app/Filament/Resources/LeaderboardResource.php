@@ -15,10 +15,10 @@ class LeaderboardResource extends Resource
     protected static ?string $model = LeaderboardEntry::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-trophy';
-    protected static ?string $navigationGroup = 'المتصدرين والنتائج';
-    protected static ?string $modelLabel = 'لاعب متصدر';
-    protected static ?string $pluralModelLabel = 'لوحة الترتيب (Leaderboard)';
-    protected static ?int $navigationSort = 5;
+    protected static ?string $navigationGroup = 'اللعب والمنافسات';
+    protected static ?string $modelLabel = 'متصدر';
+    protected static ?string $pluralModelLabel = 'لوحة الصدارة والمتصدرين';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

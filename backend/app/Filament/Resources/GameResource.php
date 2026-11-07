@@ -15,10 +15,20 @@ class GameResource extends Resource
     protected static ?string $model = Game::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-puzzle-piece';
-    protected static ?string $navigationGroup = 'إدارة المحتوى والألعاب';
+    protected static ?string $navigationGroup = 'الألعاب والمحتوى';
     protected static ?string $modelLabel = 'لعبة';
-    protected static ?string $pluralModelLabel = 'الألعاب (Games)';
+    protected static ?string $pluralModelLabel = 'دليل الألعاب';
     protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'primary';
+    }
 
     public static function form(Form $form): Form
     {

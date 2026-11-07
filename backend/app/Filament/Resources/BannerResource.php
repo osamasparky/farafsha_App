@@ -15,10 +15,10 @@ class BannerResource extends Resource
     protected static ?string $model = Banner::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-megaphone';
-    protected static ?string $navigationGroup = 'الإعلانات والترويج';
-    protected static ?string $modelLabel = 'بنر إعلاني';
-    protected static ?string $pluralModelLabel = 'البنرات الإعلانية (Banners)';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'التواصل والتسويق';
+    protected static ?string $modelLabel = 'بنر ترويجي';
+    protected static ?string $pluralModelLabel = 'البنرات الترويجية';
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {

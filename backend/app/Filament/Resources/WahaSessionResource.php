@@ -18,9 +18,9 @@ class WahaSessionResource extends Resource
     protected static ?string $model = WahaSession::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-signal';
-    protected static ?string $navigationGroup = 'خدمات واتساب (WhatsApp)';
+    protected static ?string $navigationGroup = 'التواصل والتسويق';
     protected static ?string $modelLabel = 'جلسة واتساب';
-    protected static ?string $pluralModelLabel = 'جلسات الواتساب (Sessions)';
+    protected static ?string $pluralModelLabel = 'جلسات الواتساب';
     protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form

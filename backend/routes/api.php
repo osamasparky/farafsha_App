@@ -57,5 +57,16 @@ Route::get('/levels', [AppContentController::class, 'levels']);
 Route::get('/profile', [AppContentController::class, 'profile']);
 Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
 
+// Social Authentication Architecture (v1 API)
+Route::prefix('v1/auth')->group(function () {
+    Route::post('/social/{provider}', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'authenticate']);
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/me', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'me']);
+        Route::post('/logout', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'logout']);
+        Route::post('/logout-all', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'logoutAll']);
+        Route::post('/unlink/{provider}', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'unlink']);
+    });
+});
+
 // مسارات تكامل واتساب عبر WAHA (جلسات، رسائل، ويب هوك)
 require __DIR__ . '/waha.php';

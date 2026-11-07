@@ -15,10 +15,10 @@ class BadgeResource extends Resource
     protected static ?string $model = Badge::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-sparkles';
-    protected static ?string $navigationGroup = 'المستخدمين والملف الشخصي';
+    protected static ?string $navigationGroup = 'اللاعبون والمجتمع';
     protected static ?string $modelLabel = 'وسام';
-    protected static ?string $pluralModelLabel = 'الأوسمة والإنجازات (Badges)';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $pluralModelLabel = 'الأوسمة والإنجازات';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

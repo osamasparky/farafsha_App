@@ -14,11 +14,17 @@ class CountryWaitlistResource extends Resource
 {
     protected static ?string $model = CountryWaitlist::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-envelope';
+    protected static ?string $navigationIcon = 'heroicon-o-queue-list';
     protected static ?string $navigationGroup = 'موقع فرفشة والمحتوى';
-    protected static ?string $modelLabel = 'طلب تنبيه التوفر';
-    protected static ?string $pluralModelLabel = 'قائمة الانتظار (Waitlist)';
+    protected static ?string $modelLabel = 'طلب انتظار';
+    protected static ?string $pluralModelLabel = 'قائمة الانتظار للدول';
     protected static ?int $navigationSort = 4;
+
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getModel()::count();
+        return $count > 0 ? (string) $count : null;
+    }
 
     public static function form(Form $form): Form
     {

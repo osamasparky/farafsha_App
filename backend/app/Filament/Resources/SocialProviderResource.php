@@ -15,10 +15,10 @@ class SocialProviderResource extends Resource
     protected static ?string $model = SocialProvider::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-finger-print';
-    protected static ?string $navigationGroup = 'إعدادات النظام والمصادقة';
-    protected static ?string $modelLabel = 'وسيلة دخول';
-    protected static ?string $pluralModelLabel = 'تسجيل الدخول ووسائل التواصل';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'الإعدادات والنظام';
+    protected static ?string $modelLabel = 'وسيلة تسجيل';
+    protected static ?string $pluralModelLabel = 'طرق تسجيل الدخول';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

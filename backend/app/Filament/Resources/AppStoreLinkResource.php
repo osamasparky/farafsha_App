@@ -14,10 +14,10 @@ class AppStoreLinkResource extends Resource
 {
     protected static ?string $model = AppStoreLink::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-link';
+    protected static ?string $navigationIcon = 'heroicon-o-arrow-down-tray';
     protected static ?string $navigationGroup = 'موقع فرفشة والمحتوى';
-    protected static ?string $modelLabel = 'رابط متجر / تطبيق';
-    protected static ?string $pluralModelLabel = 'روابط المتاجر والتوافر (App Links)';
+    protected static ?string $modelLabel = 'رابط متجر';
+    protected static ?string $pluralModelLabel = 'روابط تحميل التطبيق';
     protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form

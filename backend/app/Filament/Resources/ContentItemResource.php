@@ -14,11 +14,21 @@ class ContentItemResource extends Resource
 {
     protected static ?string $model = ContentItem::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-duplicate';
-    protected static ?string $navigationGroup = 'إدارة المحتوى والألعاب';
-    protected static ?string $modelLabel = 'بطاقة / سؤال';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'الألعاب والمحتوى';
+    protected static ?string $modelLabel = 'سؤال أو بطاقة';
     protected static ?string $pluralModelLabel = 'بنك الأسئلة والبطاقات';
     protected static ?int $navigationSort = 2;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'warning';
+    }
 
     public static function form(Form $form): Form
     {

@@ -15,7 +15,7 @@ class PackResource extends Resource
     protected static ?string $model = Pack::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-archive-box';
-    protected static ?string $navigationGroup = 'إدارة المحتوى والألعاب';
+    protected static ?string $navigationGroup = 'الألعاب والمحتوى';
     protected static ?string $modelLabel = 'حزمة بطاقات';
     protected static ?string $pluralModelLabel = 'حزم البطاقات والتوسعات';
     protected static ?int $navigationSort = 3;

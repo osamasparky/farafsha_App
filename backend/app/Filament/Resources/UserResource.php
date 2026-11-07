@@ -15,10 +15,20 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    protected static ?string $navigationGroup = 'المستخدمون والإدارة';
+    protected static ?string $navigationGroup = 'اللاعبون والمجتمع';
     protected static ?string $modelLabel = 'مستخدم';
-    protected static ?string $pluralModelLabel = 'المستخدمون واللاعبون';
-    protected static ?int $navigationSort = 5;
+    protected static ?string $pluralModelLabel = 'حسابات اللاعبين والمستخدمين';
+    protected static ?int $navigationSort = 1;
+
+    public static function getNavigationBadge(): ?string
+    {
+        return (string) static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): ?string
+    {
+        return 'info';
+    }
 
     public static function form(Form $form): Form
     {
