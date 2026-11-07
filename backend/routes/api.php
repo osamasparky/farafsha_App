@@ -24,6 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/verify-reset-otp', [AuthController::class, 'verifyResetOtp']);
     Route::post('/reset-password', [AuthController::class, 'resetPassword']);
     Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
+    Route::post('/request-deletion', [AuthController::class, 'requestAccountDeletion'])->middleware('auth:sanctum');
     Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
     Route::post('/register-profile', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
@@ -32,6 +33,8 @@ Route::prefix('auth')->group(function () {
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+Route::post('/user/request-deletion', [AuthController::class, 'requestAccountDeletion'])->middleware('auth:sanctum');
 
 // مسارات الألعاب والمحتوى
 Route::prefix('games')->group(function () {

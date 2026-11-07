@@ -137,6 +137,22 @@ class UserResource extends Resource
                     ->label('مشرف')
                     ->boolean(),
 
+                Tables\Columns\TextColumn::make('status')
+                    ->label('حالة الحساب')
+                    ->badge()
+                    ->formatStateUsing(fn (?string $state): string => match ($state) {
+                        'deletion_pending' => 'معلق لطلب الحذف ⏳',
+                        'banned' => 'محظور 🚫',
+                        'deleted' => 'محذوف 🗑️',
+                        default => 'نشط ✅',
+                    })
+                    ->color(fn (?string $state): string => match ($state) {
+                        'deletion_pending' => 'danger',
+                        'banned' => 'danger',
+                        'deleted' => 'gray',
+                        default => 'success',
+                    }),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('تاريخ التسجيل')
                     ->dateTime('d/m/Y')

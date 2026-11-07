@@ -19,6 +19,8 @@ class User extends Authenticatable implements FilamentUser
         'email',
         'phone',
         'phone_verified_at',
+        'status',
+        'deletion_requested_at',
         'password',
         'avatar',
         'is_admin',
@@ -38,6 +40,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'deletion_requested_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'level' => 'integer',
@@ -56,5 +59,10 @@ class User extends Authenticatable implements FilamentUser
     public function socialAccounts()
     {
         return $this->hasMany(SocialAccount::class);
+    }
+
+    public function deletionRequests()
+    {
+        return $this->hasMany(AccountDeletionRequest::class);
     }
 }

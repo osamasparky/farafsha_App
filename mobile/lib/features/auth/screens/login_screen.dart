@@ -28,6 +28,12 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
+    if (AuthService.instance.isLoggedIn && !AuthService.instance.isGuest) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) context.go('/home');
+      });
+      return;
+    }
     _loadSocialProviders();
   }
 

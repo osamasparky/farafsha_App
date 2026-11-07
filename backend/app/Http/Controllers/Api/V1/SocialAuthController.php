@@ -50,6 +50,15 @@ class SocialAuthController extends Controller
             $result = $this->socialAuthService->authenticate($provider, $request->all(), $currentUser);
             $user = $result['user'];
 
+            // التحقق من تعليق الحساب لطلب الحذف
+            if ($user->status === 'deletion_pending' || $user->deletionRequests()->where('status', 'pending')->exists()) {
+                $user->tokens()->delete();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'تم تعليق هذا الحساب بناءً على طلب الحذف المُقدّم من قبلك وهو بانتظار قرار إدارة فرفشة.',
+                ], 403);
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'تم تسجيل الدخول بنجاح 🎉',

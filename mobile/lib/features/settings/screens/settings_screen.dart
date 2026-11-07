@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
@@ -315,6 +316,118 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  void _showAccountDeletionDialog(BuildContext context) {
+    SoundService.instance.playClick();
+    bool isSubmitting = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          return AlertDialog(
+            backgroundColor: const Color(0xFF241050),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(color: Colors.white.withOpacity(0.12)),
+            ),
+            title: Text(
+              'حذف الحساب',
+              style: GoogleFonts.cairo(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: Colors.white,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            content: Text(
+              'هل أنت متأكد من رغبتك في حذف الحساب؟',
+              style: GoogleFonts.cairo(
+                fontSize: 14,
+                color: const Color(0xFFE0D4F7),
+                height: 1.5,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            actionsAlignment: MainAxisAlignment.center,
+            actionsPadding: const EdgeInsets.only(bottom: 16, left: 16, right: 16),
+            actions: [
+              TextButton(
+                onPressed: isSubmitting ? null : () => Navigator.pop(dialogCtx),
+                child: Text(
+                  'إلغاء',
+                  style: GoogleFonts.cairo(
+                    color: Colors.white70,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 14,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE53935),
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                  elevation: 0,
+                ),
+                onPressed: isSubmitting
+                    ? null
+                    : () async {
+                        setDialogState(() => isSubmitting = true);
+                        final res = await AuthService.instance.requestAccountDeletion();
+
+                        if (!dialogCtx.mounted) return;
+                        Navigator.pop(dialogCtx);
+
+                        if (res['success'] == true) {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                'تم تقديم طلب حذف الحساب بنجاح',
+                                style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+                              ),
+                              backgroundColor: const Color(0xFFE53935),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                          context.go('/login');
+                        } else {
+                          if (!context.mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                res['message']?.toString() ?? 'حدث خطأ أثناء تقديم الطلب.',
+                                style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
+                              ),
+                              backgroundColor: const Color(0xFFD2566A),
+                              behavior: SnackBarBehavior.floating,
+                            ),
+                          );
+                        }
+                      },
+                child: isSubmitting
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : Text(
+                        'حذف الحساب',
+                        style: GoogleFonts.cairo(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 14,
+                        ),
+                      ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
   Widget _buildContactCard({
     required IconData icon,
     required Color color,
@@ -545,6 +658,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       isDark: isDark,
                     ),
                   ], isDark),
+
+                  // 5. قسم إدارة الحساب (يظهر فقط إذا كان المستخدم مسجلاً وليس زائراً)
+                  if (AuthService.instance.isLoggedIn && !AuthService.instance.isGuest) ...[
+                    const SizedBox(height: 18),
+                    _buildSectionHeader('إدارة الحساب', isDark ? const Color(0xFFFF8A80) : const Color(0xFFD32F2F)),
+                    _buildCardContainer([
+                      _buildActionRow(
+                        icon: Icons.delete_outline_rounded,
+                        title: 'حذف الحساب',
+                        trailingText: '',
+                        onTap: () => _showAccountDeletionDialog(context),
+                        hasDivider: false,
+                        isDark: isDark,
+                      ),
+                    ], isDark),
+                  ],
 
                   const SizedBox(height: 24),
 

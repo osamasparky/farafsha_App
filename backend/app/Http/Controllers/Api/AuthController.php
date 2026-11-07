@@ -349,6 +349,14 @@ class AuthController extends Controller
             ], 422);
         }
 
+        // التحقق من تعليق الحساب لطلب الحذف
+        if ($user->status === 'deletion_pending' || $user->deletionRequests()->where('status', 'pending')->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم تعليق هذا الحساب بناءً على طلب الحذف المُقدّم من قبلك وهو بانتظار قرار إدارة فرفشة.',
+            ], 403);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
@@ -490,6 +498,14 @@ class AuthController extends Controller
                 'message' => 'لم يتم العثور على حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولاً برقم هاتفك واسمك.',
                 'requires_registration' => true,
             ], 404);
+        }
+
+        // التحقق من تعليق الحساب لطلب الحذف
+        if ($user->status === 'deletion_pending' || $user->deletionRequests()->where('status', 'pending')->exists()) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم تعليق هذا الحساب بناءً على طلب الحذف المُقدّم من قبلك وهو بانتظار قرار إدارة فرفشة.',
+            ], 403);
         }
 
         $token = $user->createToken('social_user_token')->plainTextToken;
@@ -849,6 +865,43 @@ class AuthController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تم تحديث كلمة المرور بنجاح 🔒',
+        ]);
+    }
+
+    /**
+     * تقديم طلب حذف الحساب نهائياً من قِبل المستخدم
+     */
+    public function requestAccountDeletion(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'غير مصرح.',
+            ], 401);
+        }
+
+        // 1. تسجيل أو تحديث طلب الحذف في جدول الطلبات
+        \App\Models\AccountDeletionRequest::updateOrCreate(
+            ['user_id' => $user->id, 'status' => 'pending'],
+            [
+                'reason' => $request->input('reason', 'طلب من المستخدم عبر إعدادات التطبيق'),
+                'requested_at' => now(),
+            ]
+        );
+
+        // 2. تعليق حالة المستخدم فوراً ومنعه من الدخول للنظام
+        $user->update([
+            'status' => 'deletion_pending',
+            'deletion_requested_at' => now(),
+        ]);
+
+        // 3. إبطال جميع توكنات وجلسات الدخول الحالية
+        $user->tokens()->delete();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'تم استلام طلب حذف حسابك بنجاح. تم تعليق حسابك ومنع الدخول إليه لحين مراجعة الطلب واتخاذ القرار من قِبل إدارة فرفشة.',
         ]);
     }
 }

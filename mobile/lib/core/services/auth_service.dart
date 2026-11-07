@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../network/api_service.dart';
 
@@ -37,7 +38,7 @@ class AuthService extends ChangeNotifier {
   int get wins => _wins;
   int get gamesPlayed => _gamesPlayed;
 
-  /// تهيئة الخدمة وقراءة الحالة المحفوظة
+  /// تهيئة الخدمة وقراءة الحالة المحفوظة واستعادتها
   Future<void> init() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,6 +53,35 @@ class AuthService extends ChangeNotifier {
       _totalPoints = prefs.getInt('auth_total_points') ?? 0;
       _wins = prefs.getInt('auth_wins') ?? 0;
       _gamesPlayed = prefs.getInt('auth_games_played') ?? 0;
+
+      // مزامنة التوكن من FlutterSecureStorage إن وجد
+      try {
+        const storage = FlutterSecureStorage();
+        final secToken = await storage.read(key: 'sanctum_token');
+        if (secToken != null && secToken.isNotEmpty) {
+          _authToken = secToken;
+          _isLoggedIn = true;
+          await prefs.setBool('auth_is_logged_in', true);
+          await prefs.setString('auth_token', secToken);
+        }
+      } catch (_) {}
+
+      // إذا كان مسجلاً ولديه توكن، يتم جلب أحدث بيانات في الخلفية للتأكد من صلاحية الجلسة
+      if (_isLoggedIn && _authToken != null && _authToken!.isNotEmpty) {
+        ApiService.instance.getCurrentUser(_authToken!).then((userData) {
+          if (userData != null) {
+            _userName = userData['name']?.toString() ?? _userName;
+            _userEmail = userData['email']?.toString() ?? _userEmail;
+            _userPhone = userData['phone']?.toString() ?? _userPhone;
+            _userAvatar = userData['avatar']?.toString() ?? _userAvatar;
+            _totalPoints = (userData['total_points'] ?? userData['total_score'] ?? _totalPoints) as int;
+            _wins = (userData['wins'] ?? userData['wins_count'] ?? _wins) as int;
+            _gamesPlayed = (userData['games_played'] ?? _gamesPlayed) as int;
+            notifyListeners();
+          }
+        }).catchError((_) {});
+      }
+
       notifyListeners();
     } catch (e) {
       debugPrint('⚠️ Error initializing AuthService: $e');
@@ -487,7 +517,27 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_wins');
     await prefs.remove('auth_games_played');
 
+    try {
+      const storage = FlutterSecureStorage();
+      await storage.delete(key: 'sanctum_token');
+    } catch (_) {}
+
     notifyListeners();
+  }
+
+  /// تقديم طلب حذف الحساب نهائياً
+  Future<Map<String, dynamic>> requestAccountDeletion({String? reason}) async {
+    final res = await ApiService.instance.requestAccountDeletion(
+      reason: reason,
+      token: _authToken,
+    );
+
+    if (res['success'] == true) {
+      // إبطال وتسجيل الخروج محلياً فوراً
+      await logout();
+    }
+
+    return res;
   }
 
   /// تحديث بيانات المستخدم بعد تسجيل الدخول بواسطة وسائل التواصل المعتمدة

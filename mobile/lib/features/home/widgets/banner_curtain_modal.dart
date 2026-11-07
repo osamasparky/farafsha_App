@@ -421,3 +421,4 @@ class _BannerCurtainModalState extends State<BannerCurtainModal> {
     );
   }
 }
+

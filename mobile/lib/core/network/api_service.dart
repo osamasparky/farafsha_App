@@ -24,6 +24,28 @@ class ApiService {
         if (token != null && token.isNotEmpty) 'Authorization': 'Bearer $token',
       };
 
+  /// جلب بيانات المستخدم المصادق الحالي بواسطة التوكن
+  Future<Map<String, dynamic>?> getCurrentUser(String token) async {
+    try {
+      final res = await http
+          .get(
+            Uri.parse('$baseUrl/me'),
+            headers: _authHeaders(token),
+          )
+          .timeout(const Duration(seconds: 4));
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['user'] is Map) {
+          return Map<String, dynamic>.from(data['user']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ Fetching current user failed: $e');
+    }
+    return null;
+  }
+
   /// تسجيل دخول سريع كضيف (Guest) والحصول على Token
   Future<String?> guestLogin({String name = 'لاعب لمّة'}) async {
     try {
@@ -879,6 +901,42 @@ class ApiService {
       return {
         'success': false,
         'message': 'تعذر الاتصال بالسيرفر.',
+      };
+    }
+  }
+
+  /// طلب حذف الحساب نهائياً من قِبل المستخدم
+  Future<Map<String, dynamic>> requestAccountDeletion({
+    String? reason,
+    String? token,
+  }) async {
+    try {
+      final res = await http
+          .post(
+            Uri.parse('$baseUrl/auth/request-deletion'),
+            headers: _authHeaders(token),
+            body: jsonEncode({
+              if (reason != null && reason.isNotEmpty) 'reason': reason,
+            }),
+          )
+          .timeout(const Duration(seconds: 8));
+
+      final data = jsonDecode(res.body);
+      if (res.statusCode == 200 && data['status'] == 'success') {
+        return {
+          'success': true,
+          'message': data['message'] ?? 'تم تقديم طلب حذف حسابك بنجاح.',
+        };
+      }
+      return {
+        'success': false,
+        'message': data['message'] ?? 'تعذر تقديم طلب حذف الحساب.',
+      };
+    } catch (e) {
+      debugPrint('⚠️ requestAccountDeletion error: $e');
+      return {
+        'success': false,
+        'message': 'تعذر الاتصال بالسيرفر، يرجى المحاولة لاحقاً.',
       };
     }
   }

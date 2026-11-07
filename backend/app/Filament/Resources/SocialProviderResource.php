@@ -266,6 +266,18 @@ class SocialProviderResource extends Resource
                     ->label('مفعّلة في التطبيق')
                     ->alignCenter(),
 
+                Tables\Columns\TextColumn::make('status')
+                    ->label('حالة الإعداد')
+                    ->state(function (SocialProvider $record): string {
+                        $id = $record->client_id;
+                        if (empty($id) || str_contains((string) $id, 'CLIENT_ID') || str_contains((string) $id, 'generic')) {
+                            return 'بحاجة لإدخال المفاتيح ⚠️';
+                        }
+                        return 'مضبوط وجاهز للربط ✅';
+                    })
+                    ->badge()
+                    ->color(fn (string $state): string => str_contains($state, 'جاهز') ? 'success' : 'warning'),
+
                 Tables\Columns\TextColumn::make('client_id')
                     ->label('معرف العميل (Client ID)')
                     ->limit(35)

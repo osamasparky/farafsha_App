@@ -704,6 +704,74 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
 
+                    const SizedBox(height: 16),
+
+                    // خيار تغيير كلمة المرور داخل صفحة تعديل الملف الشخصي
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pop(modalContext); // إغلاق شيت التعديل
+                        _showChangePasswordSheet(context); // فتح شيت تغيير كلمة المرور فوراً
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.06),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: const Color(0xFFB98AFF).withOpacity(0.4),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 38,
+                              height: 38,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF8F4BF0).withOpacity(0.25),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.lock_reset_rounded,
+                                color: Color(0xFFFFD27A),
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'تغيير كلمة المرور 🔒',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                  SizedBox(height: 2),
+                                  Text(
+                                    'تحديث كلمة المرور لحماية حسابك وبياناتك',
+                                    style: TextStyle(
+                                      color: Color(0xFFCFC6E4),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(
+                              Icons.arrow_back_ios_new_rounded,
+                              color: Colors.white38,
+                              size: 14,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
                     const SizedBox(height: 20),
 
                     // زر حفظ التعديلات
@@ -1487,22 +1555,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   child: Column(
                     children: [
-                      if (!isGuest) ...[
-                        _buildNavigationRow(
-                          icon: Icons.edit_note_rounded,
-                          title: 'تعديل الملف الشخصي والصورة',
-                          count: 'تعديل ✏️',
-                          onTap: () => _showEditProfileSheet(context),
-                          hasDivider: true,
-                        ),
-                        _buildNavigationRow(
-                          icon: Icons.lock_reset_rounded,
-                          title: 'تغيير كلمة المرور',
-                          count: 'تأمين 🔒',
-                          onTap: () => _showChangePasswordSheet(context),
-                          hasDivider: true,
-                        ),
-                      ],
                       _buildNavigationRow(
                         icon: Icons.leaderboard_rounded,
                         title: 'لوحة الترتيب والمتصدرين',
