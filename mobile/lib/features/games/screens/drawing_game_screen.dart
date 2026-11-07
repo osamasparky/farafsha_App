@@ -78,6 +78,8 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
       context,
       currentRound: 6,
       totalRounds: 10,
+      gameTitle: 'خمن الرسمة',
+      gameSlug: 'draw',
       violetScore: 21,
       orangeScore: 17,
       onResume: _resumeTimer,

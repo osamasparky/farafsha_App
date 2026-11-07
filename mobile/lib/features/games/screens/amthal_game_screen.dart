@@ -178,15 +178,15 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
 
   void _openPauseModal() {
     _pauseTimer();
-    final scores = _session.teamScores;
-    final entries = scores.entries.toList();
+    SoundService.instance.playClick();
 
     PauseDialog.show(
       context,
+      session: _session,
       currentRound: _session.currentRoundNumber,
       totalRounds: _session.totalRounds,
-      violetScore: entries.isNotEmpty ? entries.first.value : 0,
-      orangeScore: entries.length > 1 ? entries[1].value : 0,
+      gameTitle: _session.gameTitle,
+      gameSlug: _session.gameSlug,
       onResume: _resumeTimer,
       onRestartRound: () {
         setState(() {

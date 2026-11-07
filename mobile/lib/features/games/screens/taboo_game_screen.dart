@@ -92,6 +92,8 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
       context,
       currentRound: 4,
       totalRounds: 10,
+      gameTitle: 'ممنوع تقول',
+      gameSlug: 'taboo',
       violetScore: 18,
       orangeScore: 14,
       onResume: _resumeTimer,
