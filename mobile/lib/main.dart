@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/network/api_service.dart';
 import 'core/router/app_router.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/settings_service.dart';
@@ -9,6 +10,9 @@ import 'core/theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // اكتشاف أفضل اتصال متاح بالسيرفر (USB / Wi-Fi LAN / Emulator)
+  await ApiService.instance.detectWorkingHost();
 
   // تهيئة إعدادات المستخدم والمصادقة والخدمات الأساسية
   await SettingsService.instance.init();

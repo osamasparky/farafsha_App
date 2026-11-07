@@ -59,3 +59,4 @@ class AllGames100ChallengesSeeder extends Seeder
         }
     }
 }
+

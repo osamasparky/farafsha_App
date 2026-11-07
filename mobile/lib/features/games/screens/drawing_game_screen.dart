@@ -404,9 +404,17 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                               colors: [Color(0xFF4FD1A5), Color(0xFF2E9D7B)],
                             ),
                             borderRadius: BorderRadius.circular(20),
-                            border: const Border(
-                              bottom: BorderSide(color: Color(0xFF1A6B52), width: 5),
+                            border: Border.all(
+                              color: const Color(0xFF6EE7B7),
+                              width: 1.5,
                             ),
+                            boxShadow: const [
+                              BoxShadow(
+                                color: Color(0xFF1A6B52),
+                                offset: Offset(0, 5),
+                                blurRadius: 0,
+                              ),
+                            ],
                           ),
                           child: const Center(
                             child: Text(

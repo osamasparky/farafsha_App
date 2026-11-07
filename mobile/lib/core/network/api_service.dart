@@ -7,10 +7,35 @@ class ApiService {
   static final ApiService instance = ApiService._internal();
   ApiService._internal();
 
-  // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على الويب أو سطح المكتب localhost
+  static String? _workingBaseUrl;
+
+  // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على USB يتم استخدام 127.0.0.1، على الواي فاي 192.168.100.3
   String get baseUrl {
     if (kIsWeb) return 'http://localhost:8000/api';
+    if (_workingBaseUrl != null) return _workingBaseUrl!;
     return 'http://127.0.0.1:8000/api';
+  }
+
+  /// فحص واكتشاف عنوان السيرفر الفعّال تلقائياً (USB reverse، واي فاي الشبكة المحلية، أو المحاكي)
+  Future<void> detectWorkingHost() async {
+    if (kIsWeb) return;
+    const candidates = [
+      'http://127.0.0.1:8000/api',
+      'http://192.168.100.3:8000/api',
+      'http://10.0.2.2:8000/api',
+    ];
+    for (final candidate in candidates) {
+      try {
+        final res = await http
+            .get(Uri.parse('$candidate/banners'))
+            .timeout(const Duration(milliseconds: 1200));
+        if (res.statusCode == 200) {
+          _workingBaseUrl = candidate;
+          debugPrint('🌐 Connected to backend successfully at: $candidate');
+          return;
+        }
+      } catch (_) {}
+    }
   }
 
   Map<String, String> get _headers => {
