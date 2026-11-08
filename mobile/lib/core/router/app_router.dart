@@ -176,10 +176,12 @@ final appRouter = GoRouter(
         final gameSlug = extra['gameSlug'] as String? ?? 'amthal-shaabiya';
         final subMode = extra['subMode'] as String? ?? 'teams';
         final teams = extra['teams'] as List<Map<String, dynamic>>? ?? [];
+        final totalQuestions = extra['totalQuestions'] as int? ?? 50;
         return LammaHostGameScreen(
           gameSlug: gameSlug,
           subMode: subMode,
           initialTeams: teams,
+          totalQuestions: totalQuestions,
         );
       },
     ),

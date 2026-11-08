@@ -761,6 +761,7 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
                     'gameSlug': _selectedGameSlug,
                     'subMode': _subMode,
                     'teams': _teams,
+                    'totalQuestions': 50,
                   },
                 );
               },

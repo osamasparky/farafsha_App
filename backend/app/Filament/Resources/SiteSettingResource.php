@@ -40,12 +40,38 @@ class SiteSettingResource extends Resource
                                 'links' => 'المتاجر والروابط الذكية',
                                 'social' => 'شبكات التواصل والدعم',
                             ])
-                            ->required(),
+                            ->required()
+                            ->live(),
 
+                        // حقل رفع صورة فرفوش المباشر (يظهر لمجموعة أصول وتعبيرات فرفوش)
+                        Forms\Components\FileUpload::make('value')
+                            ->label('رفع صورة شخصية فرفوش 🎭')
+                            ->disk('public')
+                            ->directory('mascot')
+                            ->visibility('public')
+                            ->image()
+                            ->imageEditor()
+                            ->openable()
+                            ->downloadable()
+                            ->maxSize(10240)
+                            ->helperText('ارفع صورة كرتونية لفرفوش (يفضل PNG بخلفية شفافة). سيتم حفظها وتطبيقها تلقائياً على الموقع.')
+                            ->afterStateHydrated(function ($component, $state) {
+                                if (is_string($state) && str_contains($state, 'مطلوب من العميل')) {
+                                    $component->state(null);
+                                }
+                            })
+                            ->visible(fn (Forms\Get $get, ?SiteSetting $record) => 
+                                $get('group') === 'mascot' || str_starts_with($record?->key ?? '', 'mascot_')
+                            ),
+
+                        // حقل القيمة النصية العادية لباقي الإعدادات
                         Forms\Components\Textarea::make('value')
                             ->label('القيمة (JSON أو نص مباشر)')
                             ->rows(6)
-                            ->columnSpanFull(),
+                            ->columnSpanFull()
+                            ->visible(fn (Forms\Get $get, ?SiteSetting $record) => 
+                                $get('group') !== 'mascot' && !str_starts_with($record?->key ?? '', 'mascot_')
+                            ),
                     ]),
             ]);
     }
@@ -54,6 +80,17 @@ class SiteSettingResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\ImageColumn::make('mascot_preview')
+                    ->label('صورة فرفوش')
+                    ->disk('public')
+                    ->getStateUsing(function (SiteSetting $record) {
+                        if ($record->group !== 'mascot' || str_contains($record->value, 'مطلوب من العميل')) {
+                            return null;
+                        }
+                        return $record->value;
+                    })
+                    ->circular(),
+
                 Tables\Columns\TextColumn::make('key')
                     ->label('المفتاح')
                     ->searchable()
@@ -79,6 +116,28 @@ class SiteSettingResource extends Resource
             ])
             ->defaultSort('group')
             ->actions([
+                Tables\Actions\Action::make('upload_mascot')
+                    ->label('رفع صورة')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->color('warning')
+                    ->visible(fn (SiteSetting $record) => $record->group === 'mascot' || str_starts_with($record->key, 'mascot_'))
+                    ->form([
+                        Forms\Components\FileUpload::make('image')
+                            ->label('اختر صورة شخصية فرفوش (PNG شفاف)')
+                            ->disk('public')
+                            ->directory('mascot')
+                            ->visibility('public')
+                            ->image()
+                            ->imageEditor()
+                            ->required(),
+                    ])
+                    ->action(function (SiteSetting $record, array $data) {
+                        $record->update(['value' => $data['image']]);
+                        \Filament\Notifications\Notification::make()
+                            ->title('تم رفع وتحديث صورة فرفوش بنجاح 🎭')
+                            ->success()
+                            ->send();
+                    }),
                 Tables\Actions\EditAction::make(),
             ]);
     }

@@ -29,7 +29,17 @@
 
     $settingKey = 'mascot_' . $expression;
     $customImage = \App\Models\SiteSetting::get($settingKey);
-    $hasImage = $customImage && !str_contains($customImage, 'مطلوب من العميل') && (str_starts_with($customImage, 'http') || str_starts_with($customImage, '/'));
+    $imageUrl = null;
+    $hasImage = false;
+
+    if ($customImage && !str_contains($customImage, 'مطلوب من العميل')) {
+        if (str_starts_with($customImage, 'http://') || str_starts_with($customImage, 'https://') || str_starts_with($customImage, '/')) {
+            $imageUrl = $customImage;
+        } else {
+            $imageUrl = \Illuminate\Support\Facades\Storage::disk('public')->url($customImage);
+        }
+        $hasImage = !empty($imageUrl);
+    }
 
     $sizeClasses = match($size) {
         'sm' => 'w-16 h-16 text-xs',
@@ -65,7 +75,7 @@
     {{-- مجسم فرفوش (صورة أو Placeholder مرح بهوية اللعبة) --}}
     <div class="relative group animate-farfoush">
         @if($hasImage)
-            <img src="{{ $customImage }}" 
+            <img src="{{ $imageUrl }}" 
                  alt="{{ $expressionTitles[$expression] ?? 'فرفوش' }}" 
                  class="{{ $sizeClasses }} object-contain drop-shadow-[0_10px_20px_rgba(242,86,154,0.4)]"
                  loading="lazy">

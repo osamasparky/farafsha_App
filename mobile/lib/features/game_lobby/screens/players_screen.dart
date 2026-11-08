@@ -562,7 +562,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
     }
 
     // 2. جلب الأسئلة الفعلية
-    final cardsRaw = await ApiService.instance.getGameCards(widget.gameSlug);
+    final cardsRaw = await ApiService.instance.getGameCards(widget.gameSlug, limit: widget.totalRounds);
     final questions = cardsRaw.map((c) => GameQuestion.fromMap(c)).toList();
 
     // 3. بناء جلسة اللعبة

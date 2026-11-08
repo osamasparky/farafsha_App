@@ -24,7 +24,7 @@ class LammaHostGameScreen extends StatefulWidget {
     required this.gameSlug,
     this.subMode = 'teams',
     this.initialTeams = const [],
-    this.totalQuestions = 10,
+    this.totalQuestions = 50,
   });
 
   @override
@@ -55,7 +55,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
   Future<void> _loadQuestions() async {
     setState(() => _isLoading = true);
-    final cards = await ApiService.instance.getGameCards(widget.gameSlug);
+    final cards = await ApiService.instance.getGameCards(widget.gameSlug, limit: widget.totalQuestions);
     if (mounted) {
       setState(() {
         _questions = cards.isNotEmpty ? cards : _fallbackQuestions();
@@ -124,7 +124,10 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
 
   void _nextQuestion() {
     SettingsService.instance.triggerHaptic();
-    if (_currentIndex + 1 >= _questions.length || _currentIndex + 1 >= widget.totalQuestions) {
+    final total = _questions.isNotEmpty
+        ? (_questions.length < widget.totalQuestions ? _questions.length : widget.totalQuestions)
+        : widget.totalQuestions;
+    if (_currentIndex + 1 >= total) {
       SoundService.instance.playWin();
       setState(() => _isGameOver = true);
     } else {
@@ -280,7 +283,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
             borderRadius: BorderRadius.circular(12),
           ),
           child: Text(
-            '${_currentIndex + 1} / ${widget.totalQuestions}',
+            '${_currentIndex + 1} / ${_questions.isNotEmpty ? (_questions.length < widget.totalQuestions ? _questions.length : widget.totalQuestions) : widget.totalQuestions}',
             style: GoogleFonts.cairo(
               fontSize: 13,
               fontWeight: FontWeight.w900,

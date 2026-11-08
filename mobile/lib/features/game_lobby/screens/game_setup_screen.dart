@@ -175,10 +175,10 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
                   _buildSettingRow(
                     icon: Icons.layers_rounded,
                     title: 'عدد الجولات',
-                    value: '$_roundsCount جولات',
+                    value: '$_roundsCount جولة',
                     onTap: () {
                       setState(() {
-                        _roundsCount = _roundsCount >= 15 ? 5 : _roundsCount + 5;
+                        _roundsCount = _roundsCount >= 50 ? 5 : (_roundsCount < 20 ? _roundsCount + 5 : _roundsCount + 10);
                       });
                     },
                   ),

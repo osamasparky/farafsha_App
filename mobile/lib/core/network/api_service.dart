@@ -220,10 +220,10 @@ class ApiService {
   }
 
   /// جلب كروت وأسئلة اللعبة من السيرفر (مع fallback محلي)
-  Future<List<Map<String, dynamic>>> getGameCards(String slug) async {
+  Future<List<Map<String, dynamic>>> getGameCards(String slug, {int limit = 50}) async {
     try {
       final res = await http
-          .get(Uri.parse('$baseUrl/games/$slug/cards'), headers: _headers)
+          .get(Uri.parse('$baseUrl/games/$slug/cards?limit=$limit'), headers: _headers)
           .timeout(const Duration(seconds: 4));
 
       if (res.statusCode == 200) {

@@ -76,7 +76,7 @@ class GameController extends Controller
         };
         $game = Game::where('slug', $normalizedSlug)->firstOrFail();
         
-        $limit = $request->integer('limit', 50);
+        $limit = max(1, min($request->integer('limit', 50), 100));
         $difficulty = $request->query('difficulty');
         $packId = $request->query('pack_id');
 
