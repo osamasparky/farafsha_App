@@ -16,15 +16,22 @@ class Badge extends Model
      */
     public const AVAILABLE_ICONS = [
         'trophy' => '🏆 كأس البطولة والتفوق (Trophy)',
-        'star' => '⭐ نجمة التميز (Star)',
-        'quote' => '💬 اقتباس ومثل شعبي (Quote)',
+        'star' => '⭐ نجمة التميز والتألق (Star)',
+        'quote' => '📜 اقتباس ومثل شعبي (Quote)',
         'bulb' => '💡 عبقري وفكرة ذكية (Bulb)',
-        'music' => '🎵 موسيقى ونغمات (Music)',
         'film' => '🎬 سينما وإفيهات (Film)',
         'mask' => '🎭 شخصيات وأقنعة (Mask)',
         'fire' => '🔥 شعلة حماس مستمرة (Fire)',
-        'gem' => '💎 جوهرة نادرة (Gem)',
+        'gem' => '💎 جوهرة نادرة وألماس (Gem)',
         'bolt' => '⚡ سرعة وبديهة خارقة (Bolt)',
+        'bus' => '🚌 حريف أتوبيس كومبليت (Bus)',
+        'shield' => '🛡️ درع الصمود والفصاحة (Shield)',
+        'heart' => '💖 روح القعدة ومحبوب اللمّة (Heart)',
+        'people' => '👥 سفير اللمّة والمجتمع (People)',
+        'timer' => '⏱️ قنّاص الثواني الأخيرة (Timer)',
+        'rocket' => '🚀 صاروخ الانتصارات (Rocket)',
+        'crown' => '👑 تاج الأساطير والملوك (Crown)',
+        'music' => '🎵 نغمات وموسيقى (Music)',
     ];
 
     public static function getAvailableIcons(): array

@@ -134,6 +134,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
         return Icons.star_rounded;
       case 'mask':
         return Icons.theater_comedy_rounded;
+      case 'fire':
+        return Icons.local_fire_department_rounded;
+      case 'gem':
+      case 'diamond':
+        return Icons.diamond_rounded;
+      case 'bolt':
+      case 'flash':
+        return Icons.bolt_rounded;
+      case 'bus':
+        return Icons.directions_bus_rounded;
+      case 'shield':
+        return Icons.shield_rounded;
+      case 'heart':
+        return Icons.favorite_rounded;
+      case 'people':
+        return Icons.groups_rounded;
+      case 'timer':
+        return Icons.timer_rounded;
+      case 'rocket':
+        return Icons.rocket_launch_rounded;
+      case 'crown':
+        return Icons.workspace_premium_rounded;
       default:
         return Icons.military_tech_rounded;
     }
