@@ -61,6 +61,13 @@ android {
             )
         }
     }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+            excludes += listOf("**/libnoise.so")
+        }
+    }
 }
 
 flutter {
