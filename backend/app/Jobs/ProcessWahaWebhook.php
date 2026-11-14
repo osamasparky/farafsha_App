@@ -33,14 +33,20 @@ class ProcessWahaWebhook implements ShouldQueue
                 ]);
             }
             if (in_array($event->event_name, ['message', 'message.any'], true) && !empty($p['id'])) {
-                $session = WahaSession::firstOrCreate(['name' => $event->session ?? config('waha.default_session')]);
-                // Preserve message.any for sent-state reconciliation; ignore duplicate engine echoes.
-                WahaMessage::firstOrCreate(['waha_message_id' => $p['id']], [
-                    'waha_session_id' => $session->id, 'direction' => !empty($p['fromMe']) ? 'out' : 'in',
-                    'chat_id' => $p['from'] ?? $p['to'] ?? 'unknown', 'body' => $p['body'] ?? '',
-                    'status' => !empty($p['fromMe']) ? 'sent' : 'received', 'metadata' => $p,
-                    'sent_at' => isset($p['timestamp']) ? now()->setTimestamp((int) $p['timestamp']) : null,
-                ]);
+                $chatId = (string) ($p['from'] ?? $p['to'] ?? 'unknown');
+
+                // تجاهل حالات الواتساب والرسائل الجماعية الدعائية (WhatsApp Status / Broadcasts)
+                $isBroadcast = str_contains($chatId, 'broadcast') || !empty($p['broadcast']);
+                if (! $isBroadcast) {
+                    $session = WahaSession::firstOrCreate(['name' => $event->session ?? config('waha.default_session')]);
+                    // Preserve message.any for sent-state reconciliation; ignore duplicate engine echoes.
+                    WahaMessage::firstOrCreate(['waha_message_id' => $p['id']], [
+                        'waha_session_id' => $session->id, 'direction' => !empty($p['fromMe']) ? 'out' : 'in',
+                        'chat_id' => $chatId, 'body' => $p['body'] ?? '',
+                        'status' => !empty($p['fromMe']) ? 'sent' : 'received', 'metadata' => $p,
+                        'sent_at' => isset($p['timestamp']) ? now()->setTimestamp((int) $p['timestamp']) : null,
+                    ]);
+                }
             }
             if ($event->event_name === 'message.ack' && !empty($p['id'])) {
                 $state = match ((int) ($p['ack'] ?? 0)) { -1 => 'failed', 1, 2 => 'delivered', 3, 4 => 'read', default => null };

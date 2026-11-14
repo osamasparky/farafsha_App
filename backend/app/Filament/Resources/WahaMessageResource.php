@@ -141,6 +141,12 @@ class WahaMessageResource extends Resource
             ]);
     }
 
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('chat_id', 'not like', '%broadcast%');
+    }
+
     public static function getPages(): array
     {
         return [
