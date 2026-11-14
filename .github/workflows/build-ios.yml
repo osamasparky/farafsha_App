@@ -1,0 +1,67 @@
+name: Build iOS Release
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/build-ios.yml'
+  workflow_dispatch:
+
+jobs:
+  build-ios:
+    name: Build iOS (Flutter)
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout Code Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      - name: Setup Flutter SDK
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.3'
+          channel: 'stable'
+          cache: true
+
+      - name: Install CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Flutter Dependencies
+        run: |
+          cd mobile
+          flutter pub get
+
+      - name: Install iOS Pods
+        run: |
+          cd mobile/ios
+          pod install --repo-update
+
+      - name: Build iOS Application (Release)
+        run: |
+          cd mobile
+          flutter build ios --release --no-codesign
+
+      - name: Compress iOS App Payload
+        run: |
+          cd mobile/build/ios/iphoneos
+          mkdir -p Payload
+          cp -r Runner.app Payload/
+          zip -r Farafsha-iOS-Release.ipa Payload
+          zip -r Runner-App.zip Runner.app
+
+      - name: Upload iOS IPA & App Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: farafsha-ios-release
+          path: |
+            mobile/build/ios/iphoneos/Farafsha-iOS-Release.ipa
+            mobile/build/ios/iphoneos/Runner-App.zip
+          retention-days: 14
