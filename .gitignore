@@ -35,6 +35,11 @@ mobile/build/
 mobile/.pub-cache/
 mobile/.pub/
 mobile/*.png
+mobile/android/key.properties
+mobile/android/**/*.jks
+mobile/android/**/*.keystore
+*.jks
+*.keystore
 
 
 # Python cache
