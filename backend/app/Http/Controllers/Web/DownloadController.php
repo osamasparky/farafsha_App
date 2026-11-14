@@ -171,7 +171,7 @@ class DownloadController extends Controller
      */
     public function assetLinks(): JsonResponse
     {
-        $packageName = SiteSetting::get('android_package_name', 'com.farfasha.app');
+        $packageName = SiteSetting::get('android_package_name', 'farafsha.com');
         $sha256 = SiteSetting::get('android_sha256', '00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00:00');
 
         return response()->json([

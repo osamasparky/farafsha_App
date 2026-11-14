@@ -1,4 +1,4 @@
-package com.lammah.app.lammah
+package farafsha.com
 
 import android.content.Intent
 import android.os.Bundle
