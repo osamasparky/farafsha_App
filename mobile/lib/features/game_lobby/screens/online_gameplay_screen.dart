@@ -446,64 +446,143 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                     ),
                   ),
 
-                // شبكة الخيارات الأربعة (كاهوت ستايل ملونة وتفاعلية)
+                // خيارات الإجابة (تكيف تلقائي: قائمة عمودية مرنة للنصوص الطويلة أو شبكة كاهوت 2x2 للكلمات القصيرة)
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 10,
-                    crossAxisSpacing: 10,
-                    childAspectRatio: 1.55,
-                    physics: const NeverScrollableScrollPhysics(),
-                    children: List.generate(_choices.length, (index) {
-                      final choice = _choices[index];
-                      final isSelected = _mySelectedAnswer == choice;
-                      final color = _choiceColors[index % _choiceColors.length];
-                      final icon = _choiceIcons[index % _choiceIcons.length];
+                  child: (_choices.any((c) => c.length > 25) || _choices.length != 4)
+                      ? ListView.separated(
+                          physics: const BouncingScrollPhysics(),
+                          itemCount: _choices.length,
+                          separatorBuilder: (_, __) => const SizedBox(height: 10),
+                          itemBuilder: (context, index) {
+                            final choice = _choices[index];
+                            final isSelected = _mySelectedAnswer == choice;
+                            final color = _choiceColors[index % _choiceColors.length];
+                            final icon = _choiceIcons[index % _choiceIcons.length];
 
-                      return GestureDetector(
-                        onTap: () => _submitAnswer(choice),
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: isSelected ? color : color.withValues(alpha: _hasSubmitted ? 0.45 : 0.9),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: isSelected ? Colors.white : Colors.white24,
-                              width: isSelected ? 3.5 : 1.5,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                      color: color.withValues(alpha: 0.6),
-                                      blurRadius: 18,
-                                      spreadRadius: 2,
+                            return GestureDetector(
+                              onTap: () => _submitAnswer(choice),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                constraints: const BoxConstraints(minHeight: 56),
+                                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? color
+                                      : color.withValues(alpha: _hasSubmitted ? 0.35 : 0.88),
+                                  borderRadius: BorderRadius.circular(18),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.white : Colors.white24,
+                                    width: isSelected ? 3.0 : 1.5,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: color.withValues(alpha: 0.6),
+                                            blurRadius: 18,
+                                            spreadRadius: 2,
+                                          ),
+                                        ]
+                                      : [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(alpha: 0.2),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 3),
+                                          ),
+                                        ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white.withValues(alpha: 0.2),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(icon, color: Colors.white, size: 18),
                                     ),
-                                  ]
-                                : null,
-                          ),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(icon, color: Colors.white, size: 24),
-                              const SizedBox(height: 6),
-                              Text(
-                                choice,
-                                textAlign: TextAlign.center,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.cairo(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w900,
-                                  color: Colors.white,
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Text(
+                                        choice,
+                                        softWrap: true,
+                                        style: GoogleFonts.cairo(
+                                          fontSize: choice.length > 60
+                                              ? 13.0
+                                              : (choice.length > 30 ? 14.5 : 16.0),
+                                          fontWeight: FontWeight.w800,
+                                          color: Colors.white,
+                                          height: 1.4,
+                                        ),
+                                        textAlign: TextAlign.start,
+                                      ),
+                                    ),
+                                    if (isSelected) ...[
+                                      const SizedBox(width: 8),
+                                      const Icon(Icons.check_circle_rounded, color: Colors.white, size: 22),
+                                    ],
+                                  ],
                                 ),
                               ),
-                            ],
-                          ),
+                            );
+                          },
+                        )
+                      : GridView.count(
+                          crossAxisCount: 2,
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                          childAspectRatio: 1.55,
+                          physics: const NeverScrollableScrollPhysics(),
+                          children: List.generate(_choices.length, (index) {
+                            final choice = _choices[index];
+                            final isSelected = _mySelectedAnswer == choice;
+                            final color = _choiceColors[index % _choiceColors.length];
+                            final icon = _choiceIcons[index % _choiceIcons.length];
+
+                            return GestureDetector(
+                              onTap: () => _submitAnswer(choice),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 180),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: isSelected ? color : color.withValues(alpha: _hasSubmitted ? 0.45 : 0.9),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: isSelected ? Colors.white : Colors.white24,
+                                    width: isSelected ? 3.5 : 1.5,
+                                  ),
+                                  boxShadow: isSelected
+                                      ? [
+                                          BoxShadow(
+                                            color: color.withValues(alpha: 0.6),
+                                            blurRadius: 18,
+                                            spreadRadius: 2,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(icon, color: Colors.white, size: 24),
+                                    const SizedBox(height: 6),
+                                    Text(
+                                      choice,
+                                      textAlign: TextAlign.center,
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          }),
                         ),
-                      );
-                    }),
-                  ),
                 ),
               ],
             ),
