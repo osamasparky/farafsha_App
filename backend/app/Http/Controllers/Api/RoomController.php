@@ -166,6 +166,16 @@ class RoomController extends Controller
     {
         $room = Room::where('code', $code)->firstOrFail();
 
+        // التحقق من صلاحية المضيف
+        $playerToken = $request->header('X-Player-Token') ?: ($request->input('player_token') ?: $request->query('token'));
+        if ($playerToken) {
+            $player = RoomPlayer::where('room_id', $room->id)->where('session_token', $playerToken)->first();
+            abort_unless($player && $player->is_host, 403, 'غير مصرح: بدء اللعبة متاح لمضيف الغرفة فقط.');
+        } else {
+            $user = auth('sanctum')->user();
+            abort_unless($user && $user->id === $room->host_user_id, 403, 'غير مصرح: بدء اللعبة متاح لمضيف الغرفة فقط.');
+        }
+
         // جلب أسئلة الجولات عشوائياً
         $cards = ContentItem::where('game_id', $room->game_id)
             ->where('is_active', true)
@@ -452,6 +462,16 @@ class RoomController extends Controller
     public function nextRound(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->firstOrFail();
+
+        // التحقق من صلاحية المضيف
+        $playerToken = $request->header('X-Player-Token') ?: ($request->input('player_token') ?: $request->query('token'));
+        if ($playerToken) {
+            $player = RoomPlayer::where('room_id', $room->id)->where('session_token', $playerToken)->first();
+            abort_unless($player && $player->is_host, 403, 'غير مصرح: الانتقال للجولة التالية متاح لمضيف الغرفة فقط.');
+        } else {
+            $user = auth('sanctum')->user();
+            abort_unless($user && $user->id === $room->host_user_id, 403, 'غير مصرح: الانتقال للجولة التالية متاح لمضيف الغرفة فقط.');
+        }
         $nextRound = $room->current_round + 1;
 
         if ($nextRound > $room->total_rounds) {
@@ -549,12 +569,12 @@ class RoomController extends Controller
     }
 
     /**
-     * توليد توكن LiveKit WebRTC للغرفة الصوتية
+     * توليد توكن LiveKit WebRTC للغرفة الصوتية (مقتصر على لاعبي الغرفة المعتمدين)
      */
     public function getVoiceToken(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->firstOrFail();
-        $playerToken = $request->query('token') ?: $request->header('X-Player-Token');
+        $playerToken = $request->query('token') ?: ($request->header('X-Player-Token') ?: $request->input('player_token'));
 
         $player = null;
         if ($playerToken) {
@@ -563,11 +583,14 @@ class RoomController extends Controller
                 ->first();
         }
 
-        $identity = $player ? ('player_' . $player->id) : ('guest_' . random_int(1000, 9999));
-        $name = $player ? $player->player_name : 'لاعب فرفشة';
+        abort_unless($player, 403, 'غير مصرح: يجب الانضمام للغرفة كلاعب معتمد للحصول على تصريح الاتصال الصوتي.');
 
-        $apiKey = 'LK_80f58bd391822d64';
-        $apiSecret = 'OXtljvd4ni1nWlXUaieMm0vFcgcaKdfzxk5Rh94gW3ThfvIp';
+        $identity = 'player_' . $player->id;
+        $name = $player->player_name;
+
+        $apiKey = config('services.livekit.api_key', 'LK_80f58bd391822d64');
+        $apiSecret = config('services.livekit.api_secret', 'OXtljvd4ni1nWlXUaieMm0vFcgcaKdfzxk5Rh94gW3ThfvIp');
+        $serverUrl = config('services.livekit.url', 'wss://farafsha.com/livekit');
 
         $header = ['alg' => 'HS256', 'typ' => 'JWT'];
         $now = time();
@@ -594,7 +617,7 @@ class RoomController extends Controller
 
         return response()->json([
             'status' => 'success',
-            'server_url' => 'wss://farafsha.com/livekit',
+            'server_url' => $serverUrl,
             'token' => $jwt,
             'room' => 'room_' . $room->code,
             'identity' => $identity,

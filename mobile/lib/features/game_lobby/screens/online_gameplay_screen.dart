@@ -226,7 +226,7 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
     HapticFeedback.mediumImpact();
 
     try {
-      await ApiService.instance.nextRoomRound(_code);
+      await ApiService.instance.nextRoomRound(_code, playerToken: _playerToken);
       if (mounted) {
         setState(() => _isNextRoundLoading = false);
         _fetchState();

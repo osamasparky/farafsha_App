@@ -1140,10 +1140,16 @@ class ApiService {
   }
 
   /// بدء اللعبة من المضيف
-  Future<Map<String, dynamic>> startRoom(String code) async {
+  Future<Map<String, dynamic>> startRoom(String code, {String? playerToken}) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null) {
+      headers['X-Player-Token'] = playerToken;
+    }
+
     final res = await http.post(
       Uri.parse('$baseUrl/rooms/$code/start'),
-      headers: _headers,
+      headers: headers,
+      body: playerToken != null ? jsonEncode({'player_token': playerToken}) : null,
     ).timeout(const Duration(seconds: 10));
 
     final data = jsonDecode(utf8.decode(res.bodyBytes));
@@ -1182,10 +1188,16 @@ class ApiService {
   }
 
   /// انتهاء وقت السؤال (Timeout)
-  Future<Map<String, dynamic>> timeoutRoom(String code) async {
+  Future<Map<String, dynamic>> timeoutRoom(String code, {String? playerToken}) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null) {
+      headers['X-Player-Token'] = playerToken;
+    }
+
     final res = await http.post(
       Uri.parse('$baseUrl/rooms/$code/timeout'),
-      headers: _headers,
+      headers: headers,
+      body: playerToken != null ? jsonEncode({'player_token': playerToken}) : null,
     ).timeout(const Duration(seconds: 8));
 
     final data = jsonDecode(utf8.decode(res.bodyBytes));
@@ -1193,10 +1205,16 @@ class ApiService {
   }
 
   /// الانتقال للجولة التالية (Next Question)
-  Future<Map<String, dynamic>> nextRoomRound(String code) async {
+  Future<Map<String, dynamic>> nextRoomRound(String code, {String? playerToken}) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null) {
+      headers['X-Player-Token'] = playerToken;
+    }
+
     final res = await http.post(
       Uri.parse('$baseUrl/rooms/$code/next-round'),
-      headers: _headers,
+      headers: headers,
+      body: playerToken != null ? jsonEncode({'player_token': playerToken}) : null,
     ).timeout(const Duration(seconds: 10));
 
     final data = jsonDecode(utf8.decode(res.bodyBytes));
@@ -1208,10 +1226,16 @@ class ApiService {
   }
 
   /// إنهاء اللعبة بالكامل وحفظ إحصائيات اللاعبين
-  Future<Map<String, dynamic>> finishRoom(String code) async {
+  Future<Map<String, dynamic>> finishRoom(String code, {String? playerToken}) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null) {
+      headers['X-Player-Token'] = playerToken;
+    }
+
     final res = await http.post(
       Uri.parse('$baseUrl/rooms/$code/finish'),
-      headers: _headers,
+      headers: headers,
+      body: playerToken != null ? jsonEncode({'player_token': playerToken}) : null,
     ).timeout(const Duration(seconds: 10));
 
     final data = jsonDecode(utf8.decode(res.bodyBytes));

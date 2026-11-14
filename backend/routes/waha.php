@@ -3,11 +3,12 @@
 use App\Http\Controllers\Api\WahaMessageController;
 use App\Http\Controllers\Api\WahaSessionController;
 use App\Http\Controllers\WahaWebhookController;
+use App\Http\Middleware\EnsureAdmin;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/webhooks/waha', WahaWebhookController::class)->middleware('throttle:120,1');
 
-Route::middleware(['auth:sanctum', 'throttle:60,1'])->prefix('wa')->group(function () {
+Route::middleware(['auth:sanctum', EnsureAdmin::class, 'throttle:60,1'])->prefix('wa')->group(function () {
     Route::get('/sessions', [WahaSessionController::class, 'index']);
     Route::post('/sessions', [WahaSessionController::class, 'store']);
     Route::get('/sessions/{name}', [WahaSessionController::class, 'show']);

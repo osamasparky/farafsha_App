@@ -20,6 +20,23 @@ class AuthService extends ChangeNotifier {
   int _wins = 0;
   int _gamesPlayed = 0;
 
+  static const _secureStorage = FlutterSecureStorage();
+
+  Future<void> _persistToken(String? token) async {
+    _authToken = token;
+    try {
+      if (token != null && token.isNotEmpty) {
+        await _secureStorage.write(key: 'sanctum_token', value: token);
+      } else {
+        await _secureStorage.delete(key: 'sanctum_token');
+      }
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('auth_token');
+    } catch (e) {
+      debugPrint('⚠️ Error persisting token securely: $e');
+    }
+  }
+
   // جميع الألعاب مفعلة ومتاحة للعب
   static const List<String> kGuestUnlockedSlugs = [
     'amthal-shaabiya',
@@ -58,21 +75,27 @@ class AuthService extends ChangeNotifier {
       _userPhone = prefs.getString('auth_user_phone') ?? '';
       _userEmail = prefs.getString('auth_user_email') ?? '';
       _userDialect = prefs.getString('auth_user_dialect') ?? 'مصري';
-      _authToken = prefs.getString('auth_token');
       _totalPoints = prefs.getInt('auth_total_points') ?? 0;
       _wins = prefs.getInt('auth_wins') ?? 0;
       _gamesPlayed = prefs.getInt('auth_games_played') ?? 0;
 
-      // مزامنة التوكن من FlutterSecureStorage إن وجد
+      // استرجاع التوكن حصرياً من FlutterSecureStorage المشفرة
       try {
-        const storage = FlutterSecureStorage();
-        final secToken = await storage.read(key: 'sanctum_token');
+        final secToken = await _secureStorage.read(key: 'sanctum_token');
         if (secToken != null && secToken.isNotEmpty) {
           _authToken = secToken;
           _isLoggedIn = true;
           await prefs.setBool('auth_is_logged_in', true);
-          await prefs.setString('auth_token', secToken);
+        } else {
+          // هجرة آمنة لمرة واحدة إن وجد توكن في SharedPreferences القديمة
+          final oldToken = prefs.getString('auth_token');
+          if (oldToken != null && oldToken.isNotEmpty) {
+            _authToken = oldToken;
+            await _secureStorage.write(key: 'sanctum_token', value: oldToken);
+          }
         }
+        // حذف التوكن من SharedPreferences لحمايته من أي تسريب
+        await prefs.remove('auth_token');
       } catch (_) {}
 
       // مزامنة التوكن مع ApiService
@@ -199,9 +222,7 @@ class AuthService extends ChangeNotifier {
     await prefs.setInt('auth_total_points', _totalPoints);
     await prefs.setInt('auth_wins', _wins);
     await prefs.setInt('auth_games_played', _gamesPlayed);
-    if (_authToken != null) {
-      await prefs.setString('auth_token', _authToken!);
-    }
+    await _persistToken(_authToken);
 
     // مزامنة التحديث مع الـ Backend
     try {
@@ -251,9 +272,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setInt('auth_total_points', _totalPoints);
       await prefs.setInt('auth_wins', _wins);
       await prefs.setInt('auth_games_played', _gamesPlayed);
-      if (_authToken != null) {
-        await prefs.setString('auth_token', _authToken!);
-      }
+      await _persistToken(_authToken);
 
       _syncWithApiService();
       notifyListeners();
@@ -295,9 +314,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setString('auth_user_email', _userEmail);
       await prefs.setString('auth_user_phone', _userPhone);
       await prefs.setString('auth_user_avatar', _userAvatar);
-      if (_authToken != null) {
-        await prefs.setString('auth_token', _authToken!);
-      }
+      await _persistToken(_authToken);
       _syncWithApiService();
       notifyListeners();
     }
@@ -345,9 +362,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setInt('auth_total_points', 0);
       await prefs.setInt('auth_wins', 0);
       await prefs.setInt('auth_games_played', 0);
-      if (_authToken != null) {
-        await prefs.setString('auth_token', _authToken!);
-      }
+      await _persistToken(_authToken);
 
       _syncWithApiService();
       notifyListeners();
@@ -393,9 +408,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setInt('auth_total_points', _totalPoints);
       await prefs.setInt('auth_wins', _wins);
       await prefs.setInt('auth_games_played', _gamesPlayed);
-      if (_authToken != null) {
-        await prefs.setString('auth_token', _authToken!);
-      }
+      await _persistToken(_authToken);
 
       _syncWithApiService();
       notifyListeners();
@@ -452,9 +465,7 @@ class AuthService extends ChangeNotifier {
       await prefs.setInt('auth_total_points', 0);
       await prefs.setInt('auth_wins', 0);
       await prefs.setInt('auth_games_played', 0);
-      if (_authToken != null) {
-        await prefs.setString('auth_token', _authToken!);
-      }
+      await _persistToken(_authToken);
 
       notifyListeners();
       return {'success': true, 'message': res['message'] ?? 'تم إنشاء الحساب بنجاح'};
@@ -541,7 +552,7 @@ class AuthService extends ChangeNotifier {
     _totalPoints = 0;
     _wins = 0;
     _gamesPlayed = 0;
-    _authToken = null;
+    await _persistToken(null);
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('auth_is_logged_in', false);
@@ -550,15 +561,9 @@ class AuthService extends ChangeNotifier {
     await prefs.remove('auth_user_phone');
     await prefs.remove('auth_user_email');
     await prefs.remove('auth_user_avatar');
-    await prefs.remove('auth_token');
     await prefs.remove('auth_total_points');
     await prefs.remove('auth_wins');
     await prefs.remove('auth_games_played');
-
-    try {
-      const storage = FlutterSecureStorage();
-      await storage.delete(key: 'sanctum_token');
-    } catch (_) {}
 
     ApiService.instance.setAuthToken(null);
     ApiService.instance.setCurrentUser(null);

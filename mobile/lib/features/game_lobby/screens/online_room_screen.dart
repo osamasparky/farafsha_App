@@ -249,7 +249,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
     HapticFeedback.heavyImpact();
 
     try {
-      await ApiService.instance.startRoom(_code);
+      await ApiService.instance.startRoom(_code, playerToken: _playerToken);
       _hasNavigated = true;
       _syncTimer?.cancel();
       if (mounted) {

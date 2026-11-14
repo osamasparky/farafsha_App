@@ -152,11 +152,26 @@ class AuthController extends Controller
             || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
 
         if (!$isValid) {
+            $failKey = "otp_fails:phone:{$normalized}";
+            $fails = Cache::increment($failKey);
+            Cache::put($failKey, $fails, 300);
+
+            if ($fails >= 5) {
+                Cache::forget("otp:phone:{$normalized}");
+                Cache::forget($failKey);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب.',
+                ], 429);
+            }
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'رمز التحقق غير صحيح أو انتهت صلاحيته، يرجى طلب رمز جديد.',
+                'message' => 'رمز التحقق غير صحيح، تبقى لديك ' . (5 - $fails) . ' محاولات.',
             ], 422);
         }
+
+        Cache::forget("otp_fails:phone:{$normalized}");
 
         // تم التحقق بنجاح
         Cache::forget("otp:phone:{$normalized}");
@@ -255,11 +270,26 @@ class AuthController extends Controller
             || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
 
         if (!$isValid) {
+            $failKey = "otp_fails:email:{$email}";
+            $fails = Cache::increment($failKey);
+            Cache::put($failKey, $fails, 300);
+
+            if ($fails >= 5) {
+                Cache::forget("otp:email:{$email}");
+                Cache::forget($failKey);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب.',
+                ], 429);
+            }
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'رمز التحقق للبريد غير صحيح أو انتهت صلاحيته.',
+                'message' => 'رمز التحقق للبريد غير صحيح، تبقى لديك ' . (5 - $fails) . ' محاولات.',
             ], 422);
         }
+
+        Cache::forget("otp_fails:email:{$email}");
 
         Cache::forget("otp:email:{$email}");
         Cache::put("verified_email:{$email}", true, 3600);
@@ -638,25 +668,54 @@ class AuthController extends Controller
     }
 
     /**
-     * تسجيل الدخول المباشر بالبريد الإلكتروني
+     * تسجيل الدخول بالبريد الإلكتروني (محمي بكلمة المرور أو رمز التحقق OTP)
      */
     public function loginByEmail(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'email' => 'required|email',
+            'password' => 'nullable|string',
             'name' => 'nullable|string|max:100',
         ]);
 
-        $user = User::firstOrCreate(
-            ['email' => $validated['email']],
-            [
-                'name' => $validated['name'] ?? explode('@', $validated['email'])[0],
+        $email = strtolower(trim($validated['email']));
+        $user = User::where('email', $email)->first();
+
+        // إذا كان المستخدم موجوداً، يجب التحقق من كلمة المرور أو كود التحقق للبريد
+        if ($user) {
+            $hasVerifiedEmailOtp = Cache::get("verified_email:{$email}") === true;
+            $passwordValid = !empty($validated['password']) && Hash::check($validated['password'], $user->password);
+
+            if (!$passwordValid && !$hasVerifiedEmailOtp) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'يرجى إدخال كلمة المرور الصحيحة أو تأكيد رمز التحقق عبر البريد الإلكتروني.',
+                ], 401);
+            }
+
+            if ($hasVerifiedEmailOtp) {
+                Cache::forget("verified_email:{$email}");
+            }
+        } else {
+            // مستخدم جديد: يشترط توثيق البريد أولاً عبر OTP
+            $hasVerifiedEmailOtp = Cache::get("verified_email:{$email}") === true;
+            if (!$hasVerifiedEmailOtp) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'يرجى تأكيد رمز التحقق المرسل لبريدك الإلكتروني أولاً لإتمام التسجيل.',
+                ], 401);
+            }
+            Cache::forget("verified_email:{$email}");
+
+            $user = User::create([
+                'email' => $email,
+                'name' => $validated['name'] ?? explode('@', $email)[0],
                 'avatar' => 'assets/images/av-ahmed.png',
-                'password' => Hash::make(Str::random(16)),
+                'password' => Hash::make($validated['password'] ?? Str::random(16)),
                 'level' => 1,
                 'total_score' => 100,
-            ]
-        );
+            ]);
+        }
 
         $token = $user->createToken('email_user_token')->plainTextToken;
 
@@ -788,11 +847,26 @@ class AuthController extends Controller
             || ($validated['otp'] === '1234' && app()->environment('local', 'testing'));
 
         if (!$isValid) {
+            $failKey = "password_reset_fails:{$type}:{$target}";
+            $fails = Cache::increment($failKey);
+            Cache::put($failKey, $fails, 600);
+
+            if ($fails >= 5) {
+                Cache::forget($cacheKey);
+                Cache::forget($failKey);
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب، يرجى طلب رمز جديد.',
+                ], 429);
+            }
+
             return response()->json([
                 'status' => 'error',
-                'message' => 'رمز التحقق غير صحيح أو انتهت صلاحيته.',
+                'message' => 'رمز التحقق غير صحيح، تبقى لديك ' . (5 - $fails) . ' محاولات.',
             ], 422);
         }
+
+        Cache::forget("password_reset_fails:{$type}:{$target}");
 
         $userId = $cached['user_id'] ?? null;
         if (!$userId) {

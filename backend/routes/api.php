@@ -9,23 +9,23 @@ use Illuminate\Support\Facades\Route;
 
 // مسارات المصادقة والهاتف واللعب كضيف ووسائل التواصل
 Route::prefix('auth')->group(function () {
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:10,1');
     Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
     Route::get('/social-providers', [AuthController::class, 'getSocialProviders']);
-    Route::post('/social-login', [AuthController::class, 'socialLogin']);
-    Route::post('/social-register', [AuthController::class, 'socialRegister']);
-    Route::post('/guest', [AuthController::class, 'guestLogin']);
-    Route::post('/send-otp', [AuthController::class, 'sendOtp']);
-    Route::post('/verify-otp', [AuthController::class, 'verifyOtp']);
-    Route::post('/send-email-otp', [AuthController::class, 'sendEmailOtp']);
-    Route::post('/verify-email-otp', [AuthController::class, 'verifyEmailOtp']);
-    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
-    Route::post('/verify-reset-otp', [AuthController::class, 'verifyResetOtp']);
-    Route::post('/reset-password', [AuthController::class, 'resetPassword']);
+    Route::post('/social-login', [AuthController::class, 'socialLogin'])->middleware('throttle:15,1');
+    Route::post('/social-register', [AuthController::class, 'socialRegister'])->middleware('throttle:15,1');
+    Route::post('/guest', [AuthController::class, 'guestLogin'])->middleware('throttle:20,1');
+    Route::post('/send-otp', [AuthController::class, 'sendOtp'])->middleware('throttle:6,1');
+    Route::post('/verify-otp', [AuthController::class, 'verifyOtp'])->middleware('throttle:10,1');
+    Route::post('/send-email-otp', [AuthController::class, 'sendEmailOtp'])->middleware('throttle:6,1');
+    Route::post('/verify-email-otp', [AuthController::class, 'verifyEmailOtp'])->middleware('throttle:10,1');
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])->middleware('throttle:6,1');
+    Route::post('/verify-reset-otp', [AuthController::class, 'verifyResetOtp'])->middleware('throttle:10,1');
+    Route::post('/reset-password', [AuthController::class, 'resetPassword'])->middleware('throttle:6,1');
     Route::post('/change-password', [AuthController::class, 'changePassword'])->middleware('auth:sanctum');
     Route::post('/request-deletion', [AuthController::class, 'requestAccountDeletion'])->middleware('auth:sanctum');
-    Route::post('/login-by-email', [AuthController::class, 'loginByEmail']);
+    Route::post('/login-by-email', [AuthController::class, 'loginByEmail'])->middleware('throttle:10,1');
     Route::post('/register-profile', [AuthController::class, 'registerProfile'])->middleware('auth:sanctum');
     Route::get('/me', [AuthController::class, 'me'])->middleware('auth:sanctum');
 });

@@ -275,6 +275,7 @@ class GameResource extends Resource
                                 Forms\Components\FileUpload::make('og_image')
                                     ->label('صورة المشاركة بشبكات التواصل (OG Image)')
                                     ->image()
+                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
                                     ->disk('public')
                                     ->directory('seo')
                                     ->visibility('public'),

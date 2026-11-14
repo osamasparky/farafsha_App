@@ -78,6 +78,7 @@ class BadgeResource extends Resource
                             ->directory('badges')
                             ->visibility('public')
                             ->image()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
                             ->imageEditor()
                             ->openable()
                             ->downloadable()

@@ -52,8 +52,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function canAccessPanel(Panel $panel): bool
     {
-        // By default allow all users in local development or check is_admin
-        return true;
+        return (bool) $this->is_admin && $this->status !== 'suspended';
     }
 
     public function socialAccounts()

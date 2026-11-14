@@ -50,6 +50,7 @@ class SiteSettingResource extends Resource
                             ->directory('mascot')
                             ->visibility('public')
                             ->image()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
                             ->imageEditor()
                             ->openable()
                             ->downloadable()
@@ -128,6 +129,7 @@ class SiteSettingResource extends Resource
                             ->directory('mascot')
                             ->visibility('public')
                             ->image()
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
                             ->imageEditor()
                             ->required(),
                     ])
