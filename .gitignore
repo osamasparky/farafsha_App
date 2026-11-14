@@ -39,3 +39,9 @@ mobile/.pub/
 # Python cache
 __pycache__/
 *.pyc
+
+# Deployment scripts and server credentials
+scripts/deploy_*.py
+scripts/create_user.py
+scripts/*.key
+scripts/*.pem
