@@ -21,7 +21,7 @@ class _StoreScreenState extends State<StoreScreen> {
       'isOwned': true,
       'isFree': false,
       'price': '',
-      'image': 'assets/images/ic-quote.png',
+      'image': 'assets/images/ic-quote.webp',
       'gradient': const [Color(0xFFD2566A), Color(0xFF8E2A4E)],
     },
     {
@@ -30,7 +30,7 @@ class _StoreScreenState extends State<StoreScreen> {
       'isOwned': false,
       'isFree': false,
       'price': '19.99 ج.م',
-      'image': 'assets/images/ic-film.png',
+      'image': 'assets/images/ic-film.webp',
       'gradient': const [Color(0xFF8F3BD0), Color(0xFF561C94)],
     },
     {
@@ -39,7 +39,7 @@ class _StoreScreenState extends State<StoreScreen> {
       'isOwned': false,
       'isFree': true,
       'price': 'نزّل مجانًا',
-      'image': 'assets/images/ic-bulb.png',
+      'image': 'assets/images/ic-bulb.webp',
       'gradient': const [Color(0xFF2F6E7A), Color(0xFF1B3F52)],
     },
     {
@@ -48,7 +48,7 @@ class _StoreScreenState extends State<StoreScreen> {
       'isOwned': false,
       'isFree': false,
       'price': '19.99 ج.م',
-      'image': 'assets/images/ic-music.png',
+      'image': 'assets/images/ic-music.webp',
       'gradient': const [Color(0xFFB23A72), Color(0xFF6E1C4E)],
     },
   ];

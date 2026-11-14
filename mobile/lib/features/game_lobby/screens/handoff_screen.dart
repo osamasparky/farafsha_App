@@ -14,7 +14,7 @@ class HandoffScreen extends StatelessWidget {
   const HandoffScreen({
     super.key,
     this.playerName = 'منة',
-    this.playerAvatar = 'assets/images/av-mena.png',
+    this.playerAvatar = 'assets/images/av-mena.webp',
     this.teamName = 'قفوش',
     this.round = 3,
     this.totalRounds = 10,

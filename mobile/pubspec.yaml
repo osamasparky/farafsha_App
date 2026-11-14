@@ -1,7 +1,7 @@
 name: lammah
 description: "تطبيق ألعاب جماعية عربي للجلسات - لمّة"
 publish_to: 'none'
-version: 1.0.0+7
+version: 1.0.0+8
 
 environment:
   sdk: ^3.4.0
@@ -68,3 +68,9 @@ flutter:
     - assets/icons/
     - assets/data/
     - assets/audio/
+    - assets/fonts/
+
+  fonts:
+    - family: Cairo
+      fonts:
+        - asset: assets/fonts/Cairo.ttf

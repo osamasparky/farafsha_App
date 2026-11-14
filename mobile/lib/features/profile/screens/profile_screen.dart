@@ -18,7 +18,7 @@ class ProfileScreen extends StatefulWidget {
 class _ProfileScreenState extends State<ProfileScreen> {
   bool _isLoading = true;
   String _userName = '';
-  String _avatar = 'assets/images/farfasha_logo.png';
+  String _avatar = 'assets/images/farfasha_logo.webp';
   int _totalPoints = 0;
   int _wins = 0;
   int _gamesPlayed = 0;
@@ -51,7 +51,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (mounted) {
         setState(() {
           _userName = 'زائر فرفشة';
-          _avatar = 'assets/images/farfasha_logo.png';
+          _avatar = 'assets/images/farfasha_logo.webp';
           _totalPoints = 0;
           _wins = 0;
           _gamesPlayed = 0;
@@ -414,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         );
       }
       return Image.asset(
-        'assets/images/farfasha_logo.png',
+        'assets/images/farfasha_logo.webp',
         width: size,
         height: size,
         fit: BoxFit.cover,
@@ -424,11 +424,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   void _showEditProfileSheet(BuildContext context) {
     final List<String> availableAvatars = [
-      'assets/images/av-ahmed.png',
-      'assets/images/av-karim.png',
-      'assets/images/av-mahmoud.png',
-      'assets/images/av-sara.png',
-      'assets/images/av-mena.png',
+      'assets/images/av-ahmed.webp',
+      'assets/images/av-karim.webp',
+      'assets/images/av-mahmoud.webp',
+      'assets/images/av-sara.webp',
+      'assets/images/av-mena.webp',
     ];
 
     String selectedAvatar = _avatar;

@@ -127,7 +127,7 @@ final appRouter = GoRouter(
           return HandoffScreen(
             playerName: data['playerName']?.toString() ?? 'اللاعب التالي',
             teamName: data['teamName']?.toString() ?? 'فريق الأبطال',
-            playerAvatar: data['playerAvatar']?.toString() ?? 'assets/images/av-ahmed.png',
+            playerAvatar: data['playerAvatar']?.toString() ?? 'assets/images/av-ahmed.webp',
             round: data['round'] as int? ?? 1,
             totalRounds: data['totalRounds'] as int? ?? 10,
             targetRoute: data['targetRoute']?.toString() ?? '/game/amthal',
@@ -198,7 +198,7 @@ final appRouter = GoRouter(
             runnerUpTeam: data['runnerUpTeam']?.toString() ?? 'قفوش',
             runnerUpScore: data['runnerUpScore'] as int? ?? 19,
             mvpName: data['mvpName']?.toString() ?? 'سارة',
-            mvpAvatar: data['mvpAvatar']?.toString() ?? 'assets/images/av-sara.png',
+            mvpAvatar: data['mvpAvatar']?.toString() ?? 'assets/images/av-sara.webp',
             mvpStats: data['mvpStats']?.toString() ?? 'أعلى نقاط',
           );
         }

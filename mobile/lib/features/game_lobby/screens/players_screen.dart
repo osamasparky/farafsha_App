@@ -21,20 +21,20 @@ class DefaultPlayerInfo {
 }
 
 const List<DefaultPlayerInfo> kDefaultPlayers = [
-  DefaultPlayerInfo(name: 'ياسين', isMale: true, avatar: 'assets/images/av-ahmed.png'),
-  DefaultPlayerInfo(name: 'رانيا', isMale: false, avatar: 'assets/images/av-sara.png'),
-  DefaultPlayerInfo(name: 'ياسمين', isMale: false, avatar: 'assets/images/av-mena.png'),
-  DefaultPlayerInfo(name: 'سيلين', isMale: false, avatar: 'assets/images/av-sara.png'),
-  DefaultPlayerInfo(name: 'أسامة', isMale: true, avatar: 'assets/images/av-karim.png'),
-  DefaultPlayerInfo(name: 'إيناس', isMale: false, avatar: 'assets/images/av-mena.png'),
-  DefaultPlayerInfo(name: 'آيسن', isMale: false, avatar: 'assets/images/av-sara.png'),
-  DefaultPlayerInfo(name: 'شدن', isMale: false, avatar: 'assets/images/av-mena.png'),
-  DefaultPlayerInfo(name: 'محمد', isMale: true, avatar: 'assets/images/av-mahmoud.png'),
-  DefaultPlayerInfo(name: 'أماني', isMale: false, avatar: 'assets/images/av-sara.png'),
-  DefaultPlayerInfo(name: 'عمر', isMale: true, avatar: 'assets/images/av-ahmed.png'),
-  DefaultPlayerInfo(name: 'ليان', isMale: false, avatar: 'assets/images/av-mena.png'),
-  DefaultPlayerInfo(name: 'أميرة', isMale: false, avatar: 'assets/images/av-sara.png'),
-  DefaultPlayerInfo(name: 'مليكة', isMale: false, avatar: 'assets/images/av-mena.png'),
+  DefaultPlayerInfo(name: 'ياسين', isMale: true, avatar: 'assets/images/av-ahmed.webp'),
+  DefaultPlayerInfo(name: 'رانيا', isMale: false, avatar: 'assets/images/av-sara.webp'),
+  DefaultPlayerInfo(name: 'ياسمين', isMale: false, avatar: 'assets/images/av-mena.webp'),
+  DefaultPlayerInfo(name: 'سيلين', isMale: false, avatar: 'assets/images/av-sara.webp'),
+  DefaultPlayerInfo(name: 'أسامة', isMale: true, avatar: 'assets/images/av-karim.webp'),
+  DefaultPlayerInfo(name: 'إيناس', isMale: false, avatar: 'assets/images/av-mena.webp'),
+  DefaultPlayerInfo(name: 'آيسن', isMale: false, avatar: 'assets/images/av-sara.webp'),
+  DefaultPlayerInfo(name: 'شدن', isMale: false, avatar: 'assets/images/av-mena.webp'),
+  DefaultPlayerInfo(name: 'محمد', isMale: true, avatar: 'assets/images/av-mahmoud.webp'),
+  DefaultPlayerInfo(name: 'أماني', isMale: false, avatar: 'assets/images/av-sara.webp'),
+  DefaultPlayerInfo(name: 'عمر', isMale: true, avatar: 'assets/images/av-ahmed.webp'),
+  DefaultPlayerInfo(name: 'ليان', isMale: false, avatar: 'assets/images/av-mena.webp'),
+  DefaultPlayerInfo(name: 'أميرة', isMale: false, avatar: 'assets/images/av-sara.webp'),
+  DefaultPlayerInfo(name: 'مليكة', isMale: false, avatar: 'assets/images/av-mena.webp'),
 ];
 
 class TeamModel {
@@ -470,13 +470,13 @@ class _PlayersScreenState extends State<PlayersScreen> {
       return matched.avatar;
     }
     final maleAvatars = [
-      'assets/images/av-ahmed.png',
-      'assets/images/av-karim.png',
-      'assets/images/av-mahmoud.png',
+      'assets/images/av-ahmed.webp',
+      'assets/images/av-karim.webp',
+      'assets/images/av-mahmoud.webp',
     ];
     final femaleAvatars = [
-      'assets/images/av-sara.png',
-      'assets/images/av-mena.png',
+      'assets/images/av-sara.webp',
+      'assets/images/av-mena.webp',
     ];
 
     final isMale = _isMaleName(name);
@@ -548,14 +548,14 @@ class _PlayersScreenState extends State<PlayersScreen> {
           id: '1',
           name: 'ياسين',
           teamName: 'فرفوش',
-          avatar: 'assets/images/av-ahmed.png',
+          avatar: 'assets/images/av-ahmed.webp',
           teamColor: const Color(0xFFA35BFF),
         ),
         GamePlayer(
           id: '2',
           name: 'رانيا',
           teamName: 'قفوش',
-          avatar: 'assets/images/av-sara.png',
+          avatar: 'assets/images/av-sara.webp',
           teamColor: const Color(0xFFFF8A4C),
         ),
       ]);

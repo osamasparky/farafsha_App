@@ -164,7 +164,7 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
 
                 // صورة أونلاين الجذابة
                 Image.asset(
-                  'assets/images/online.png',
+                  'assets/images/online.webp',
                   width: 200,
                   height: 160,
                   fit: BoxFit.contain,

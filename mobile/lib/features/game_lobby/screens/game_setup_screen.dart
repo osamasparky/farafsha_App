@@ -47,21 +47,21 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
   String _getDefaultAssetForSlug(String slug) {
     switch (slug) {
       case 'amthal-shaabiya':
-        return 'assets/images/proverb.png';
+        return 'assets/images/proverb.webp';
       case 'famous-quotes':
-        return 'assets/images/popcorn.png';
+        return 'assets/images/popcorn.webp';
       case 'autobus-complete':
-        return 'assets/images/proverb.png';
+        return 'assets/images/proverb.webp';
       case 'who-am-i':
-        return 'assets/images/ic-mask.png';
+        return 'assets/images/ic-mask.webp';
       case 'forbidden-words':
-        return 'assets/images/ic-a.png';
+        return 'assets/images/ic-a.webp';
       case 'speed-trivia':
-        return 'assets/images/ic-bulb.png';
+        return 'assets/images/ic-bulb.webp';
       case 'two-truths-and-lie':
-        return 'assets/images/ic-dice.png';
+        return 'assets/images/ic-dice.webp';
       default:
-        return 'assets/images/proverb.png';
+        return 'assets/images/proverb.webp';
     }
   }
 

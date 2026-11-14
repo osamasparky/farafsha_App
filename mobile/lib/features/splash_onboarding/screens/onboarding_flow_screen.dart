@@ -16,12 +16,12 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
   int _currentPage = 0;
 
   final List<String> _walkImages = [
-    'assets/images/walk_1.png',
-    'assets/images/walk_2.png',
-    'assets/images/walk_3.png',
-    'assets/images/walk_4.png',
-    'assets/images/walk_5.png',
-    'assets/images/walk_6.png',
+    'assets/images/walk_1.webp',
+    'assets/images/walk_2.webp',
+    'assets/images/walk_3.webp',
+    'assets/images/walk_4.webp',
+    'assets/images/walk_5.webp',
+    'assets/images/walk_6.webp',
   ];
 
   @override
@@ -96,6 +96,7 @@ class _OnboardingFlowScreenState extends State<OnboardingFlowScreen> {
                           child: Image.asset(
                             _walkImages[index],
                             fit: BoxFit.contain,
+                            cacheWidth: 800,
                           ),
                         ),
                       ),

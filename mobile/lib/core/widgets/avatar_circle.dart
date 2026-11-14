@@ -22,8 +22,8 @@ class AvatarCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final String imagePath = assetName != null
-        ? (assetName!.contains('/') ? assetName! : 'assets/images/$assetName.png')
-        : 'assets/images/av-ahmed.png';
+        ? (assetName!.contains('/') ? assetName! : 'assets/images/$assetName.webp')
+        : 'assets/images/av-ahmed.webp';
 
     return GestureDetector(
       onTap: onTap,

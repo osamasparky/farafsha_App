@@ -24,11 +24,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final TextEditingController _confirmPasswordController = TextEditingController();
 
   final List<String> _avatars = [
-    'assets/images/av-sara.png',
-    'assets/images/av-karim.png',
-    'assets/images/av-ahmed.png',
-    'assets/images/av-mena.png',
-    'assets/images/av-mahmoud.png',
+    'assets/images/av-sara.webp',
+    'assets/images/av-karim.webp',
+    'assets/images/av-ahmed.webp',
+    'assets/images/av-mena.webp',
+    'assets/images/av-mahmoud.webp',
   ];
 
   int _selectedAvatarIndex = 2; // Default: Ahmed

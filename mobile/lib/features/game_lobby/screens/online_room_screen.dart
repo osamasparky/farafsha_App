@@ -84,7 +84,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
           final isH = p['is_host'] == true || p['is_host'] == 1;
           return {
             'name': p['player_name']?.toString() ?? 'لاعب',
-            'avatar': p['avatar']?.toString() ?? 'assets/images/av-ahmed.png',
+            'avatar': p['avatar']?.toString() ?? 'assets/images/av-ahmed.webp',
             'isHost': isH,
             'score': p['score'] ?? 0,
             'status': 'متصل 🟢',

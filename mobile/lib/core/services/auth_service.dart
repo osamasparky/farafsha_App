@@ -11,7 +11,7 @@ class AuthService extends ChangeNotifier {
   bool _isLoggedIn = false;
   bool _isGuest = false;
   String _userName = '';
-  String _userAvatar = 'assets/images/farfasha_logo.png';
+  String _userAvatar = 'assets/images/farfasha_logo.webp';
   String _userPhone = '';
   String _userEmail = '';
   String _userDialect = 'مصري';
@@ -71,7 +71,7 @@ class AuthService extends ChangeNotifier {
       _isLoggedIn = prefs.getBool('auth_is_logged_in') ?? false;
       _isGuest = prefs.getBool('auth_is_guest') ?? false;
       _userName = prefs.getString('auth_user_name') ?? (_isGuest ? 'زائر فرفشة' : '');
-      _userAvatar = prefs.getString('auth_user_avatar') ?? (_isGuest ? 'assets/images/farfasha_logo.png' : 'assets/images/av-ahmed.png');
+      _userAvatar = prefs.getString('auth_user_avatar') ?? (_isGuest ? 'assets/images/farfasha_logo.webp' : 'assets/images/av-ahmed.webp');
       _userPhone = prefs.getString('auth_user_phone') ?? '';
       _userEmail = prefs.getString('auth_user_email') ?? '';
       _userDialect = prefs.getString('auth_user_dialect') ?? 'مصري';
@@ -158,7 +158,7 @@ class AuthService extends ChangeNotifier {
     _isLoggedIn = false;
     _isGuest = true;
     _userName = 'زائر فرفشة';
-    _userAvatar = 'assets/images/farfasha_logo.png';
+    _userAvatar = 'assets/images/farfasha_logo.webp';
     _totalPoints = 0;
 
     final prefs = await SharedPreferences.getInstance();
@@ -257,7 +257,7 @@ class AuthService extends ChangeNotifier {
       _userName = user?['name'] ?? '';
       _userEmail = user?['email'] ?? '';
       _userPhone = user?['phone'] ?? '';
-      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.png';
+      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.webp';
       _totalPoints = (user?['total_points'] ?? user?['total_score'] ?? 0) as int;
       _wins = (user?['wins'] ?? user?['wins_count'] ?? 0) as int;
       _gamesPlayed = (user?['games_played'] ?? 0) as int;
@@ -347,7 +347,7 @@ class AuthService extends ChangeNotifier {
       _userName = user?['name'] ?? name;
       _userEmail = user?['email'] ?? email;
       _userPhone = user?['phone'] ?? phone;
-      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
+      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.webp');
       _totalPoints = 0;
       _wins = 0;
       _gamesPlayed = 0;
@@ -393,7 +393,7 @@ class AuthService extends ChangeNotifier {
       _userName = user?['name'] ?? '';
       _userEmail = user?['email'] ?? email;
       _userPhone = user?['phone'] ?? '';
-      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.png';
+      _userAvatar = user?['avatar'] ?? 'assets/images/av-ahmed.webp';
       _totalPoints = (user?['total_points'] ?? 0) as int;
       _wins = (user?['wins'] ?? 0) as int;
       _gamesPlayed = (user?['games_played'] ?? 0) as int;
@@ -450,7 +450,7 @@ class AuthService extends ChangeNotifier {
       _userName = user?['name'] ?? name;
       _userEmail = user?['email'] ?? email;
       _userPhone = user?['phone'] ?? phone;
-      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.png');
+      _userAvatar = user?['avatar'] ?? (avatar ?? 'assets/images/av-ahmed.webp');
       _totalPoints = 0;
       _wins = 0;
       _gamesPlayed = 0;
@@ -548,7 +548,7 @@ class AuthService extends ChangeNotifier {
     _userName = '';
     _userEmail = '';
     _userPhone = '';
-    _userAvatar = 'assets/images/farfasha_logo.png';
+    _userAvatar = 'assets/images/farfasha_logo.webp';
     _totalPoints = 0;
     _wins = 0;
     _gamesPlayed = 0;

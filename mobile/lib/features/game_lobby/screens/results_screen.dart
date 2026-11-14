@@ -22,7 +22,7 @@ class ResultsScreen extends StatelessWidget {
     this.runnerUpTeam = 'قفوش',
     this.runnerUpScore = 19,
     this.mvpName = 'سارة',
-    this.mvpAvatar = 'assets/images/av-sara.png',
+    this.mvpAvatar = 'assets/images/av-sara.webp',
     this.mvpStats = 'سارة — 7 إجابات صح',
   });
 
@@ -41,7 +41,7 @@ class ResultsScreen extends StatelessWidget {
       runnerUpTeam: runnerUp.key,
       runnerUpScore: runnerUp.value,
       mvpName: mvp?.name ?? 'البطل',
-      mvpAvatar: mvp?.avatar ?? 'assets/images/av-ahmed.png',
+      mvpAvatar: mvp?.avatar ?? 'assets/images/av-ahmed.webp',
       mvpStats: '${mvp?.name ?? "البطل"} — ${mvp?.correctAnswers ?? 0} إجابات صح',
     );
   }

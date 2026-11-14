@@ -26,7 +26,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
       'title': 'لعبة محلية',
       'subtitle': 'على جهاز واحد بالتناوب\nمع أصحابك جنبك (Pass & Play)',
       'badge': 'التناوب الكلاسيكي',
-      'image': 'assets/images/local.png',
+      'image': 'assets/images/local.webp',
       'image_url': null,
       'highlight_color': '#A35BFF',
     },
@@ -35,7 +35,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
       'title': 'طريقة اللمّة',
       'subtitle': 'واحد معاه الموبايل والميكروفون\nويقرأ الأسئلة للقعدة كلها',
       'badge': 'الأمتع للقعدة 🎉',
-      'image': 'assets/images/crowd.png',
+      'image': 'assets/images/crowd.webp',
       'image_url': null,
       'highlight_color': '#FF8A4C',
     },
@@ -44,7 +44,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
       'title': 'لعبة أونلاين',
       'subtitle': 'العب مع أصحابك\nعن بُعد بغرفة ورمز سري',
       'badge': 'غرف شبكية',
-      'image': 'assets/images/online.png',
+      'image': 'assets/images/online.webp',
       'image_url': null,
       'highlight_color': '#A35BFF',
     },
@@ -70,12 +70,12 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
   String _fallbackAsset(String slug) {
     switch (slug) {
       case 'lammah':
-        return 'assets/images/crowd.png';
+        return 'assets/images/crowd.webp';
       case 'online':
-        return 'assets/images/online.png';
+        return 'assets/images/online.webp';
       case 'local':
       default:
-        return 'assets/images/local.png';
+        return 'assets/images/local.webp';
     }
   }
 
@@ -253,9 +253,11 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     ? Image.network(
                         imageUrl,
                         fit: BoxFit.contain,
+                        cacheWidth: 200,
                         errorBuilder: (_, __, ___) => Image.asset(
                           imageAsset,
                           fit: BoxFit.contain,
+                          cacheWidth: 200,
                           errorBuilder: (_, __, ___) => const Icon(
                             Icons.group_work_rounded,
                             color: Colors.white,
@@ -266,6 +268,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     : Image.asset(
                         imageAsset,
                         fit: BoxFit.contain,
+                        cacheWidth: 200,
                         errorBuilder: (_, __, ___) => const Icon(
                           Icons.group_work_rounded,
                           color: Colors.white,

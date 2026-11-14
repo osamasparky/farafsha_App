@@ -52,14 +52,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     if (period == 'monthly') {
       setState(() {
         _podium = [
-          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.png', 'score': 8450, 'rank': 1, 'badge': 'سيدة الشهر 👑'},
-          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.png', 'score': 7910, 'rank': 2, 'badge': 'الوصيف 🥈'},
-          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.png', 'score': 7200, 'rank': 3, 'badge': 'المتحدي 🥉'},
+          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.webp', 'score': 8450, 'rank': 1, 'badge': 'سيدة الشهر 👑'},
+          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.webp', 'score': 7910, 'rank': 2, 'badge': 'الوصيف 🥈'},
+          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.webp', 'score': 7200, 'rank': 3, 'badge': 'المتحدي 🥉'},
         ];
         _rankings = [
-          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.png', 'score': 5830, 'rank': 4},
-          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.png', 'score': 4920, 'rank': 5},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.png', 'score': 3420, 'rank': 8, 'is_current_user': true},
+          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 5830, 'rank': 4},
+          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 4920, 'rank': 5},
+          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 3420, 'rank': 8, 'is_current_user': true},
         ];
         _currentUser = {'player_name': 'أنت (أسامة)', 'score': 3420, 'rank': 8};
         _isLoading = false;
@@ -67,15 +67,15 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } else if (period == 'all_time') {
       setState(() {
         _podium = [
-          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.png', 'score': 24190, 'rank': 1, 'badge': 'الأسطورة 🌟'},
-          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.png', 'score': 21500, 'rank': 2, 'badge': 'المحارب ⚔️'},
-          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.png', 'score': 19840, 'rank': 3, 'badge': 'العبقرية 💡'},
+          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.webp', 'score': 24190, 'rank': 1, 'badge': 'الأسطورة 🌟'},
+          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.webp', 'score': 21500, 'rank': 2, 'badge': 'المحارب ⚔️'},
+          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.webp', 'score': 19840, 'rank': 3, 'badge': 'العبقرية 💡'},
         ];
         _rankings = [
-          {'player_name': 'ياسين', 'avatar': 'assets/images/av-ahmed.png', 'score': 16300, 'rank': 4},
-          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.png', 'score': 14750, 'rank': 5},
-          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.png', 'score': 12900, 'rank': 6},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.png', 'score': 8650, 'rank': 15, 'is_current_user': true},
+          {'player_name': 'ياسين', 'avatar': 'assets/images/av-ahmed.webp', 'score': 16300, 'rank': 4},
+          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 14750, 'rank': 5},
+          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 12900, 'rank': 6},
+          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 8650, 'rank': 15, 'is_current_user': true},
         ];
         _currentUser = {'player_name': 'أنت (أسامة)', 'score': 8650, 'rank': 15};
         _isLoading = false;
@@ -83,14 +83,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     } else {
       setState(() {
         _podium = [
-          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.png', 'score': 2840, 'rank': 1, 'badge': 'بطل الأسبوع 👑'},
-          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.png', 'score': 2120, 'rank': 2, 'badge': 'محترفة 🥈'},
-          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.png', 'score': 1980, 'rank': 3, 'badge': 'سريع البديهة 🥉'},
+          {'player_name': 'أحمد', 'avatar': 'assets/images/av-ahmed.webp', 'score': 2840, 'rank': 1, 'badge': 'بطل الأسبوع 👑'},
+          {'player_name': 'سارة', 'avatar': 'assets/images/av-sara.webp', 'score': 2120, 'rank': 2, 'badge': 'محترفة 🥈'},
+          {'player_name': 'محمود', 'avatar': 'assets/images/av-mahmoud.webp', 'score': 1980, 'rank': 3, 'badge': 'سريع البديهة 🥉'},
         ];
         _rankings = [
-          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.png', 'score': 1760, 'rank': 4},
-          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.png', 'score': 1520, 'rank': 5},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.png', 'score': 980, 'rank': 12, 'is_current_user': true},
+          {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 1760, 'rank': 4},
+          {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 1520, 'rank': 5},
+          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 980, 'rank': 12, 'is_current_user': true},
         ];
         _currentUser = {'player_name': 'أنت (أسامة)', 'score': 980, 'rank': 12};
         _isLoading = false;
@@ -296,7 +296,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
 
     final name = player['player_name']?.toString() ?? '';
     final score = player['score']?.toString() ?? '0';
-    final avatar = player['avatar']?.toString() ?? 'assets/images/av-ahmed.png';
+    final avatar = player['avatar']?.toString() ?? 'assets/images/av-ahmed.webp';
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -373,7 +373,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     final rank = item['rank']?.toString() ?? '-';
     final name = item['player_name']?.toString() ?? '';
     final score = item['score']?.toString() ?? '0';
-    final avatar = item['avatar']?.toString() ?? 'assets/images/av-ahmed.png';
+    final avatar = item['avatar']?.toString() ?? 'assets/images/av-ahmed.webp';
     final badge = item['badge']?.toString();
 
     return Container(

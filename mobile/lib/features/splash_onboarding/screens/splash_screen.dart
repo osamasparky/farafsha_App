@@ -88,9 +88,10 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
         children: [
           // خلفية الشاشة الكاملة من الصورة الرسمية
           Image.asset(
-            'assets/images/splash_bg.png',
+            'assets/images/splash_bg.webp',
             fit: BoxFit.cover,
             alignment: Alignment.center,
+            cacheWidth: 1080,
           ),
 
           // تدرج لوني سفلي ناعم لإبراز الأزرار التفاعلية فقط عند عدم وجود جلسة

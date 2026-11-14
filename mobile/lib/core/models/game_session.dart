@@ -101,7 +101,7 @@ class GameSession {
         id: '1',
         name: 'اللاعب',
         teamName: 'فريق الأبطال',
-        avatar: 'assets/images/av-ahmed.png',
+        avatar: 'assets/images/av-ahmed.webp',
         teamColor: const Color(0xFF8B42FC),
       );
     }

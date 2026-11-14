@@ -251,9 +251,11 @@ class _DrawingGameScreenState extends State<DrawingGameScreen> {
                                 _currentStroke.add(DrawingPoint(offset: localPos, paint: paint));
                               });
                             },
-                            child: CustomPaint(
-                              painter: CanvasPainter(strokes: _strokes),
-                              size: Size.infinite,
+                            child: RepaintBoundary(
+                              child: CustomPaint(
+                                painter: CanvasPainter(strokes: _strokes),
+                                size: Size.infinite,
+                              ),
                             ),
                           ),
 

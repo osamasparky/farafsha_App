@@ -199,30 +199,34 @@ class _BannerCurtainModalState extends State<BannerCurtainModal> {
       );
     }
 
-    // عرض الصورة الأساسية (شبكة أو Asset محلي)
+    // عرض الصورة الأساسية (شبكة أو Asset محلي مع تقييد الذاكرة)
     if (imageUrl != null && imageUrl.isNotEmpty) {
       if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
         return Image.network(
           imageUrl,
           fit: BoxFit.cover,
+          cacheWidth: 800,
           errorBuilder: (_, __, ___) => Image.asset(
-            'assets/images/crowd.png',
+            'assets/images/crowd.webp',
             fit: BoxFit.cover,
+            cacheWidth: 800,
           ),
         );
       } else {
         return Image.asset(
           imageUrl,
           fit: BoxFit.cover,
+          cacheWidth: 800,
           errorBuilder: (_, __, ___) => Image.asset(
-            'assets/images/crowd.png',
+            'assets/images/crowd.webp',
             fit: BoxFit.cover,
+            cacheWidth: 800,
           ),
         );
       }
     }
 
-    return Image.asset('assets/images/crowd.png', fit: BoxFit.cover);
+    return Image.asset('assets/images/crowd.webp', fit: BoxFit.cover, cacheWidth: 800);
   }
 
   @override

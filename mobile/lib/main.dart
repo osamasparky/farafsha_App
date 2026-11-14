@@ -1,7 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'core/network/api_service.dart';
 import 'core/router/app_router.dart';
 import 'core/services/auth_service.dart';
@@ -12,8 +14,13 @@ import 'core/theme/app_theme.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // اكتشاف أفضل اتصال متاح بالسيرفر (USB / Wi-Fi LAN / Emulator)
-  await ApiService.instance.detectWorkingHost();
+  // منع تحميل الخطوط عبر الشبكة والاعتماد 100% على الخط المحلي المدمج Cairo.ttf لتسريع الإقلاع
+  GoogleFonts.config.allowRuntimeFetching = false;
+
+  // في الإنتاج نتصل مباشرة بـ farafsha.com بدون أي فحص شبكة يستهلك وقت الإقلاع
+  if (!kReleaseMode) {
+    await ApiService.instance.detectWorkingHost();
+  }
 
   // تهيئة إعدادات المستخدم والمصادقة والخدمات الأساسية
   await SettingsService.instance.init();

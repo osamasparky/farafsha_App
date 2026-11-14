@@ -18,6 +18,16 @@ class ApiService {
   String? get authToken => _authToken;
   void setAuthToken(String? token) => _authToken = token;
 
+  // طبقة التخزين المؤقت في الذاكرة لتسريع استجابة الشاشات ومنع تكرار طلبات HTTP
+  List<Map<String, dynamic>>? _cachedGames;
+  DateTime? _gamesCacheTime;
+
+  List<Map<String, dynamic>>? _cachedBanners;
+  DateTime? _bannersCacheTime;
+
+  List<Map<String, dynamic>>? _cachedDialects;
+  DateTime? _dialectsCacheTime;
+
   // على المحاكي في أندرويد يتم استخدام 10.0.2.2، على USB يتم استخدام 127.0.0.1، على الواي فاي 192.168.100.3
   String get baseUrl {
     if (kIsWeb) return 'https://farafsha.com/api';
@@ -27,7 +37,10 @@ class ApiService {
 
   /// فحص واكتشاف عنوان السيرفر الفعّال تلقائياً (السيرفر السحابي المباشر، USB reverse، أو الشبكة المحلية)
   Future<void> detectWorkingHost() async {
-    if (kIsWeb) return;
+    if (kIsWeb || kReleaseMode) {
+      _workingBaseUrl = 'https://farafsha.com/api';
+      return;
+    }
     const candidates = [
       'https://farafsha.com/api',
       'http://127.0.0.1:8000/api',
@@ -179,8 +192,18 @@ class ApiService {
     }
   }
 
-  /// جلب كافة الألعاب المتاحة من السيرفر (مع fallback محلي)
-  Future<List<Map<String, dynamic>>> getGames({String? category}) async {
+  /// جلب كافة الألعاب المتاحة من السيرفر (مع تخزين مؤقت فوري و fallback محلي)
+  Future<List<Map<String, dynamic>>> getGames({String? category, bool forceRefresh = false}) async {
+    // 1. استخدام التخزين المؤقت في الذاكرة لتسريع الشاشة بشكل فوري (0ms)
+    if (!forceRefresh && _cachedGames != null && _gamesCacheTime != null) {
+      if (DateTime.now().difference(_gamesCacheTime!).inMinutes < 5) {
+        if (category != null && category != 'all') {
+          return _cachedGames!.where((g) => g['category'] == category).toList();
+        }
+        return _cachedGames!;
+      }
+    }
+
     try {
       final uri = Uri.parse('$baseUrl/games').replace(
         queryParameters: category != null && category != 'all' ? {'category': category} : null,
@@ -190,16 +213,25 @@ class ApiService {
 
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
+        List<Map<String, dynamic>> result = [];
         if (data is Map && data['data'] is List) {
-          return List<Map<String, dynamic>>.from(data['data']);
+          result = List<Map<String, dynamic>>.from(data['data']);
         } else if (data is List) {
-          return List<Map<String, dynamic>>.from(data);
+          result = List<Map<String, dynamic>>.from(data);
         }
+        if (result.isNotEmpty && (category == null || category == 'all')) {
+          _cachedGames = result;
+          _gamesCacheTime = DateTime.now();
+        }
+        return result;
       }
     } catch (e) {
       debugPrint('⚠️ Fetching online games failed ($e). Loading local seed data...');
     }
 
+    if (_cachedGames != null && _cachedGames!.isNotEmpty) {
+      return _cachedGames!;
+    }
     return _loadSeedGames();
   }
 
@@ -243,36 +275,54 @@ class ApiService {
     return _loadSeedCards(slug);
   }
 
-  /// جلب البنرات الإعلانية والترويجية
-  Future<List<Map<String, dynamic>>> getBanners() async {
+  /// جلب البنرات الإعلانية والترويجية (مع تخزين مؤقت)
+  Future<List<Map<String, dynamic>>> getBanners({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedBanners != null && _bannersCacheTime != null) {
+      if (DateTime.now().difference(_bannersCacheTime!).inMinutes < 5) {
+        return _cachedBanners!;
+      }
+    }
+
     try {
       final res = await http.get(Uri.parse('$baseUrl/banners'), headers: _headers).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is Map && data['data'] is List) {
-          return List<Map<String, dynamic>>.from(data['data']);
+          final banners = List<Map<String, dynamic>>.from(data['data']);
+          _cachedBanners = banners;
+          _bannersCacheTime = DateTime.now();
+          return banners;
         }
       }
     } catch (e) {
       debugPrint('⚠️ Fetching banners failed: $e');
     }
-    return [];
+    return _cachedBanners ?? [];
   }
 
-  /// جلب اللهجات المتاحة من السيرفر (فقط إذا كانت مفعلة في لوحة التحكم)
-  Future<List<Map<String, dynamic>>> getDialects() async {
+  /// جلب اللهجات المتاحة من السيرفر (مع تخزين مؤقت)
+  Future<List<Map<String, dynamic>>> getDialects({bool forceRefresh = false}) async {
+    if (!forceRefresh && _cachedDialects != null && _dialectsCacheTime != null) {
+      if (DateTime.now().difference(_dialectsCacheTime!).inMinutes < 10) {
+        return _cachedDialects!;
+      }
+    }
+
     try {
       final res = await http.get(Uri.parse('$baseUrl/dialects'), headers: _headers).timeout(const Duration(seconds: 4));
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         if (data is Map && data['data'] is List) {
-          return List<Map<String, dynamic>>.from(data['data']);
+          final dialects = List<Map<String, dynamic>>.from(data['data']);
+          _cachedDialects = dialects;
+          _dialectsCacheTime = DateTime.now();
+          return dialects;
         }
       }
     } catch (e) {
       debugPrint('⚠️ Fetching dialects failed: $e');
     }
-    return [];
+    return _cachedDialects ?? [];
   }
 
   /// جلب لوحة الترتيب والمتصدرين حسب الفترة (weekly, monthly, all_time)
@@ -1007,7 +1057,7 @@ class ApiService {
         'title': 'لعبة محلية',
         'subtitle': 'على جهاز واحد بالتناوب\nمع أصحابك جنبك (Pass & Play)',
         'badge': 'التناوب الكلاسيكي',
-        'image': 'assets/images/local.png',
+        'image': 'assets/images/local.webp',
         'image_url': null,
         'highlight_color': '#A35BFF',
         'sort_order': 1,
@@ -1018,7 +1068,7 @@ class ApiService {
         'title': 'طريقة اللمّة',
         'subtitle': 'واحد معاه الموبايل والميكروفون\nويقرأ الأسئلة للقعدة كلها',
         'badge': 'الأمتع للقعدة 🎉',
-        'image': 'assets/images/crowd.png',
+        'image': 'assets/images/crowd.webp',
         'image_url': null,
         'highlight_color': '#FF8A4C',
         'sort_order': 2,
@@ -1029,7 +1079,7 @@ class ApiService {
         'title': 'لعبة أونلاين',
         'subtitle': 'العب مع أصحابك\nعن بُعد بغرفة ورمز سري',
         'badge': 'غرف شبكية',
-        'image': 'assets/images/online.png',
+        'image': 'assets/images/online.webp',
         'image_url': null,
         'highlight_color': '#A35BFF',
         'sort_order': 3,

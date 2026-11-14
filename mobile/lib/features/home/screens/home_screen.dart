@@ -37,11 +37,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _fetchData() async {
-    setState(() => _isLoading = true);
+  Future<void> _fetchData({bool forceRefresh = false}) async {
+    if (!forceRefresh && _games.isEmpty) {
+      setState(() => _isLoading = true);
+    }
     final results = await Future.wait([
-      ApiService.instance.getGames(),
-      ApiService.instance.getBanners(),
+      ApiService.instance.getGames(forceRefresh: forceRefresh),
+      ApiService.instance.getBanners(forceRefresh: forceRefresh),
     ]);
 
     if (mounted) {
@@ -60,13 +62,13 @@ class _HomeScreenState extends State<HomeScreen> {
       {
         'id': 1,
         'title': 'بطولة لمّة الأسبوعية الكبرى 🏆',
-        'image': 'assets/images/crowd.png',
+        'image': 'assets/images/crowd.webp',
         'external_url': 'https://lammah.app/tournament',
       },
       {
         'id': 2,
         'title': 'كروت جديدة وإفيهات حصرية 🔥',
-        'image': 'assets/images/local.png',
+        'image': 'assets/images/local.webp',
         'external_url': null,
       },
     ];
@@ -80,7 +82,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'أمثال شعبية',
         'subtitle': 'كمّل المثل الشعبي',
         'category': 'أمثال',
-        'icon': 'assets/images/ic-quote.png',
+        'icon': 'assets/images/ic-quote.webp',
       },
       {
         'id': 2,
@@ -88,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'جمل مشهورة',
         'subtitle': 'من الأفلام والمسلسلات',
         'category': 'إفيهات',
-        'icon': 'assets/images/ic-film.png',
+        'icon': 'assets/images/ic-film.webp',
       },
       {
         'id': 3,
@@ -96,7 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'خمن الكلمة',
         'subtitle': 'ممنوع تقول',
         'category': 'ذكاء وسرعة',
-        'icon': 'assets/images/ic-a.png',
+        'icon': 'assets/images/ic-a.webp',
       },
       {
         'id': 4,
@@ -104,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'معلومات عامة',
         'subtitle': 'سؤال على السريع',
         'category': 'معلومات عامة',
-        'icon': 'assets/images/ic-bulb.png',
+        'icon': 'assets/images/ic-bulb.webp',
       },
       {
         'id': 5,
@@ -112,7 +114,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'خمن الأغنية',
         'subtitle': 'من التلميحات',
         'category': 'فن',
-        'icon': 'assets/images/ic-music.png',
+        'icon': 'assets/images/ic-music.webp',
       },
       {
         'id': 6,
@@ -120,7 +122,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'مين أنا؟',
         'subtitle': 'شخصيات وأشياء بأسئلة نعم/لا',
         'category': 'تخمين',
-        'icon': 'assets/images/ic-mask.png',
+        'icon': 'assets/images/ic-mask.webp',
       },
       {
         'id': 7,
@@ -128,7 +130,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'name': 'أتوبيس كومبليت',
         'subtitle': 'ولد، بنت، جماد، نبات، بلاد، حيوان',
         'category': 'ذكاء وسرعة',
-        'icon': 'assets/images/ic-dice.png',
+        'icon': 'assets/images/ic-dice.webp',
         'is_featured': true,
       },
     ];
@@ -168,23 +170,23 @@ class _HomeScreenState extends State<HomeScreen> {
   String _getGameCover(String slug) {
     switch (slug) {
       case 'amthal-shaabiya':
-        return 'assets/images/proverb.png';
+        return 'assets/images/proverb.webp';
       case 'famous-quotes':
-        return 'assets/images/popcorn.png';
+        return 'assets/images/popcorn.webp';
       case 'forbidden-words':
       case 'taboo-words':
-        return 'assets/images/walk_2.png';
+        return 'assets/images/walk_2.webp';
       case 'speed-trivia':
-        return 'assets/images/walk_4.png';
+        return 'assets/images/walk_4.webp';
       case 'who-am-i':
-        return 'assets/images/walk_3.png';
+        return 'assets/images/walk_3.webp';
       case 'autobus-complete':
-        return 'assets/images/walk_1.png';
+        return 'assets/images/walk_1.webp';
       case 'acting-drawing':
       case 'draw-guess':
-        return 'assets/images/walk_5.png';
+        return 'assets/images/walk_5.webp';
       default:
-        return 'assets/images/crowd.png';
+        return 'assets/images/crowd.webp';
     }
   }
 
@@ -332,7 +334,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 : Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 18.0),
                     child: RefreshIndicator(
-                      onRefresh: _fetchData,
+                      onRefresh: () => _fetchData(forceRefresh: true),
                       color: LammaColors.violet500,
                       child: GridView.builder(
                         physics: const BouncingScrollPhysics(),
@@ -405,11 +407,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               ? Image.network(
                                   imgUrl,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Image.asset('assets/images/crowd.png', fit: BoxFit.cover),
+                                  cacheWidth: 800,
+                                  errorBuilder: (_, __, ___) => Image.asset('assets/images/crowd.webp', fit: BoxFit.cover, cacheWidth: 800),
                                 )
                               : Image.asset(
-                                  banner['image'] ?? 'assets/images/crowd.png',
+                                  banner['image'] ?? 'assets/images/crowd.webp',
                                   fit: BoxFit.cover,
+                                  cacheWidth: 800,
                                 ),
                         ),
                         // طبقة تظليل لضمان وضوح النص
@@ -543,50 +547,52 @@ class _HomeScreenState extends State<HomeScreen> {
     final isUnlocked = AuthService.instance.isGameUnlocked(slug);
     final badgeText = game['badge_text']?.toString();
 
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () {
-        SettingsService.instance.triggerHaptic();
-        SoundService.instance.playClick();
-        if (!isUnlocked) {
-          _showGuestLockedModal(context, game['name'] ?? 'اللعبة');
-        } else {
-          context.push('/game-setup', extra: game);
-        }
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: isUnlocked
-                ? Colors.white.withValues(alpha: 0.22)
-                : const Color(0xFFFFD27A).withValues(alpha: 0.45),
-            width: isUnlocked ? 1.4 : 1.8,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: colors.first.withValues(alpha: isUnlocked ? 0.4 : 0.2),
-              offset: const Offset(0, 8),
-              blurRadius: 18,
-              spreadRadius: -2,
+    return RepaintBoundary(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          SettingsService.instance.triggerHaptic();
+          SoundService.instance.playClick();
+          if (!isUnlocked) {
+            _showGuestLockedModal(context, game['name'] ?? 'اللعبة');
+          } else {
+            context.push('/game-setup', extra: game);
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: isUnlocked
+                  ? Colors.white.withValues(alpha: 0.22)
+                  : const Color(0xFFFFD27A).withValues(alpha: 0.45),
+              width: isUnlocked ? 1.4 : 1.8,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(23),
-          child: Stack(
-            fit: StackFit.expand,
-            children: [
-              // 1. الصورة كخلفية كاملة للكارت (Full Background Image)
-              Positioned.fill(
-                child: coverImageUrl != null && coverImageUrl.isNotEmpty
-                    ? Image.network(
-                        coverImageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Image.asset(fallbackCover, fit: BoxFit.cover),
-                      )
-                    : Image.asset(fallbackCover, fit: BoxFit.cover),
+            boxShadow: [
+              BoxShadow(
+                color: colors.first.withValues(alpha: isUnlocked ? 0.4 : 0.2),
+                offset: const Offset(0, 8),
+                blurRadius: 18,
+                spreadRadius: -2,
               ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(23),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 1. الصورة كخلفية كاملة للكارت (Full Background Image مع تقييد حجم الذاكرة cacheWidth)
+                Positioned.fill(
+                  child: coverImageUrl != null && coverImageUrl.isNotEmpty
+                      ? Image.network(
+                          coverImageUrl,
+                          fit: BoxFit.cover,
+                          cacheWidth: 360,
+                          errorBuilder: (_, __, ___) => Image.asset(fallbackCover, fit: BoxFit.cover, cacheWidth: 360),
+                        )
+                      : Image.asset(fallbackCover, fit: BoxFit.cover, cacheWidth: 360),
+                ),
 
               // 2. تدرج لوني خفيف لحماية التباين اللوني
               Positioned.fill(
@@ -732,8 +738,9 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   void _showGuestLockedModal(BuildContext context, String gameTitle) {
     showModalBottomSheet(
@@ -778,7 +785,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(19),
-                child: Image.asset('assets/images/farfasha_logo.png', fit: BoxFit.cover),
+                child: Image.asset('assets/images/farfasha_logo.webp', fit: BoxFit.cover),
               ),
             ),
             const SizedBox(height: 16),
