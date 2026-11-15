@@ -9,7 +9,7 @@ class AppConfig {
   static const String appName = 'فرفشة';
   static const String packageName = 'com.farafsha.app';
   static const String version = '1.0.0';
-  static const int buildNumber = 10;
+  static const int buildNumber = 11;
 }
 
 class AppUpdateInfo {
