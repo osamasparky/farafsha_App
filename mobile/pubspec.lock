@@ -470,13 +470,13 @@ packages:
     source: sdk
     version: "0.0.0"
   flutter_webrtc:
-    dependency: "direct overridden"
+    dependency: transitive
     description:
       name: flutter_webrtc
-      sha256: b98ef03376401e54ff87fc78907b38e562b15ca8424aba589c263eddc3c1ecf9
+      sha256: b832dc76c0d1577f14aaf35e9c38d4ed7667cbc89c492b7bf4505d8d5f62e08b
       url: "https://pub.dev"
     source: hosted
-    version: "1.6.3"
+    version: "0.12.12+hotfix.1"
   go_router:
     dependency: "direct main"
     description:
@@ -693,14 +693,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.6"
-  logger:
-    dependency: transitive
-    description:
-      name: logger
-      sha256: "2a0dc097e7b01d942475bdd552356db2d0f768b05540bd4b2b53f1840f2239a7"
-      url: "https://pub.dev"
-    source: hosted
-    version: "2.8.0"
   logging:
     dependency: transitive
     description:
