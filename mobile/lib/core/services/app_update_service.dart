@@ -1,9 +1,16 @@
 import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:package_info_plus/package_info_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../network/api_service.dart';
+
+/// ثوابت تعريف إصدار التطبيق (يتم تحديثها عند كل إطلاق)
+class AppConfig {
+  static const String appName = 'فرفشة';
+  static const String packageName = 'com.farafsha.app';
+  static const String version = '1.0.0';
+  static const int buildNumber = 9;
+}
 
 class AppUpdateInfo {
   final bool isUpdateAvailable;
@@ -62,46 +69,27 @@ class AppUpdateService {
 
   bool get isForceUpdateRequired => _currentUpdateInfo?.isForceUpdate ?? false;
 
-  PackageInfo? _packageInfo;
-  PackageInfo? get packageInfo => _packageInfo;
-
-  /// الحصول على بيانات الإصدار الحالي من التطبيق
-  Future<PackageInfo> getPackageInfo() async {
-    if (_packageInfo != null) return _packageInfo!;
-    try {
-      _packageInfo = await PackageInfo.fromPlatform();
-    } catch (e) {
-      debugPrint('⚠️ Could not load PackageInfo: $e');
-      _packageInfo = PackageInfo(
-        appName: 'فرفشة',
-        packageName: 'com.farafsha.app',
-        version: '1.0.0',
-        buildNumber: '8',
-      );
-    }
-    return _packageInfo!;
-  }
+  int get currentBuildNumber => AppConfig.buildNumber;
+  String get currentVersion => AppConfig.version;
 
   /// فحص توفر تحديث من السيرفر
   Future<AppUpdateInfo?> checkUpdate() async {
     try {
-      final info = await getPackageInfo();
-      final currentBuildNumber = int.tryParse(info.buildNumber) ?? 8;
-      final currentVersion = info.version;
-
+      const buildNum = AppConfig.buildNumber;
+      const ver = AppConfig.version;
       final platform = kIsWeb ? 'web' : (Platform.isIOS ? 'ios' : 'android');
 
       final data = await ApiService.instance.checkAppUpdate(
         platform: platform,
-        buildNumber: currentBuildNumber,
-        version: currentVersion,
+        buildNumber: buildNum,
+        version: ver,
       );
 
       if (data != null) {
         final updateInfo = AppUpdateInfo.fromMap(
           data,
-          currentVersion: currentVersion,
-          currentBuildNumber: currentBuildNumber,
+          currentVersion: ver,
+          currentBuildNumber: buildNum,
         );
         _currentUpdateInfo = updateInfo;
         return updateInfo;
