@@ -55,3 +55,5 @@ scripts/*.pem
 
 backend/public/*.ipa
 *.ipa
+
+backend/public/app_store_icon_1024.png
