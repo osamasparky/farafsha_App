@@ -72,14 +72,14 @@ jobs:
 
           # 1. Decode provisioning profile or fallback to repository file
           if [ -n "$BUILD_PROVISION_PROFILE_BASE64" ]; then
-            echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+            python3 -c "import base64, os; open('$PP_PATH', 'wb').write(base64.b64decode(os.environ['BUILD_PROVISION_PROFILE_BASE64'].strip()))"
           else
             cp ios/profiles/appstore.mobileprovision "$PP_PATH"
           fi
 
           # 2. Decode certificate or fallback to repository file
           if [ -n "$BUILD_CERTIFICATE_BASE64" ]; then
-            echo "$BUILD_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_RAW"
+            python3 -c "import base64, os; open('$CERTIFICATE_RAW', 'wb').write(base64.b64decode(os.environ['BUILD_CERTIFICATE_BASE64'].strip()))"
           elif [ -f "ios/profiles/certificate.p12" ]; then
             cp ios/profiles/certificate.p12 "$CERTIFICATE_RAW"
           fi
