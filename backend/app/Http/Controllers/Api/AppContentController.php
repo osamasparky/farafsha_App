@@ -308,6 +308,62 @@ class AppContentController extends Controller
             ],
         ]);
     }
+
+    /**
+     * فحص إصدار التطبيق والتحقق من التحديث الإجباري
+     */
+    public function checkVersion(Request $request): JsonResponse
+    {
+        $platform = strtolower($request->query('platform', 'android'));
+        $currentBuildNumber = (int) $request->query('build_number', 0);
+        $currentVersion = (string) $request->query('version', '1.0.0');
+
+        $settings = SiteSetting::get('app_update_settings', [
+            'force_update_enabled' => true,
+            'min_android_build' => 8,
+            'latest_android_version' => '1.0.0+8',
+            'min_ios_build' => 1,
+            'latest_ios_version' => '1.0.0+1',
+            'title' => 'تحديث إجباري جديد متوفر 🚀',
+            'message' => 'يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة لأداء أفضل للألعاب والصوت الجماعي. يرجى التحديث الآن للمتابعة!',
+            'play_store_url' => 'https://play.google.com/store/apps/details?id=com.farafsha.app',
+            'app_store_url' => 'https://apps.apple.com/app/id6738933221',
+            'direct_download_url' => 'https://farafsha.com/farafsha.aab',
+        ]);
+
+        $forceEnabled = (bool) ($settings['force_update_enabled'] ?? true);
+        $isIos = $platform === 'ios';
+
+        $minBuild = $isIos
+            ? (int) ($settings['min_ios_build'] ?? 1)
+            : (int) ($settings['min_android_build'] ?? 8);
+
+        $latestVersion = $isIos
+            ? ($settings['latest_ios_version'] ?? '1.0.0+1')
+            : ($settings['latest_android_version'] ?? '1.0.0+8');
+
+        $storeUrl = $isIos
+            ? ($settings['app_store_url'] ?? 'https://apps.apple.com/app/id6738933221')
+            : ($settings['play_store_url'] ?? 'https://play.google.com/store/apps/details?id=com.farafsha.app');
+
+        $isUpdateAvailable = $currentBuildNumber > 0 && $currentBuildNumber < $minBuild;
+        $isForceUpdate = $forceEnabled && $isUpdateAvailable;
+
+        return response()->json([
+            'status' => 'success',
+            'data' => [
+                'is_update_available' => $isUpdateAvailable,
+                'is_force_update' => $isForceUpdate,
+                'current_build_number' => $currentBuildNumber,
+                'min_build_number' => $minBuild,
+                'latest_version' => $latestVersion,
+                'title' => $settings['title'] ?? 'تحديث إجباري جديد متوفر 🚀',
+                'message' => $settings['message'] ?? 'يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة لأداء أفضل للألعاب والصوت الجماعي. يرجى التحديث الآن للمتابعة!',
+                'store_url' => $storeUrl,
+                'direct_download_url' => $settings['direct_download_url'] ?? 'https://farafsha.com/farafsha.aab',
+            ],
+        ]);
+    }
 }
 
 

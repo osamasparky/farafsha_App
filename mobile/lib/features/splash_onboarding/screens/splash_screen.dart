@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../../core/services/app_update_service.dart';
 import '../../../core/services/asset_sync_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
@@ -49,6 +50,14 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   }
 
   Future<void> _checkInitialSyncAndSession() async {
+    // 1. فحص التحديث الإجباري فور فتح التطبيق
+    final updateInfo = await AppUpdateService.instance.checkUpdate();
+    if (updateInfo != null && updateInfo.isForceUpdate) {
+      if (!mounted) return;
+      context.go('/force-update', extra: updateInfo);
+      return;
+    }
+
     final alreadySynced = await AssetSyncService.instance.hasCompletedInitialSync();
     if (!alreadySynced) {
       final success = await AssetSyncService.instance.startInitialSync();
@@ -64,6 +73,11 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   Future<void> _proceedAfterSync() async {
     await Future.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
+
+    if (AppUpdateService.instance.isForceUpdateRequired) {
+      context.go('/force-update', extra: AppUpdateService.instance.currentUpdateInfo);
+      return;
+    }
 
     if (AuthService.instance.isLoggedIn || AuthService.instance.isGuest) {
       context.go('/home');

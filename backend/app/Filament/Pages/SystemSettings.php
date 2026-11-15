@@ -30,12 +30,25 @@ class SystemSettings extends Page implements Forms\Contracts\HasForms
     {
         $mailSettings = SiteSetting::get('mail_settings', []);
         $otpSettings = SiteSetting::get('otp_settings', []);
+        $updateSettings = SiteSetting::get('app_update_settings', []);
 
         $activeWahaSession = SiteSetting::get('whatsapp_otp_session')
             ?: WahaSession::where('status', 'WORKING')->value('name')
             ?: 'UAE';
 
         $this->form->fill([
+            // إعدادات تحديث التطبيق الإجباري (Force Update)
+            'update_force_enabled' => $updateSettings['force_update_enabled'] ?? true,
+            'update_min_android_build' => $updateSettings['min_android_build'] ?? 8,
+            'update_latest_android_version' => $updateSettings['latest_android_version'] ?? '1.0.0+8',
+            'update_min_ios_build' => $updateSettings['min_ios_build'] ?? 1,
+            'update_latest_ios_version' => $updateSettings['latest_ios_version'] ?? '1.0.0+1',
+            'update_title' => $updateSettings['title'] ?? 'تحديث إجباري جديد متوفر 🚀',
+            'update_message' => $updateSettings['message'] ?? 'يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة لأداء أفضل للألعاب والصوت الجماعي. يرجى التحديث الآن للمتابعة!',
+            'update_play_store_url' => $updateSettings['play_store_url'] ?? 'https://play.google.com/store/apps/details?id=com.farafsha.app',
+            'update_app_store_url' => $updateSettings['app_store_url'] ?? 'https://apps.apple.com/app/id6738933221',
+            'update_direct_download_url' => $updateSettings['direct_download_url'] ?? 'https://farafsha.com/farafsha.aab',
+
             // إعدادات الواتساب والـ OTP
             'whatsapp_otp_session' => $activeWahaSession,
             'whatsapp_otp_enabled' => $otpSettings['whatsapp_enabled'] ?? true,
@@ -200,6 +213,75 @@ class SystemSettings extends Page implements Forms\Contracts\HasForms
                                             ->placeholder('مثال: osamasabry@msn.com'),
                                     ]),
                             ]),
+
+                        // تبويب تحديثات التطبيق الإجباري (Force Update)
+                        Forms\Components\Tabs\Tab::make('تحديثات التطبيق (Force Update)')
+                            ->icon('heroicon-o-arrow-up-circle')
+                            ->schema([
+                                Forms\Components\Section::make('التحكم في التحديث الإجباري للتطبيق')
+                                    ->description('عند تفعيل هذا الخيار ورفع رقم البناء، سيُجبر أي لاعب لديه إصدار أقدم على التحديث فور فتح التطبيق تلقائياً.')
+                                    ->schema([
+                                        Forms\Components\Toggle::make('update_force_enabled')
+                                            ->label('تفعيل التحديث الإجباري للتطبيق')
+                                            ->helperText('إذا تم التفعيل، سيتم إيقاف التطبيق لشاشة التحديث الإجباري لأي مستخدم يملك إصداراً أقل من المطلوب.')
+                                            ->default(true),
+
+                                        Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('update_min_android_build')
+                                                    ->label('أقل رقم بناء مطلوب لأندرويد (Version Code)')
+                                                    ->numeric()
+                                                    ->default(8)
+                                                    ->helperText('أي تطبيق أندرويد رقمه أقل من هذا الرقم سيُجبر على التحديث فوراً.')
+                                                    ->required(),
+
+                                                Forms\Components\TextInput::make('update_latest_android_version')
+                                                    ->label('رقم الإصدار الأحدث لأندرويد (الظاهر للمستخدم)')
+                                                    ->default('1.0.0+8')
+                                                    ->required(),
+
+                                                Forms\Components\TextInput::make('update_min_ios_build')
+                                                    ->label('أقل رقم بناء مطلوب لـ iOS (Build Number)')
+                                                    ->numeric()
+                                                    ->default(1)
+                                                    ->helperText('أي تطبيق iOS رقمه أقل من هذا الرقم سيُجبر على التحديث فوراً.')
+                                                    ->required(),
+
+                                                Forms\Components\TextInput::make('update_latest_ios_version')
+                                                    ->label('رقم الإصدار الأحدث لـ iOS (الظاهر للمستخدم)')
+                                                    ->default('1.0.0+1')
+                                                    ->required(),
+                                            ]),
+
+                                        Forms\Components\TextInput::make('update_title')
+                                            ->label('عنوان شاشة التحديث')
+                                            ->default('تحديث إجباري جديد متوفر 🚀')
+                                            ->required(),
+
+                                        Forms\Components\Textarea::make('update_message')
+                                            ->label('نص رسالة التحديث للمستخدم')
+                                            ->default('يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة لأداء أفضل للألعاب والصوت الجماعي. يرجى التحديث الآن للمتابعة!')
+                                            ->rows(3)
+                                            ->required(),
+
+                                        Forms\Components\Grid::make(2)
+                                            ->schema([
+                                                Forms\Components\TextInput::make('update_play_store_url')
+                                                    ->label('رابط التطبيق على متجر Google Play')
+                                                    ->default('https://play.google.com/store/apps/details?id=com.farafsha.app')
+                                                    ->required(),
+
+                                                Forms\Components\TextInput::make('update_app_store_url')
+                                                    ->label('رابط التطبيق على متجر Apple App Store')
+                                                    ->default('https://apps.apple.com/app/id6738933221')
+                                                    ->required(),
+                                            ]),
+
+                                        Forms\Components\TextInput::make('update_direct_download_url')
+                                            ->label('رابط التحميل المباشر البديل (APK / AAB)')
+                                            ->default('https://farafsha.com/farafsha.aab'),
+                                    ]),
+                            ]),
                     ])
                     ->columnSpanFull(),
             ])
@@ -247,9 +329,23 @@ class SystemSettings extends Page implements Forms\Contracts\HasForms
             'mail.from.name' => $mailSettings['from_name'],
         ]);
 
+        // 3. حفظ إعدادات تحديث التطبيق الإجباري (Force Update)
+        SiteSetting::set('app_update_settings', [
+            'force_update_enabled' => (bool) ($state['update_force_enabled'] ?? true),
+            'min_android_build' => (int) ($state['update_min_android_build'] ?? 8),
+            'latest_android_version' => $state['update_latest_android_version'] ?? '1.0.0+8',
+            'min_ios_build' => (int) ($state['update_min_ios_build'] ?? 1),
+            'latest_ios_version' => $state['update_latest_ios_version'] ?? '1.0.0+1',
+            'title' => $state['update_title'] ?? 'تحديث إجباري جديد متوفر 🚀',
+            'message' => $state['update_message'] ?? '',
+            'play_store_url' => $state['update_play_store_url'] ?? 'https://play.google.com/store/apps/details?id=com.farafsha.app',
+            'app_store_url' => $state['update_app_store_url'] ?? 'https://apps.apple.com/app/id6738933221',
+            'direct_download_url' => $state['update_direct_download_url'] ?? 'https://farafsha.com/farafsha.aab',
+        ], 'app_update');
+
         Notification::make()
             ->title('تم حفظ وتطبيق الإعدادات بنجاح 🟢')
-            ->body('تم تحديث إعدادات البريد والواتساب فورياً على كامل المنصة.')
+            ->body('تم تحديث إعدادات البريد والواتساب وتحديثات التطبيق فورياً على كامل المنصة.')
             ->success()
             ->send();
     }

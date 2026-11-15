@@ -1,6 +1,8 @@
 import 'package:go_router/go_router.dart';
 import '../models/game_session.dart';
+import '../services/app_update_service.dart';
 import '../../features/splash_onboarding/screens/splash_screen.dart';
+import '../../features/splash_onboarding/screens/force_update_screen.dart';
 import '../../features/splash_onboarding/screens/onboarding_flow_screen.dart';
 import '../../features/auth/screens/login_screen.dart';
 import '../../features/auth/screens/otp_screen.dart';
@@ -30,6 +32,28 @@ import '../../features/notifications/screens/notifications_screen.dart';
 final appRouter = GoRouter(
   initialLocation: '/',
   routes: [
+    GoRoute(
+      path: '/force-update',
+      builder: (context, state) {
+        final updateInfo = state.extra as AppUpdateInfo? ??
+            AppUpdateService.instance.currentUpdateInfo ??
+            const AppUpdateInfo(
+              isUpdateAvailable: true,
+              isForceUpdate: true,
+              currentBuildNumber: 1,
+              minBuildNumber: 8,
+              currentVersion: '1.0.0',
+              latestVersion: '1.0.0+8',
+              title: 'تحديث إجباري جديد متوفر 🚀',
+              message:
+                  'يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة. يرجى التحديث الآن للمتابعة!',
+              storeUrl:
+                  'https://play.google.com/store/apps/details?id=com.farafsha.app',
+              directDownloadUrl: 'https://farafsha.com/farafsha.aab',
+            );
+        return ForceUpdateScreen(updateInfo: updateInfo);
+      },
+    ),
     GoRoute(
       path: '/',
       builder: (context, state) => const SplashScreen(),

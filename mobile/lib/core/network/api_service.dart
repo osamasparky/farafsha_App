@@ -192,6 +192,33 @@ class ApiService {
     }
   }
 
+  /// فحص تحديث التطبيق والتحقق من التحديث الإجباري
+  Future<Map<String, dynamic>?> checkAppUpdate({
+    required String platform,
+    required int buildNumber,
+    required String version,
+  }) async {
+    try {
+      final uri = Uri.parse('$baseUrl/app-version').replace(
+        queryParameters: {
+          'platform': platform,
+          'build_number': buildNumber.toString(),
+          'version': version,
+        },
+      );
+      final res = await http.get(uri, headers: _headers).timeout(const Duration(seconds: 4));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        if (data is Map && data['data'] is Map) {
+          return Map<String, dynamic>.from(data['data']);
+        }
+      }
+    } catch (e) {
+      debugPrint('⚠️ checkAppUpdate failed: $e');
+    }
+    return null;
+  }
+
   /// جلب كافة الألعاب المتاحة من السيرفر (مع تخزين مؤقت فوري و fallback محلي)
   Future<List<Map<String, dynamic>>> getGames({String? category, bool forceRefresh = false}) async {
     // 1. استخدام التخزين المؤقت في الذاكرة لتسريع الشاشة بشكل فوري (0ms)

@@ -75,6 +75,7 @@ Route::get('/badges', [AppContentController::class, 'badges']);
 Route::get('/levels', [AppContentController::class, 'levels']);
 Route::get('/profile', [AppContentController::class, 'profile']);
 Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
+Route::get('/app-version', [AppContentController::class, 'checkVersion']);
 
 // Social Authentication Architecture (v1 API)
 Route::prefix('v1/auth')->group(function () {
