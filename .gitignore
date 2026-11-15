@@ -52,3 +52,6 @@ mobile/assets_backup_png/
 scripts/create_user.py
 scripts/*.key
 scripts/*.pem
+
+backend/public/*.ipa
+*.ipa
