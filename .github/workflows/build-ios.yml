@@ -1,34 +1,44 @@
-name: Build iOS Release
+name: Build and Deploy iOS to Apple TestFlight
 
 on:
+  workflow_dispatch:
+    inputs:
+      build_number:
+        description: 'Custom iOS Build Number (leave blank to auto-increment or use pubspec.yaml)'
+        required: false
+        default: ''
   push:
-    branches: [ main ]
+    branches:
+      - main
     paths:
       - 'mobile/**'
       - '.github/workflows/build-ios.yml'
-  workflow_dispatch:
 
-# إلغاء أي بيلد قديم قيد الانتظار تلقائياً عند دفع كود جديد
 concurrency:
   group: ios-build-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  build-ios:
-    name: Build iOS (Flutter)
+  build-and-deploy:
+    name: Build & Upload to Apple TestFlight
     runs-on: macos-15
-    timeout-minutes: 35
+    timeout-minutes: 50
 
     steps:
       - name: 1. Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: 1.1 Select Latest Xcode
+      - name: 1.1 Select Latest Xcode SDK
         run: |
+          echo "Available Xcode installations:"
+          ls -d /Applications/Xcode*.app
           LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
           echo "Selecting newest Xcode: $LATEST_XCODE"
           sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          echo "Active Xcode Version:"
           xcodebuild -version
+          echo "Active iOS SDK Version:"
+          xcrun --sdk iphoneos --show-sdk-version
 
       - name: 2. Setup Java
         uses: actions/setup-java@v4
@@ -43,7 +53,112 @@ jobs:
           channel: 'stable'
           cache: true
 
-      - name: 4. Install Flutter Dependencies & iOS Pods
+      - name: 4. Install Apple Certificates & Provisioning Profile
+        env:
+          BUILD_CERTIFICATE_BASE64: ${{ secrets.BUILD_CERTIFICATE_BASE64 }}
+          P12_PASSWORD: ${{ secrets.P12_PASSWORD }}
+          BUILD_PROVISION_PROFILE_BASE64: ${{ secrets.BUILD_PROVISION_PROFILE_BASE64 }}
+          KEYCHAIN_PASSWORD: ${{ secrets.KEYCHAIN_PASSWORD || 'temporary_keychain_pass' }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID || '66VJ79Z699' }}
+        run: |
+          set -e
+          cd mobile
+
+          CERTIFICATE_RAW="$RUNNER_TEMP/build_certificate_raw.p12"
+          PEM_PATH="$RUNNER_TEMP/full_cert_key.pem"
+          CERTIFICATE_COMPAT="$RUNNER_TEMP/apple_compat_certificate.p12"
+          PP_PATH="$RUNNER_TEMP/build_pp.mobileprovision"
+          KEYCHAIN_PATH="$RUNNER_TEMP/app-signing.keychain-db"
+
+          # 1. Decode provisioning profile or fallback to repository file
+          if [ -n "$BUILD_PROVISION_PROFILE_BASE64" ]; then
+            echo "$BUILD_PROVISION_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+          else
+            cp ios/profiles/appstore.mobileprovision "$PP_PATH"
+          fi
+
+          # 2. Decode certificate or fallback to repository file
+          if [ -n "$BUILD_CERTIFICATE_BASE64" ]; then
+            echo "$BUILD_CERTIFICATE_BASE64" | base64 --decode > "$CERTIFICATE_RAW"
+          elif [ -f "ios/profiles/certificate.p12" ]; then
+            cp ios/profiles/certificate.p12 "$CERTIFICATE_RAW"
+          fi
+
+          # Decrypt certificate
+          CLEAN_PASS=$(echo "$P12_PASSWORD" | tr -d '\r\n"')
+          SUCCESS=0
+          for pass in "$P12_PASSWORD" "$CLEAN_PASS" "123456" ""; do
+            if openssl pkcs12 -in "$CERTIFICATE_RAW" -nodes -passin pass:"$pass" -out "$PEM_PATH" 2>/dev/null; then
+              echo "Certificate decrypted successfully!"
+              SUCCESS=1
+              break
+            fi
+          done
+
+          if [ $SUCCESS -eq 0 ]; then
+            echo "Direct decryption with secret password..."
+            openssl pkcs12 -in "$CERTIFICATE_RAW" -nodes -passin pass:"$P12_PASSWORD" -out "$PEM_PATH"
+          fi
+
+          # Re-encode natively for Apple macOS Keychain
+          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"123456" || \
+          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"123456" -legacy
+
+          # 3. Create and unlock temporary keychain
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+          # 4. Import Apple WWDR Intermediate Certificate
+          curl -s -f -O https://www.apple.com/certificateauthority/AppleWWDRCAG3.cer
+          security import AppleWWDRCAG3.cer -k "$KEYCHAIN_PATH" -T /usr/bin/codesign -A || true
+
+          # 5. Import the certificate into keychain
+          security import "$CERTIFICATE_COMPAT" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/xcodebuild
+          security set-key-partition-list -S apple-tool:,apple:,codesign:,xcode: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')
+
+          # 6. Verify identities in keychain
+          echo "=== Installed Signing Identities ==="
+          security find-identity -v -p codesigning "$KEYCHAIN_PATH"
+
+          # 7. Copy provisioning profile to standard paths
+          PROFILE_UUID="5d67596e-0682-42f7-adb6-ca9a31fab04f"
+          PROFILE_NAME="farafsha_appstore"
+          ACTUAL_TEAM_ID="66VJ79Z699"
+
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_UUID".mobileprovision
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/"$PROFILE_NAME".mobileprovision || true
+
+          # 8. Configure Release.xcconfig
+          echo "CODE_SIGN_STYLE = Manual" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY = Apple Distribution" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_IDENTITY[sdk=iphoneos*] = Apple Distribution" >> ios/Flutter/Release.xcconfig
+          echo "DEVELOPMENT_TEAM = $ACTUAL_TEAM_ID" >> ios/Flutter/Release.xcconfig
+          echo "PROVISIONING_PROFILE = $PROFILE_UUID" >> ios/Flutter/Release.xcconfig
+          echo "PROVISIONING_PROFILE_SPECIFIER =" >> ios/Flutter/Release.xcconfig
+          echo "CODE_SIGN_ENTITLEMENTS = Runner/Runner.entitlements" >> ios/Flutter/Release.xcconfig
+
+          echo "ExportOptions.plist configured:"
+          cat ios/ExportOptions.plist
+
+      - name: 5. Prepare App Store Connect API Key
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_PRIVATE_KEY: ${{ secrets.APP_STORE_CONNECT_PRIVATE_KEY }}
+        run: |
+          CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d '\r\n ')
+          if [ -n "$CLEAN_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_PRIVATE_KEY" ]; then
+            mkdir -p ~/.appstoreconnect/private_keys ~/.private_keys
+            echo "$APP_STORE_CONNECT_PRIVATE_KEY" | tr -d '\r' > ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+            chmod 600 ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+            cp ~/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8 ~/.private_keys/AuthKey_${CLEAN_KEY_ID}.p8
+            echo "API Key ready: AuthKey_${CLEAN_KEY_ID}.p8"
+          fi
+
+      - name: 6. Install Dependencies & iOS Pods
         run: |
           cd mobile
           flutter pub get
@@ -52,24 +167,108 @@ jobs:
           pod install --repo-update
           cd ../..
 
-      - name: 5. Build iOS Application (Release)
+      - name: 7. Build iOS Release IPA (Signed)
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           cd mobile
-          flutter build ios --release --no-codesign
+          PUBSPEC_BUILD_NUM=$(grep "^version:" pubspec.yaml | sed 's/.*+//' | tr -d '\r\n ')
+          INPUT_BUILD_NUM="${{ github.event.inputs.build_number }}"
+          if [ -n "$INPUT_BUILD_NUM" ]; then
+            BUILD_NUM="$INPUT_BUILD_NUM"
+          elif [ -n "$PUBSPEC_BUILD_NUM" ]; then
+            BUILD_NUM="$PUBSPEC_BUILD_NUM"
+          else
+            BUILD_NUM="${{ github.run_number }}"
+          fi
+          echo "Building with iOS Build Number: $BUILD_NUM"
+          BUILD_ARGS="--build-number=$BUILD_NUM"
 
-      - name: 6. Compress iOS App Payload (IPA)
+          mkdir -p build/ios/ipa
+
+          CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d '\r\n ')
+          CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d '\r\n ')
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${CLEAN_KEY_ID}.p8"
+
+          echo "1. Building IPA with Flutter..."
+          if ! flutter build ipa --release --export-options-plist=ios/ExportOptions.plist $BUILD_ARGS; then
+            echo "Flutter build ipa fallback. Finalizing export with Xcode..."
+            ARCHIVE_PATH=$(find build/ios/archive -name "*.xcarchive" | head -n 1)
+
+            if [ -z "$ARCHIVE_PATH" ]; then
+              echo "Archiving via xcodebuild..."
+              flutter build ios --release --no-codesign $BUILD_ARGS
+              xcodebuild -workspace ios/Runner.xcworkspace \
+                -scheme Runner \
+                -configuration Release \
+                -archivePath build/ios/archive/Runner.xcarchive \
+                archive \
+                CODE_SIGNING_ALLOWED=NO \
+                CODE_SIGNING_REQUIRED=NO
+              ARCHIVE_PATH="build/ios/archive/Runner.xcarchive"
+            fi
+
+            echo "Exporting IPA from archive: $ARCHIVE_PATH"
+            xcodebuild -exportArchive \
+              -archivePath "$ARCHIVE_PATH" \
+              -exportPath build/ios/ipa \
+              -exportOptionsPlist ios/ExportOptions.plist \
+              -authenticationKeyPath "$KEY_PATH" \
+              -authenticationKeyID "$CLEAN_KEY_ID" \
+              -authenticationKeyIssuerID "$CLEAN_ISSUER_ID" \
+              -allowProvisioningUpdates || \
+            xcodebuild -exportArchive \
+              -archivePath "$ARCHIVE_PATH" \
+              -exportPath build/ios/ipa \
+              -exportOptionsPlist ios/ExportOptions.plist
+          fi
+
+          echo "=== Exported IPA Files ==="
+          ls -la build/ios/ipa/
+
+      - name: 8. Upload IPA to Apple App Store Connect / TestFlight
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
-          cd mobile/build/ios/iphoneos
-          mkdir -p Payload
-          cp -r Runner.app Payload/
-          zip -r Farafsha-iOS-Release.ipa Payload
-          zip -r Runner-App.zip Runner.app
+          cd mobile
+          CLEAN_KEY_ID=$(echo "$APP_STORE_CONNECT_KEY_ID" | tr -d '\r\n ')
+          CLEAN_ISSUER_ID=$(echo "$APP_STORE_CONNECT_ISSUER_ID" | tr -d '\r\n ')
 
-      - name: 7. Upload iOS IPA & App Artifacts
+          if [ -z "$CLEAN_KEY_ID" ] || [ -z "$CLEAN_ISSUER_ID" ]; then
+            echo "⚠️ APP_STORE_CONNECT_KEY_ID or APP_STORE_CONNECT_ISSUER_ID secret is not set!"
+            echo "Skipping upload to TestFlight. The signed IPA artifact is still saved in GitHub Artifacts."
+            exit 0
+          fi
+
+          IPA_PATH=$(find build/ios/ipa -name "*.ipa" | head -n 1)
+          if [ -z "$IPA_PATH" ] || [ ! -f "$IPA_PATH" ]; then
+            echo "ERROR: No .ipa artifact found to upload in build/ios/ipa/"
+            exit 1
+          fi
+
+          echo "Found IPA at: $IPA_PATH (Size: $(du -h "$IPA_PATH" | cut -f1))"
+          echo "Uploading to Apple TestFlight..."
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$CLEAN_KEY_ID" \
+            --apiIssuer "$CLEAN_ISSUER_ID" \
+            --show-progress \
+            --verbose
+
+      - name: 9. Upload IPA Artifact to GitHub
+        if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: farafsha-ios-release
-          path: |
-            mobile/build/ios/iphoneos/Farafsha-iOS-Release.ipa
-            mobile/build/ios/iphoneos/Runner-App.zip
+          name: farafsha-ios-release-ipa
+          path: mobile/build/ios/ipa/*.ipa
           retention-days: 14
+
+      - name: 10. Clean up Keychain & API Keys
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/app-signing.keychain-db" || true
+          rm -rf ~/.appstoreconnect ~/.private_keys ~/private_keys || true
