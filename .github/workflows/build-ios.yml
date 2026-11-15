@@ -8,48 +8,56 @@ on:
       - '.github/workflows/build-ios.yml'
   workflow_dispatch:
 
+# إلغاء أي بيلد قديم قيد الانتظار تلقائياً عند دفع كود جديد
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build-ios:
     name: Build iOS (Flutter)
-    runs-on: macos-13
-    timeout-minutes: 45
+    runs-on: macos-15
+    timeout-minutes: 35
 
     steps:
-      - name: Checkout Code Repository
+      - name: 1. Checkout Code Repository
         uses: actions/checkout@v4
 
-      - name: Setup Java
+      - name: 1.1 Select Latest Xcode
+        run: |
+          LATEST_XCODE=$(ls -d /Applications/Xcode*.app | sort -V | tail -n 1)
+          echo "Selecting newest Xcode: $LATEST_XCODE"
+          sudo xcode-select -s "$LATEST_XCODE/Contents/Developer"
+          xcodebuild -version
+
+      - name: 2. Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
           java-version: '17'
 
-      - name: Setup Flutter SDK
+      - name: 3. Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
           flutter-version: '3.24.3'
           channel: 'stable'
           cache: true
 
-      - name: Install CocoaPods
-        run: sudo gem install cocoapods
-
-      - name: Flutter Dependencies
+      - name: 4. Install Flutter Dependencies & iOS Pods
         run: |
           cd mobile
           flutter pub get
-
-      - name: Install iOS Pods
-        run: |
-          cd mobile/ios
+          cd ios
+          rm -f Podfile.lock
           pod install --repo-update
+          cd ../..
 
-      - name: Build iOS Application (Release)
+      - name: 5. Build iOS Application (Release)
         run: |
           cd mobile
           flutter build ios --release --no-codesign
 
-      - name: Compress iOS App Payload
+      - name: 6. Compress iOS App Payload (IPA)
         run: |
           cd mobile/build/ios/iphoneos
           mkdir -p Payload
@@ -57,7 +65,7 @@ jobs:
           zip -r Farafsha-iOS-Release.ipa Payload
           zip -r Runner-App.zip Runner.app
 
-      - name: Upload iOS IPA & App Artifacts
+      - name: 7. Upload iOS IPA & App Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: farafsha-ios-release
