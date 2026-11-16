@@ -44,12 +44,28 @@ jobs:
       - name: 5. Build Android App Bundle (AAB)
         run: |
           cd mobile
-          flutter build appbundle --release
+          PUBSPEC_BUILD_NUM=$(grep "^version:" pubspec.yaml | sed 's/.*+//' | tr -d '\r\n ')
+          RUN_NUM="${{ github.run_number }}"
+          if [ -n "$PUBSPEC_BUILD_NUM" ] && [ "$PUBSPEC_BUILD_NUM" -gt "$RUN_NUM" ]; then
+            BUILD_NUM="$PUBSPEC_BUILD_NUM"
+          else
+            BUILD_NUM="$RUN_NUM"
+          fi
+          echo "Building AAB with build number: $BUILD_NUM"
+          flutter build appbundle --release --build-number=$BUILD_NUM
 
       - name: 6. Build Android APK (Release)
         run: |
           cd mobile
-          flutter build apk --release
+          PUBSPEC_BUILD_NUM=$(grep "^version:" pubspec.yaml | sed 's/.*+//' | tr -d '\r\n ')
+          RUN_NUM="${{ github.run_number }}"
+          if [ -n "$PUBSPEC_BUILD_NUM" ] && [ "$PUBSPEC_BUILD_NUM" -gt "$RUN_NUM" ]; then
+            BUILD_NUM="$PUBSPEC_BUILD_NUM"
+          else
+            BUILD_NUM="$RUN_NUM"
+          fi
+          echo "Building APK with build number: $BUILD_NUM"
+          flutter build apk --release --build-number=$BUILD_NUM
 
       - name: 7. Upload AAB Artifact
         uses: actions/upload-artifact@v4
