@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import '../models/game_session.dart';
 import '../services/app_update_service.dart';
+import '../services/auth_service.dart';
 import '../../features/splash_onboarding/screens/splash_screen.dart';
 import '../../features/splash_onboarding/screens/force_update_screen.dart';
 import '../../features/splash_onboarding/screens/onboarding_flow_screen.dart';
@@ -102,6 +103,14 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game-setup',
+      redirect: (context, state) {
+        final gameData = state.extra as Map<String, dynamic>?;
+        final gameId = gameData?['slug']?.toString() ?? 'amthal-shaabiya';
+        if (!AuthService.instance.isGameUnlocked(gameId)) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final gameData = state.extra as Map<String, dynamic>?;
         final gameId = gameData?['slug']?.toString() ?? 'amthal-shaabiya';
@@ -110,6 +119,13 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game-setup/:id',
+      redirect: (context, state) {
+        final gameId = state.pathParameters['id'] ?? 'amthal-shaabiya';
+        if (!AuthService.instance.isGameUnlocked(gameId)) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final gameId = state.pathParameters['id'] ?? 'amthal-shaabiya';
         final gameData = state.extra as Map<String, dynamic>?;
@@ -118,6 +134,17 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/players',
+      redirect: (context, state) {
+        String slug = 'amthal-shaabiya';
+        if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          slug = data['gameSlug']?.toString() ?? slug;
+        }
+        if (!AuthService.instance.isGameUnlocked(slug)) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         if (state.extra is Map<String, dynamic>) {
           final data = state.extra as Map<String, dynamic>;
@@ -170,6 +197,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game/quotes',
+      redirect: (context, state) {
+        if (!AuthService.instance.isGameUnlocked('famous-quotes')) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final session = state.extra as GameSession?;
         return MovieQuotesGameScreen(session: session);
@@ -177,6 +210,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game/taboo',
+      redirect: (context, state) {
+        if (!AuthService.instance.isGameUnlocked('forbidden-words')) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final session = state.extra as GameSession?;
         return TabooGameScreen(session: session);
@@ -184,10 +223,22 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game/draw',
+      redirect: (context, state) {
+        if (!AuthService.instance.isGameUnlocked('acting-drawing')) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) => const DrawingGameScreen(),
     ),
     GoRoute(
       path: '/game/autobus-complete',
+      redirect: (context, state) {
+        if (!AuthService.instance.isGameUnlocked('autobus-complete')) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final session = state.extra as GameSession?;
         return AutobusGameScreen(session: session);
@@ -195,6 +246,17 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/game/lammah-host',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('lammah')) {
+          return '/mode-select';
+        }
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        final gameSlug = extra['gameSlug'] as String? ?? 'amthal-shaabiya';
+        if (!AuthService.instance.isGameUnlocked(gameSlug)) {
+          return '/home';
+        }
+        return null;
+      },
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         final gameSlug = extra['gameSlug'] as String? ?? 'amthal-shaabiya';
@@ -231,6 +293,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/online-room',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('online')) {
+          return '/mode-select';
+        }
+        return null;
+      },
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>?;
         return OnlineRoomScreen(
@@ -242,6 +310,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/join-room',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('online')) {
+          return '/mode-select';
+        }
+        return null;
+      },
       builder: (context, state) {
         final code = state.uri.queryParameters['code'] ?? (state.extra as String?);
         return JoinRoomScreen(initialCode: code);
@@ -249,6 +323,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/online-gameplay',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('online')) {
+          return '/mode-select';
+        }
+        return null;
+      },
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         return OnlineGameplayScreen(

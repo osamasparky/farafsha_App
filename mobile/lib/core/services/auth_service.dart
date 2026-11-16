@@ -37,19 +37,10 @@ class AuthService extends ChangeNotifier {
     }
   }
 
-  // جميع الألعاب مفعلة ومتاحة للعب
+  // ألعاب الزائر المفتوحة (لعبة الأمثال الشعبية فقط)
   static const List<String> kGuestUnlockedSlugs = [
     'amthal-shaabiya',
-    'famous-quotes',
-    'forbidden-words',
-    'taboo-words',
-    'speed-trivia',
-    'guess-song',
-    'who-am-i',
-    'autobus-complete',
-    'two-truths-and-lie',
-    'acting-drawing',
-    'draw-guess',
+    'amthal',
   ];
 
   bool get isLoggedIn => _isLoggedIn;
@@ -144,13 +135,27 @@ class AuthService extends ChangeNotifier {
   }
 
   /// هل هذه اللعبة مفتوحة للمستخدم الحالي؟
-  /// - إذا كان المستخدم مسجلاً (غير ضيف) -> كل الألعاب مفتوحة 100%.
-  /// - إذا كان ضيفاً (Guest) -> يفتح له لعبتان فقط (أمثال شعبية وجمل مشهورة).
+  /// - إذا كان المستخدم مسجلاً ومسجل دخوله (غير ضيف) -> كل الألعاب مفتوحة 100%.
+  /// - إذا كان ضيفاً (Guest) أو غير مسجل -> لعبة الأمثال الشعبية فقط هي المتاحة.
   bool isGameUnlocked(String slug) {
     if (!_isGuest && _isLoggedIn) {
       return true;
     }
-    return kGuestUnlockedSlugs.contains(slug);
+    final normalized = slug.trim().toLowerCase();
+    return kGuestUnlockedSlugs.contains(normalized) ||
+        normalized == 'amthal' ||
+        normalized == 'amthal-shaabiya' ||
+        normalized.contains('amthal');
+  }
+
+  /// هل نمط اللعب مفتوح للمستخدم الحالي؟
+  /// - النمط المحلي ('local') متاح للجميع بما في ذلك الزائر (Guest).
+  /// - باقي الأنماط ('lammah', 'online') متاحة فقط للمسجلين داخل المنصة.
+  bool isModeUnlocked(String modeSlug) {
+    if (!_isGuest && _isLoggedIn) {
+      return true;
+    }
+    return modeSlug.toLowerCase().trim() == 'local';
   }
 
   /// الدخول كـ زائر

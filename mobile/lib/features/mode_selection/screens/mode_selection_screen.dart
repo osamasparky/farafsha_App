@@ -7,6 +7,7 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/guest_locked_modal.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
 class ModeSelectionScreen extends StatefulWidget {
@@ -53,6 +54,9 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
   @override
   void initState() {
     super.initState();
+    if (!AuthService.instance.isModeUnlocked(_selectedMode)) {
+      _selectedMode = 'local';
+    }
     _loadModes();
   }
 
@@ -144,6 +148,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     final badge = mode['badge']?.toString() ?? '';
                     final imageUrl = mode['image_url']?.toString();
                     final fallbackAsset = _fallbackAsset(slug);
+                    final isUnlocked = AuthService.instance.isModeUnlocked(slug);
                     final color = _parseColor(
                       mode['highlight_color']?.toString(),
                       slug == 'lammah' ? const Color(0xFFFF8A4C) : const Color(0xFFA35BFF),
@@ -159,6 +164,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                         imageUrl: imageUrl,
                         badge: badge,
                         highlightColor: color,
+                        isUnlocked: isUnlocked,
                       ),
                     );
                   }).toList(),
@@ -171,6 +177,21 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
               GameButton(
                 text: 'متابعة',
                 onPressed: () {
+                  if (!AuthService.instance.isModeUnlocked(_selectedMode)) {
+                    final currentModeData = activeModes.firstWhere(
+                      (m) => m['slug'] == _selectedMode,
+                      orElse: () => {'title': 'طريقة اللعب'},
+                    );
+                    final title = currentModeData['title']?.toString() ?? 'طريقة اللعب';
+                    GuestLockedModal.show(
+                      context,
+                      gameTitle: title,
+                      customTitle: 'طريقة اللعب للمسجلين فقط! 🔒',
+                      customMessage:
+                          'طريقة "$title" متاحة فقط للأعضاء المسجلين في المنصة.\nسجّل دخولك الآن واستمتع بجميع طرق اللعب واللمّة والتحديات أونلاين واحفظ نقاطك!',
+                    );
+                    return;
+                  }
                   if (_selectedMode == 'local') {
                     context.go('/home');
                   } else if (_selectedMode == 'lammah') {
@@ -196,11 +217,23 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
     String? imageUrl,
     required String badge,
     Color highlightColor = const Color(0xFFA35BFF),
+    required bool isUnlocked,
   }) {
-    final bool isSelected = _selectedMode == modeId;
+    final bool isSelected = _selectedMode == modeId && isUnlocked;
 
     return GestureDetector(
       onTap: () {
+        if (!isUnlocked) {
+          HapticFeedback.lightImpact();
+          GuestLockedModal.show(
+            context,
+            gameTitle: title,
+            customTitle: 'طريقة اللعب للمسجلين فقط! 🔒',
+            customMessage:
+                'طريقة "$title" متاحة فقط للأعضاء المسجلين في المنصة.\nسجّل دخولك الآن واستمتع بجميع طرق اللعب واللمّة والتحديات أونلاين واحفظ نقاطك!',
+          );
+          return;
+        }
         HapticFeedback.selectionClick();
         setState(() => _selectedMode = modeId);
       },
@@ -219,10 +252,18 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                   end: Alignment.bottomRight,
                 )
               : null,
-          color: isSelected ? null : const Color(0xFF1B0E38).withValues(alpha: 0.9),
+          color: isSelected
+              ? null
+              : (isUnlocked
+                  ? const Color(0xFF1B0E38).withValues(alpha: 0.9)
+                  : const Color(0xFF130926).withValues(alpha: 0.8)),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: isSelected ? highlightColor : LammaColors.cardBorder,
+            color: isSelected
+                ? highlightColor
+                : (isUnlocked
+                    ? LammaColors.cardBorder
+                    : const Color(0xFFFFD27A).withValues(alpha: 0.35)),
             width: isSelected ? 2.5 : 1.2,
           ),
           boxShadow: isSelected
@@ -233,13 +274,15 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     spreadRadius: 1,
                   ),
                 ]
-              : [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 10,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
+              : (isUnlocked
+                  ? [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.3),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ]
+                  : []),
         ),
         child: Row(
           children: [
@@ -287,15 +330,15 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color: highlightColor.withValues(alpha: 0.25),
+                      color: (isUnlocked ? highlightColor : const Color(0xFFFFD27A)).withValues(alpha: 0.22),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      badge,
+                      isUnlocked ? badge : 'للمسجلين فقط 🔒',
                       style: GoogleFonts.cairo(
                         fontSize: 11,
                         fontWeight: FontWeight.w800,
-                        color: highlightColor,
+                        color: isUnlocked ? highlightColor : const Color(0xFFFFD27A),
                       ),
                     ),
                   ),
@@ -305,7 +348,7 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     style: GoogleFonts.cairo(
                       fontSize: 20,
                       fontWeight: FontWeight.w900,
-                      color: Colors.white,
+                      color: isUnlocked ? Colors.white : Colors.white70,
                     ),
                   ),
                   const SizedBox(height: 2),
@@ -314,28 +357,34 @@ class _ModeSelectionScreenState extends State<ModeSelectionScreen> {
                     style: GoogleFonts.cairo(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: const Color(0xFFD6C8F5),
+                      color: isUnlocked ? const Color(0xFFD6C8F5) : const Color(0xFFA99BC8),
                       height: 1.35,
                     ),
                   ),
                 ],
               ),
             ),
-            // علامة الاختيار
+            // علامة الاختيار أو أيقونة القفل
             Container(
-              width: 26,
-              height: 26,
+              width: 28,
+              height: 28,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isSelected ? highlightColor : Colors.transparent,
+                color: isSelected
+                    ? highlightColor
+                    : (isUnlocked ? Colors.transparent : Colors.black45),
                 border: Border.all(
-                  color: isSelected ? Colors.white : Colors.white38,
-                  width: 2,
+                  color: isSelected
+                      ? Colors.white
+                      : (isUnlocked ? Colors.white38 : const Color(0xFFFFD27A)),
+                  width: isSelected ? 2 : 1.5,
                 ),
               ),
               child: isSelected
                   ? const Icon(Icons.check_rounded, color: Colors.white, size: 16)
-                  : null,
+                  : (!isUnlocked
+                      ? const Icon(Icons.lock_rounded, color: Color(0xFFFFD27A), size: 14)
+                      : null),
             ),
           ],
         ),
@@ -669,20 +718,31 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
                 final name = game['name']?.toString() ?? slug;
                 final category = game['category']?.toString();
                 final isSelected = _selectedGameSlug == slug;
+                final isUnlocked = AuthService.instance.isGameUnlocked(slug);
                 final icon = _getGameIcon(slug);
 
                 return SizedBox(
                   width: (MediaQuery.of(context).size.width - 56) / 2,
                   child: GestureDetector(
-                    onTap: () => setState(() => _selectedGameSlug = slug),
+                    onTap: () {
+                      if (!isUnlocked) {
+                        GuestLockedModal.show(context, gameTitle: name);
+                        return;
+                      }
+                      setState(() => _selectedGameSlug = slug);
+                    },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 180),
                       padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 10),
                       decoration: BoxDecoration(
-                        color: isSelected ? const Color(0xFF451A8A) : Colors.white.withValues(alpha: 0.05),
+                        color: isSelected
+                            ? const Color(0xFF451A8A)
+                            : (isUnlocked ? Colors.white.withValues(alpha: 0.05) : Colors.black.withValues(alpha: 0.2)),
                         borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          color: isSelected ? LammaColors.gold500 : Colors.white24,
+                          color: isSelected
+                              ? LammaColors.gold500
+                              : (isUnlocked ? Colors.white24 : const Color(0xFFFFD27A).withValues(alpha: 0.35)),
                           width: isSelected ? 2 : 1,
                         ),
                         boxShadow: isSelected
@@ -702,12 +762,14 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
                             decoration: BoxDecoration(
                               color: isSelected
                                   ? LammaColors.gold500.withValues(alpha: 0.25)
-                                  : Colors.white.withValues(alpha: 0.08),
+                                  : (isUnlocked ? Colors.white.withValues(alpha: 0.08) : Colors.black38),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               icon,
-                              color: isSelected ? LammaColors.gold500 : const Color(0xFFD9C2FF),
+                              color: isSelected
+                                  ? LammaColors.gold500
+                                  : (isUnlocked ? const Color(0xFFD9C2FF) : const Color(0xFFFFD27A)),
                               size: 18,
                             ),
                           ),
@@ -724,25 +786,29 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
                                   style: GoogleFonts.cairo(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
-                                    color: Colors.white,
+                                    color: isUnlocked ? Colors.white : Colors.white70,
                                   ),
                                 ),
                                 if (category != null)
                                   Text(
-                                    category,
+                                    isUnlocked ? category : 'للمسجلين فقط 🔒',
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: GoogleFonts.cairo(
                                       fontSize: 10,
                                       fontWeight: FontWeight.w600,
-                                      color: isSelected ? LammaColors.gold300 : const Color(0xFFA99BC8),
+                                      color: isSelected
+                                          ? LammaColors.gold300
+                                          : (isUnlocked ? const Color(0xFFA99BC8) : const Color(0xFFFFD27A)),
                                     ),
                                   ),
                               ],
                             ),
                           ),
                           if (isSelected)
-                            const Icon(Icons.check_circle_rounded, color: LammaColors.gold500, size: 16),
+                            const Icon(Icons.check_circle_rounded, color: LammaColors.gold500, size: 16)
+                          else if (!isUnlocked)
+                            const Icon(Icons.lock_rounded, color: Color(0xFFFFD27A), size: 14),
                         ],
                       ),
                     ),
@@ -757,6 +823,10 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
             GameButton(
               text: 'ابدأ اللمّة الآن 🎤',
               onPressed: () {
+                if (!AuthService.instance.isGameUnlocked(_selectedGameSlug)) {
+                  GuestLockedModal.show(context, gameTitle: 'هذه اللعبة');
+                  return;
+                }
                 Navigator.pop(context); // إغلاق الشيت
                 context.push(
                   '/game/lammah-host',
@@ -890,6 +960,10 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
   }
 
   Future<void> _handleCreateRoom() async {
+    if (!AuthService.instance.isGameUnlocked(_selectedGameSlug)) {
+      GuestLockedModal.show(context, gameTitle: 'هذه اللعبة');
+      return;
+    }
     setState(() => _isLoadingHost = true);
     HapticFeedback.heavyImpact();
 
@@ -1154,10 +1228,15 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
               final game = _displayGames[index];
               final slug = game['slug'] as String;
               final isSel = _selectedGameSlug == slug;
+              final isUnlocked = AuthService.instance.isGameUnlocked(slug);
 
               return GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
+                  if (!isUnlocked) {
+                    GuestLockedModal.show(context, gameTitle: game['name'] as String);
+                    return;
+                  }
                   setState(() => _selectedGameSlug = slug);
                 },
                 child: AnimatedContainer(
@@ -1165,29 +1244,51 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
                   width: 110,
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: isSel ? const Color(0xFF4A2090) : const Color(0xFF26144D),
+                    color: isSel
+                        ? const Color(0xFF4A2090)
+                        : (isUnlocked ? const Color(0xFF26144D) : const Color(0xFF1B0E38)),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: isSel ? LammaColors.gold500 : const Color(0xFFA35BFF).withValues(alpha: 0.3),
+                      color: isSel
+                          ? LammaColors.gold500
+                          : (isUnlocked
+                              ? const Color(0xFFA35BFF).withValues(alpha: 0.3)
+                              : const Color(0xFFFFD27A).withValues(alpha: 0.3)),
                       width: isSel ? 2 : 1,
                     ),
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  child: Stack(
                     children: [
-                      const Icon(Icons.videogame_asset_rounded, color: LammaColors.gold500, size: 28),
-                      const SizedBox(height: 6),
-                      Text(
-                        game['name'] as String,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.cairo(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Colors.white,
+                      Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              isUnlocked ? Icons.videogame_asset_rounded : Icons.lock_rounded,
+                              color: isUnlocked ? LammaColors.gold500 : const Color(0xFFFFD27A),
+                              size: 28,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              game['name'] as String,
+                              textAlign: TextAlign.center,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: GoogleFonts.cairo(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w800,
+                                color: isUnlocked ? Colors.white : Colors.white70,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
+                      if (!isUnlocked)
+                        const Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Icon(Icons.lock_rounded, size: 14, color: Color(0xFFFFD27A)),
+                        ),
                     ],
                   ),
                 ),

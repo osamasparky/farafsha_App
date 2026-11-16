@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/guest_locked_modal.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
 
 class GameSetupScreen extends StatefulWidget {
@@ -31,6 +33,14 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
     super.initState();
     _game = widget.initialGameData;
     _loadGameDetails();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!AuthService.instance.isGameUnlocked(widget.gameId)) {
+        if (mounted) {
+          context.pop();
+          GuestLockedModal.show(context, gameTitle: _game?['name'] ?? 'اللعبة');
+        }
+      }
+    });
   }
 
   Future<void> _loadGameDetails() async {
@@ -203,6 +213,11 @@ class _GameSetupScreenState extends State<GameSetupScreen> {
             GameButton(
               text: 'ابدأ اللعبة',
               onPressed: () {
+                if (!AuthService.instance.isGameUnlocked(widget.gameId)) {
+                  GuestLockedModal.show(context, gameTitle: _game?['name'] ?? 'اللعبة');
+                  return;
+                }
+
                 final targetRoute = widget.gameId == 'famous-quotes'
                     ? '/game/quotes'
                     : (widget.gameId == 'autobus-complete'
