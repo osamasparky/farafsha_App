@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/game_session.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
@@ -94,7 +95,24 @@ class _PlayersScreenState extends State<PlayersScreen> {
 
   void _resetToDefaults() {
     final count = widget.playersCount.clamp(2, kDefaultPlayers.length);
-    final selected = kDefaultPlayers.take(count).map((p) => p.name).toList();
+    final defaultNames = kDefaultPlayers.map((p) => p.name).toList();
+
+    // وضع اسم المستخدم المسجل أولاً ثم إكمال الباقي من القائمة الافتراضية
+    String loggedInName = '';
+    if (!AuthService.instance.isGuest) {
+      loggedInName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
+      if (loggedInName.isEmpty) {
+        loggedInName = AuthService.instance.userName.trim();
+      }
+    }
+
+    final List<String> selected;
+    if (loggedInName.isNotEmpty) {
+      final rest = defaultNames.where((n) => n != loggedInName).take(count - 1).toList();
+      selected = [loggedInName, ...rest];
+    } else {
+      selected = defaultNames.take(count).toList();
+    }
 
     // توزيع اللاعبين على الفريقين بالتساوي
     final half = (selected.length / 2).ceil();

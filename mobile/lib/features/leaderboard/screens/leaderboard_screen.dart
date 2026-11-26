@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
@@ -49,6 +50,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
   }
 
   void _loadFallbackData(String period) {
+    final userName = AuthService.instance.userName.trim();
+    final displayName = userName.isNotEmpty ? 'أنت ($userName)' : 'أنت';
+
     if (period == 'monthly') {
       setState(() {
         _podium = [
@@ -59,9 +63,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         _rankings = [
           {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 5830, 'rank': 4},
           {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 4920, 'rank': 5},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 3420, 'rank': 8, 'is_current_user': true},
+          {'player_name': displayName, 'avatar': 'assets/images/av-karim.webp', 'score': 3420, 'rank': 8, 'is_current_user': true},
         ];
-        _currentUser = {'player_name': 'أنت (أسامة)', 'score': 3420, 'rank': 8};
+        _currentUser = {'player_name': displayName, 'score': 3420, 'rank': 8};
         _isLoading = false;
       });
     } else if (period == 'all_time') {
@@ -75,9 +79,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           {'player_name': 'ياسين', 'avatar': 'assets/images/av-ahmed.webp', 'score': 16300, 'rank': 4},
           {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 14750, 'rank': 5},
           {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 12900, 'rank': 6},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 8650, 'rank': 15, 'is_current_user': true},
+          {'player_name': displayName, 'avatar': 'assets/images/av-karim.webp', 'score': 8650, 'rank': 15, 'is_current_user': true},
         ];
-        _currentUser = {'player_name': 'أنت (أسامة)', 'score': 8650, 'rank': 15};
+        _currentUser = {'player_name': displayName, 'score': 8650, 'rank': 15};
         _isLoading = false;
       });
     } else {
@@ -90,9 +94,9 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
         _rankings = [
           {'player_name': 'منة', 'avatar': 'assets/images/av-mena.webp', 'score': 1760, 'rank': 4},
           {'player_name': 'كريم', 'avatar': 'assets/images/av-karim.webp', 'score': 1520, 'rank': 5},
-          {'player_name': 'أنت (أسامة)', 'avatar': 'assets/images/av-karim.webp', 'score': 980, 'rank': 12, 'is_current_user': true},
+          {'player_name': displayName, 'avatar': 'assets/images/av-karim.webp', 'score': 980, 'rank': 12, 'is_current_user': true},
         ];
-        _currentUser = {'player_name': 'أنت (أسامة)', 'score': 980, 'rank': 12};
+        _currentUser = {'player_name': displayName, 'score': 980, 'rank': 12};
         _isLoading = false;
       });
     }
@@ -212,27 +216,60 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                 Expanded(
                   child: _isLoading
                       ? const Center(child: CircularProgressIndicator(color: LammaColors.gold500))
-                      : Column(
-                          children: [
-                            // منصة التتويج الثلاثية
-                            _buildPodium(firstPlace, secondPlace, thirdPlace),
-
-                            const SizedBox(height: 12),
-
-                            // باقي قائمة الترتيب
-                            Expanded(
-                              child: ListView.separated(
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: _rankings.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 8),
-                                itemBuilder: (context, index) {
-                                  final item = _rankings[index];
-                                  return _buildRankRow(item);
-                                },
+                      : (_podium.isEmpty && _rankings.isEmpty)
+                          ? Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Icon(Icons.emoji_events_outlined, color: LammaColors.gold500, size: 56),
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    'لا توجد نتائج في لوحة الصدارة حالياً',
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    'العب جولة جديدة وسجل أول نقاطك لتتصدر القائمة!',
+                                    textAlign: TextAlign.center,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 13,
+                                      color: Colors.white70,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  ElevatedButton.icon(
+                                    onPressed: () => _fetchLeaderboard(_periodKeys[_selectedTab]),
+                                    icon: const Icon(Icons.refresh_rounded),
+                                    label: Text('تحديث', style: GoogleFonts.cairo(fontWeight: FontWeight.w800)),
+                                  ),
+                                ],
                               ),
+                            )
+                          : Column(
+                              children: [
+                                // منصة التتويج الثلاثية
+                                _buildPodium(firstPlace, secondPlace, thirdPlace),
+
+                                const SizedBox(height: 12),
+
+                                // باقي قائمة الترتيب
+                                Expanded(
+                                  child: ListView.separated(
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: _rankings.length,
+                                    separatorBuilder: (_, __) => const SizedBox(height: 8),
+                                    itemBuilder: (context, index) {
+                                      final item = _rankings[index];
+                                      return _buildRankRow(item);
+                                    },
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
                 ),
               ],
             ),
@@ -284,6 +321,36 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
     );
   }
 
+  String _normalizeAvatarPath(String? raw) {
+    final val = (raw ?? '').trim();
+    if (val.isEmpty) return 'assets/images/av-karim.webp';
+    if (val.startsWith('http://') || val.startsWith('https://')) return val;
+    if (val.startsWith('assets/')) {
+      return val.replaceAll('.png', '.webp');
+    }
+    return 'assets/images/${val.replaceAll('.png', '.webp').endsWith('.webp') ? val.replaceAll('.png', '.webp') : '$val.webp'}';
+  }
+
+  Widget _buildAvatarImage(String? raw, {double size = 36}) {
+    final resolved = _normalizeAvatarPath(raw);
+    if (resolved.startsWith('http://') || resolved.startsWith('https://')) {
+      return Image.network(
+        resolved,
+        width: size,
+        height: size,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
+      );
+    }
+    return Image.asset(
+      resolved,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
+    );
+  }
+
   Widget _buildPodiumColumn({
     required Map<String, dynamic>? player,
     required double height,
@@ -320,7 +387,7 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
             ],
           ),
           child: ClipOval(
-            child: Image.asset(avatar, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white)),
+            child: _buildAvatarImage(avatar, size: hasCrown ? 64 : 54),
           ),
         ),
         const SizedBox(height: 6),
@@ -403,7 +470,10 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
           const SizedBox(width: 8),
           CircleAvatar(
             radius: 18,
-            backgroundImage: AssetImage(avatar),
+            backgroundColor: const Color(0xFF331560),
+            child: ClipOval(
+              child: _buildAvatarImage(avatar, size: 36),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

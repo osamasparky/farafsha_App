@@ -49,8 +49,8 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
     _isHost = widget.isHost;
 
     _fetchRoomState();
-    // بدء مزامنة حالة الغرفة الذكية كل 1.5 ثانية لجلب اللاعبين فور انضمامهم
-    _syncTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+    // بدء مزامنة حالة الغرفة الذكية كل 3 ثوانٍ لتخفيف الحمل وجلب اللاعبين بسلاسة
+    _syncTimer = Timer.periodic(const Duration(milliseconds: 3000), (_) {
       _fetchRoomState();
     });
   }

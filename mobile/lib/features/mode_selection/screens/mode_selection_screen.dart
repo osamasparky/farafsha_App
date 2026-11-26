@@ -442,10 +442,16 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
 
   Future<void> _loadGames() async {
     try {
-      final games = await ApiService.instance.getGames();
+      // forceRefresh لتجاوز الكاش وضمان تطبيق إعدادات لوحة التحكم فورًا
+      final games = await ApiService.instance.getGames(forceRefresh: true);
       if (mounted) {
         setState(() {
-          _availableGames = games.where((g) => g['is_active'] != false).toList();
+          // فلترة ألعاب المحلية: all, local_only, hybrid, local_and_lammah
+          _availableGames = games.where((g) {
+            final gm = g['game_mode']?.toString() ?? 'all';
+            return g['is_active'] != false &&
+                ['all', 'local_only', 'hybrid', 'local_and_lammah'].contains(gm);
+          }).toList();
           _isLoadingGames = false;
         });
       }
@@ -937,10 +943,16 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
 
   Future<void> _loadGames() async {
     try {
-      final games = await ApiService.instance.getGames();
+      // forceRefresh لتجاوز الكاش وضمان تطبيق إعدادات لوحة التحكم فورًا
+      final games = await ApiService.instance.getGames(forceRefresh: true);
       if (mounted) {
         setState(() {
-          _availableGames = games.where((g) => g['is_active'] != false).toList();
+          // فلترة ألعاب الأونلاين: all, online_only, hybrid
+          _availableGames = games.where((g) {
+            final gm = g['game_mode']?.toString() ?? 'all';
+            return g['is_active'] != false &&
+                ['all', 'online_only', 'hybrid'].contains(gm);
+          }).toList();
         });
       }
     } catch (_) {}

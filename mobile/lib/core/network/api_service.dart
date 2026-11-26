@@ -371,6 +371,25 @@ class ApiService {
     return null;
   }
 
+  /// تسجيل نقاط اللعب المحلي / اللمة للمستخدم المسجل في لوحة المتصدرين
+  Future<void> recordGameScore({required int score, bool isWin = false}) async {
+    if (_authToken == null || _authToken!.isEmpty) return;
+    try {
+      await http
+          .post(
+            Uri.parse('$baseUrl/leaderboard/record'),
+            headers: _headers,
+            body: jsonEncode({
+              'score': score,
+              'is_win': isWin,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (e) {
+      debugPrint('⚠️ Recording game score failed: $e');
+    }
+  }
+
   /// جلب قائمة الإشعارات
   Future<List<Map<String, dynamic>>> getNotifications() async {
     try {

@@ -58,9 +58,12 @@ class GameQuestion {
       options = [answer];
     }
 
-    // تأكد من وجود الإجابة الصحيحة داخل الخيارات
+    // تأكد من وجود الإجابة الصحيحة داخل الخيارات ثم خلطها عشوائياً
     if (!options.contains(answer) && answer.isNotEmpty) {
       options.insert(0, answer);
+    }
+    if (options.length > 1) {
+      options.shuffle();
     }
 
     return GameQuestion(

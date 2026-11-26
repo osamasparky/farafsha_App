@@ -45,8 +45,6 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
   bool _isSubmitting = false;
 
   bool _roundEnded = false;
-  String? _revealedAnswer;
-  String? _explanation;
   int _pointsEarned = 0;
   bool? _isCorrect;
 
@@ -81,8 +79,8 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
 
     _fetchState();
 
-    // مؤقت مزامنة حالة الغرفة الذكية كل ثانية ونصف
-    _syncTimer = Timer.periodic(const Duration(milliseconds: 1500), (_) {
+    // مؤقت مزامنة حالة الغرفة الذكية كل 3 ثوانٍ لتخفيف الحمل على الشبكة والجهاز
+    _syncTimer = Timer.periodic(const Duration(milliseconds: 3000), (_) {
       _fetchState();
     });
 
@@ -139,19 +137,17 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
         if (serverRound != _currentRound) {
           _currentRound = serverRound;
           _card = cardData;
-          _choices = newChoices;
+          _choices = List<String>.from(newChoices)..shuffle();
           _remainingSeconds = serverDuration;
           _mySelectedAnswer = null;
           _hasSubmitted = false;
           _roundEnded = false;
-          _revealedAnswer = null;
-          _explanation = null;
           _isCorrect = null;
           _pointsEarned = 0;
         } else {
           _card = cardData;
           if (_choices.isEmpty && newChoices.isNotEmpty) {
-            _choices = newChoices;
+            _choices = List<String>.from(newChoices)..shuffle();
           }
         }
 
@@ -166,8 +162,6 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
         // في حال انتهت الجولة
         if (serverRoundEnded && !_roundEnded) {
           _roundEnded = true;
-          _revealedAnswer = res['revealed_answer']?.toString();
-          _explanation = res['explanation']?.toString();
           if (myAns != null) {
             _isCorrect = myAns['is_correct'] as bool?;
             _pointsEarned = (myAns['points'] as int?) ?? 0;
@@ -647,27 +641,15 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
                                 color: Colors.white,
                               ),
                             ),
-                            Text(
-                              correct
-                                  ? 'أحسنت! حصلت على +$_pointsEarned نقطة سرعة'
-                                  : 'الإجابة الصحيحة كانت: ${_revealedAnswer ?? ""}',
-                              style: GoogleFonts.cairo(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white.withValues(alpha: 0.95),
-                              ),
-                            ),
-                            if (_explanation != null && _explanation!.isNotEmpty) ...[
-                              const SizedBox(height: 4),
+                            if (correct)
                               Text(
-                                _explanation!,
+                                'أحسنت! حصلت على +$_pointsEarned نقطة سرعة',
                                 style: GoogleFonts.cairo(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: Colors.white.withValues(alpha: 0.85),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white.withValues(alpha: 0.95),
                                 ),
                               ),
-                            ],
                           ],
                         ),
                       ),

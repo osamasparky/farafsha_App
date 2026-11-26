@@ -70,43 +70,43 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
         GameQuestion(
           prompt: '«يا بابا .. أنا مش زعلان ...»',
           answer: 'أنا متضايق بس',
-          options: ['أنا متضايق بس', 'أنا مش باطل', 'أنا زعلان قوي'],
+          options: (['أنا متضايق بس', 'أنا مش باطل', 'أنا زعلان قوي']..shuffle()),
           explanation: 'فيلم الكيف - الفنان محمود عبد العزيز (مزاجنجي).',
         ),
         GameQuestion(
           prompt: '«هو كله ضرب ضرب ...»',
           answer: 'مفيش شتيمة؟',
-          options: ['مفيش شتيمة؟', 'مفيش راحة؟', 'مفيش كلام؟'],
+          options: (['مفيش شتيمة؟', 'مفيش راحة؟', 'مفيش كلام؟']..shuffle()),
           explanation: 'فيلم بوحة - الفنان محمد سعد.',
         ),
         GameQuestion(
           prompt: '«أنا مش كريم أنا ...»',
           answer: 'أنا شحاتة يا عمري',
-          options: ['أنا شحاتة يا عمري', 'أنا حمادة', 'أنا غلبان'],
+          options: (['أنا شحاتة يا عمري', 'أنا حمادة', 'أنا غلبان']..shuffle()),
           explanation: 'فيلم كركر - الفنان محمد سعد والفنان حسن حسني.',
         ),
         GameQuestion(
           prompt: '«اللي يخاف من العفريت ...»',
           answer: 'يطلع له',
-          options: ['يطلع له', 'يستخبى منه', 'يقفل الباب'],
+          options: (['يطلع له', 'يستخبى منه', 'يقفل الباب']..shuffle()),
           explanation: 'فيلم الإنس والنمس - الفنان محمد هنيدي.',
         ),
         GameQuestion(
           prompt: '«دي بلد شهادات يا ...»',
           answer: 'محيي',
-          options: ['محيي', 'حودة', 'أحمد'],
+          options: (['محيي', 'حودة', 'أحمد']..shuffle()),
           explanation: 'فيلم صعيدي في الجامعة الأمريكية - الفنان محمد هنيدي.',
         ),
         GameQuestion(
           prompt: '«الجوازة دي لازم ...»',
           answer: 'تبوظ',
-          options: ['تبوظ', 'تتم', 'تتأجل'],
+          options: (['تبوظ', 'تتم', 'تتأجل']..shuffle()),
           explanation: 'فيلم غبي منه فيه - الفنان طلعت زكريا وهاني رمزي.',
         ),
         GameQuestion(
           prompt: '«أنا في الميري يا باشا ...»',
           answer: 'مبفكرش',
-          options: ['مبفكرش', 'مبتكلمش', 'منفذ وبس'],
+          options: (['مبفكرش', 'مبتكلمش', 'منفذ وبس']..shuffle()),
           explanation: 'فيلم النوم في العسل - الفنان عادل إمام.',
         ),
       ],
@@ -518,7 +518,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                       IconData? statusIcon;
                       Color statusIconColor = Colors.white;
 
-                      if (_isAnswered) {
+                      if (_isAnswered && isSelected) {
                         if (isCorrect) {
                           bgColor = const Color(0xFF059669);
                           bevelColor = const Color(0xFF04533C);
@@ -527,7 +527,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                           badgeText = Colors.white;
                           statusIcon = Icons.check_circle_rounded;
                           statusIconColor = Colors.white;
-                        } else if (isSelected && !isCorrect) {
+                        } else {
                           bgColor = const Color(0xFFDC2626);
                           bevelColor = const Color(0xFF991B1B);
                           borderColor = const Color(0xFFF87171);
@@ -561,9 +561,11 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
                                 offset: const Offset(0, 4),
                                 blurRadius: 0,
                               ),
-                              if (isSelected || (_isAnswered && isCorrect))
+                              if (isSelected)
                                 BoxShadow(
-                                  color: (isCorrect ? const Color(0xFF059669) : const Color(0xFFA35BFF))
+                                  color: (_isAnswered
+                                          ? (isCorrect ? const Color(0xFF059669) : const Color(0xFFDC2626))
+                                          : const Color(0xFFA35BFF))
                                       .withOpacity(0.4),
                                   blurRadius: 14,
                                   offset: const Offset(0, 4),

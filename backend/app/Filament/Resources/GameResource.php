@@ -214,6 +214,7 @@ class GameResource extends Resource
 
                                 Forms\Components\Repeater::make('scoring_guide')
                                     ->label('دليل احتساب النقاط (Scoring System)')
+                                    ->helperText('أول قيمة موجبة تحدد نقاط الإجابة الصحيحة في اللعبة (مثال: +3 أو +10)، وأي بند يذكر "سرعة" أو "بونص" يحدد بونص السرعة الأقصى.')
                                     ->schema([
                                         Forms\Components\TextInput::make('condition')->label('الحالة / الإنجاز')->required(),
                                         Forms\Components\TextInput::make('points')->label('النقاط (+/-)')->required(),

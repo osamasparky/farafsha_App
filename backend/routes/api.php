@@ -68,6 +68,7 @@ Route::get('/gameplay-modes', function () {
 Route::get('/banners', [AppContentController::class, 'banners']);
 Route::get('/dialects', [AppContentController::class, 'dialects']);
 Route::get('/leaderboard', [AppContentController::class, 'leaderboard']);
+Route::post('/leaderboard/record', [AppContentController::class, 'recordScore'])->middleware('auth:sanctum');
 Route::get('/notifications', [AppContentController::class, 'notifications']);
 Route::get('/pages/{slug}', [AppContentController::class, 'page']);
 Route::get('/contact-info', [AppContentController::class, 'contactInfo']);

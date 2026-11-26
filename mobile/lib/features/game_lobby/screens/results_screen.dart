@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/game_session.dart';
+import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
-class ResultsScreen extends StatelessWidget {
+class ResultsScreen extends StatefulWidget {
   final GameSession? session;
   final String winnerTeam;
   final int winnerScore;
@@ -45,6 +47,55 @@ class ResultsScreen extends StatelessWidget {
       mvpStats: '${mvp?.name ?? "البطل"} — ${mvp?.correctAnswers ?? 0} إجابات صح',
     );
   }
+
+  @override
+  State<ResultsScreen> createState() => _ResultsScreenState();
+}
+
+class _ResultsScreenState extends State<ResultsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    _syncScoreToLeaderboard();
+  }
+
+  Future<void> _syncScoreToLeaderboard() async {
+    final session = widget.session;
+    if (session == null || AuthService.instance.isGuest || !AuthService.instance.isLoggedIn) {
+      return;
+    }
+
+    final userName = (ApiService.instance.currentUser?['name']?.toString().trim() ??
+            AuthService.instance.userName.trim())
+        .toLowerCase();
+
+    GamePlayer? userPlayer;
+    if (userName.isNotEmpty) {
+      for (final p in session.players) {
+        if (p.name.trim().toLowerCase() == userName) {
+          userPlayer = p;
+          break;
+        }
+      }
+    }
+    userPlayer ??= session.players.isNotEmpty ? session.players.first : null;
+    if (userPlayer == null) return;
+
+    final isWin = userPlayer.teamName == widget.winnerTeam && userPlayer.score > 0;
+    await ApiService.instance.recordGameScore(
+      score: userPlayer.score,
+      isWin: isWin,
+    );
+  }
+
+  GameSession? get session => widget.session;
+  String get winnerTeam => widget.winnerTeam;
+  int get winnerScore => widget.winnerScore;
+  String get runnerUpTeam => widget.runnerUpTeam;
+  int get runnerUpScore => widget.runnerUpScore;
+  String get mvpName => widget.mvpName;
+  String get mvpAvatar => widget.mvpAvatar;
+  String get mvpStats => widget.mvpStats;
 
   @override
   Widget build(BuildContext context) {

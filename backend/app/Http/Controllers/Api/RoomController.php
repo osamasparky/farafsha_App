@@ -206,6 +206,7 @@ class RoomController extends Controller
             'current_round' => 1,
             'game_state' => [
                 'current_card_id' => $firstCard->id,
+                'current_choices' => $choices,
                 'round_started_at' => now()->timestamp,
                 'round_ended' => false,
                 'all_cards_ids' => $cards->pluck('id')->toArray(),
@@ -271,11 +272,14 @@ class RoomController extends Controller
         if ($currentCardId) {
             $card = ContentItem::find($currentCardId);
             if ($card) {
-                $choices = collect([$card->answer, ...($card->distractors ?? [])])
-                    ->filter()
-                    ->unique()
-                    ->values()
-                    ->toArray();
+                $choices = !empty($gameState['current_choices']) && is_array($gameState['current_choices'])
+                    ? array_values($gameState['current_choices'])
+                    : collect([$card->answer, ...($card->distractors ?? [])])
+                        ->filter()
+                        ->unique()
+                        ->shuffle()
+                        ->values()
+                        ->toArray();
 
                 $publicCard = [
                     'id' => $card->id,
@@ -355,15 +359,16 @@ class RoomController extends Controller
 
         $isCorrect = trim(mb_strtolower($validated['answer'])) === trim(mb_strtolower($card->answer));
 
-        // نظام نقاط كاهوت: 300 نقطة أساسية للإجابة الصحيحة + بونص سرعة يصل لـ 200 نقطة
+        // احتساب النقاط ديناميكياً من دليل احتساب النقاط (Scoring System) الخاص باللعبة
         $pointsEarned = 0;
         if ($isCorrect) {
-            $basePoints = 300;
             $duration = max(10, $room->round_duration_seconds);
             $timeTaken = min($duration, max(1, (float) ($validated['time_taken_seconds'] ?? 5)));
+            [$basePoints, $maxSpeedBonus] = $this->resolveScoringFromGuide($room->game?->scoring_guide);
+
             $speedRatio = max(0, ($duration - $timeTaken) / $duration);
-            $speedBonus = (int) round($speedRatio * 200);
-            $pointsEarned = $basePoints + $speedBonus;
+            $speedBonus = $maxSpeedBonus > 0 ? (int) round($speedRatio * $maxSpeedBonus) : 0;
+            $pointsEarned = max(1, $basePoints + $speedBonus);
 
             $player->increment('score', $pointsEarned);
         }
@@ -500,6 +505,7 @@ class RoomController extends Controller
             'current_round' => $nextRound,
             'game_state' => array_merge($gameState, [
                 'current_card_id' => $nextCard->id,
+                'current_choices' => $choices,
                 'round_started_at' => now()->timestamp,
                 'round_ended' => false,
                 'answers' => [],
@@ -531,24 +537,29 @@ class RoomController extends Controller
     public function finish(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->firstOrFail();
-        $room->update(['status' => 'finished']);
+        $alreadyFinished = $room->status === 'finished';
+        if (!$alreadyFinished) {
+            $room->update(['status' => 'finished']);
+        }
 
         $rankedPlayers = $room->players()->orderBy('score', 'desc')->get();
 
-        // تحديث إحصائيات المستخدمين المسجلين في قاعدة البيانات
-        foreach ($rankedPlayers as $rankIndex => $player) {
-            if ($player->user_id) {
-                $user = User::find($player->user_id);
-                if ($user) {
-                    $user->increment('games_played');
-                    $user->increment('total_score', $player->score);
-                    if ($rankIndex === 0 && $player->score > 0) {
-                        $user->increment('wins_count');
-                    }
-                    // احتساب الترقية في المستوى
-                    $calculatedLevel = max(1, (int) floor($user->total_score / 500) + 1);
-                    if ($calculatedLevel > $user->level) {
-                        $user->update(['level' => $calculatedLevel]);
+        // تحديث إحصائيات المستخدمين المسجلين في قاعدة البيانات (مرة واحدة فقط)
+        if (!$alreadyFinished) {
+            foreach ($rankedPlayers as $rankIndex => $player) {
+                if ($player->user_id) {
+                    $user = User::find($player->user_id);
+                    if ($user) {
+                        $user->increment('games_played');
+                        $user->increment('total_score', $player->score);
+                        if ($rankIndex === 0 && $player->score > 0) {
+                            $user->increment('wins_count');
+                        }
+                        // احتساب الترقية في المستوى
+                        $calculatedLevel = max(1, (int) floor($user->total_score / 500) + 1);
+                        if ($calculatedLevel > $user->level) {
+                            $user->update(['level' => $calculatedLevel]);
+                        }
                     }
                 }
             }
@@ -660,6 +671,37 @@ class RoomController extends Controller
             'status' => 'success',
             'message' => 'تمت مغادرة الغرفة بنجاح.',
         ]);
+    }
+
+    private function resolveScoringFromGuide(?array $scoringGuide): array
+    {
+        $basePoints = null;
+        $speedBonus = 0;
+
+        if (!empty($scoringGuide)) {
+            foreach ($scoringGuide as $rule) {
+                $pointsText = (string) ($rule['points'] ?? '');
+                if (!preg_match('/(\d+)/', $pointsText, $matches)) {
+                    continue;
+                }
+                $val = (int) $matches[1];
+                if ($val <= 0) {
+                    continue;
+                }
+
+                $meta = mb_strtolower(($rule['condition'] ?? '') . ' ' . ($rule['note'] ?? ''));
+                $isSpeedRule = str_contains($meta, 'سرعة') || str_contains($meta, 'بونص') || str_contains($meta, 'speed') || str_contains($meta, 'bonus');
+
+                if ($basePoints === null) {
+                    $basePoints = $val;
+                } elseif ($isSpeedRule && $speedBonus === 0) {
+                    $speedBonus = $val;
+                }
+            }
+        }
+
+        // قيم افتراضية متوازنة في حال عدم ضبط دليل احتساب النقاط
+        return [$basePoints ?? 5, $speedBonus];
     }
 
     private function safeBroadcast($event): void

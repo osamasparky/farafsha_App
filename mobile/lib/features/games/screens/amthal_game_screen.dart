@@ -70,52 +70,52 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
         GameQuestion(
           prompt: 'اللي اختشوا …',
           answer: 'ماتوا',
-          options: ['ماتوا', 'هربوا', 'سكتوا'],
+          options: (['ماتوا', 'هربوا', 'سكتوا']..shuffle()),
         ),
         GameQuestion(
           prompt: 'القرد في عين أمه …',
           answer: 'غزال',
-          options: ['غزال', 'سلطان', 'جميل'],
+          options: (['غزال', 'سلطان', 'جميل']..shuffle()),
         ),
         GameQuestion(
           prompt: 'على قد لحافك …',
           answer: 'مد رجليك',
-          options: ['مد رجليك', 'نام وارتاح', 'غطي نفسك'],
+          options: (['مد رجليك', 'نام وارتاح', 'غطي نفسك']..shuffle()),
         ),
         GameQuestion(
           prompt: 'باب النجار …',
           answer: 'مخلّع',
-          options: ['مخلّع', 'مكسور', 'مفتوح'],
+          options: (['مخلّع', 'مكسور', 'مفتوح']..shuffle()),
         ),
         GameQuestion(
           prompt: 'اطبخ يا جارية كلف يا …',
           answer: 'سيدي',
-          options: ['سيدي', 'مولاي', 'معلم'],
+          options: (['سيدي', 'مولاي', 'معلم']..shuffle()),
         ),
         GameQuestion(
           prompt: 'حبل الكذب …',
           answer: 'قصير',
-          options: ['قصير', 'طويل', 'مقطوع'],
+          options: (['قصير', 'طويل', 'مقطوع']..shuffle()),
         ),
         GameQuestion(
           prompt: 'اللي على راسه بطحة …',
           answer: 'يحسس عليها',
-          options: ['يحسس عليها', 'يخبيها', 'ينساها'],
+          options: (['يحسس عليها', 'يخبيها', 'ينساها']..shuffle()),
         ),
         GameQuestion(
           prompt: 'يا خبر بفلوس بكرة …',
           answer: 'يبقى ببلاش',
-          options: ['يبقى ببلاش', 'ينتشر', 'يخلص'],
+          options: (['يبقى ببلاش', 'ينتشر', 'يخلص']..shuffle()),
         ),
         GameQuestion(
           prompt: 'الصبر مفتاح …',
           answer: 'الفرج',
-          options: ['الفرج', 'النجاح', 'السعادة'],
+          options: (['الفرج', 'النجاح', 'السعادة']..shuffle()),
         ),
         GameQuestion(
           prompt: 'عصفور في اليد خير من …',
           answer: 'عشرة على الشجرة',
-          options: ['عشرة على الشجرة', 'مية طايرين', 'صيد الغابة'],
+          options: (['عشرة على الشجرة', 'مية طايرين', 'صيد الغابة']..shuffle()),
         ),
       ],
     );
@@ -548,7 +548,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                       IconData? statusIcon;
                       Color statusIconColor = Colors.white;
 
-                      if (_isAnswered) {
+                      if (_isAnswered && isSelected) {
                         if (isCorrect) {
                           bgColor = const Color(0xFF059669);
                           bevelColor = const Color(0xFF04533C);
@@ -557,7 +557,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                           badgeText = Colors.white;
                           statusIcon = Icons.check_circle_rounded;
                           statusIconColor = Colors.white;
-                        } else if (isSelected && !isCorrect) {
+                        } else {
                           bgColor = const Color(0xFFDC2626);
                           bevelColor = const Color(0xFF991B1B);
                           borderColor = const Color(0xFFF87171);
@@ -591,9 +591,11 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                                 offset: const Offset(0, 4),
                                 blurRadius: 0,
                               ),
-                              if (isSelected || (_isAnswered && isCorrect))
+                              if (isSelected)
                                 BoxShadow(
-                                  color: (isCorrect ? const Color(0xFF059669) : const Color(0xFFA35BFF))
+                                  color: (_isAnswered
+                                          ? (isCorrect ? const Color(0xFF059669) : const Color(0xFFDC2626))
+                                          : const Color(0xFFA35BFF))
                                       .withOpacity(0.4),
                                   blurRadius: 14,
                                   offset: const Offset(0, 4),

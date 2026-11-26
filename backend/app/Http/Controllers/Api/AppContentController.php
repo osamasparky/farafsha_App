@@ -57,7 +57,7 @@ class AppContentController extends Controller
     }
 
     /**
-     * لوحة الترتيب والمتصدرين (مفصولة حسب الفترة)
+     * لوحة الترتيب والمتصدرين (مبنية ديناميكياً من المستخدمين الحقيقيين)
      */
     public function leaderboard(Request $request): JsonResponse
     {
@@ -66,9 +66,37 @@ class AppContentController extends Controller
             $period = 'weekly';
         }
 
-        $entries = LeaderboardEntry::where('period_type', $period)
-            ->orderBy('score', 'desc')
+        $authUser = $request->user('sanctum');
+
+        $users = User::where('status', 'active')
+            ->where('is_admin', false)
+            ->orderByDesc('total_score')
+            ->orderByDesc('wins_count')
+            ->orderBy('id')
+            ->limit(50)
             ->get();
+
+        $badges = [
+            1 => 'بطل الترتيب 👑',
+            2 => 'الوصيف 🥈',
+            3 => 'المتحدي 🥉',
+        ];
+
+        $entries = $users->values()->map(function (User $user, int $index) use ($authUser, $badges) {
+            $rank = $index + 1;
+            $isCurrent = $authUser && $authUser->id === $user->id;
+
+            return [
+                'id' => $user->id,
+                'player_name' => $user->name,
+                'avatar' => $user->avatar ?: 'assets/images/av-karim.webp',
+                'score' => (int) ($user->total_score ?? 0),
+                'wins' => (int) ($user->wins_count ?? 0),
+                'rank' => $rank,
+                'badge' => $badges[$rank] ?? null,
+                'is_current_user' => $isCurrent,
+            ];
+        });
 
         // المراكز الثلاثة الأولى (المنصة)
         $podium = $entries->take(3)->values();
@@ -78,6 +106,23 @@ class AppContentController extends Controller
 
         // حساب اللاعب الحالي (أنت)
         $currentUser = $entries->firstWhere('is_current_user', true);
+        if (!$currentUser && $authUser) {
+            $higherCount = User::where('status', 'active')
+                ->where('is_admin', false)
+                ->where('total_score', '>', (int) ($authUser->total_score ?? 0))
+                ->count();
+
+            $currentUser = [
+                'id' => $authUser->id,
+                'player_name' => $authUser->name,
+                'avatar' => $authUser->avatar ?: 'assets/images/av-karim.webp',
+                'score' => (int) ($authUser->total_score ?? 0),
+                'wins' => (int) ($authUser->wins_count ?? 0),
+                'rank' => $higherCount + 1,
+                'badge' => null,
+                'is_current_user' => true,
+            ];
+        }
 
         return response()->json([
             'status' => 'success',
@@ -88,6 +133,44 @@ class AppContentController extends Controller
                 'current_user' => $currentUser,
                 'all' => $entries,
             ],
+        ]);
+    }
+
+    /**
+     * تسجيل نقاط اللعب المحلي / اللمة للمستخدم المسجل في لوحة المتصدرين
+     */
+    public function recordScore(Request $request): JsonResponse
+    {
+        $user = $request->user();
+        if (!$user) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح'], 401);
+        }
+
+        $validated = $request->validate([
+            'score' => 'required|integer|min:0|max:5000',
+            'is_win' => 'nullable|boolean',
+        ]);
+
+        $score = (int) $validated['score'];
+        $user->increment('games_played');
+        if ($score > 0) {
+            $user->increment('total_score', $score);
+        }
+        if (!empty($validated['is_win']) && $score > 0) {
+            $user->increment('wins_count');
+        }
+
+        $user->refresh();
+        $calculatedLevel = max(1, (int) floor($user->total_score / 500) + 1);
+        if ($calculatedLevel > $user->level) {
+            $user->update(['level' => $calculatedLevel]);
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'total_score' => (int) $user->total_score,
+            'wins_count' => (int) $user->wins_count,
+            'level' => (int) $user->level,
         ]);
     }
 
