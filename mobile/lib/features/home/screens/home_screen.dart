@@ -9,6 +9,7 @@ import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/app_bottom_nav_bar.dart';
 import '../../../core/widgets/guest_locked_modal.dart';
 import '../../../core/widgets/lamma_scaffold.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 import '../widgets/banner_curtain_modal.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -248,9 +249,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               ],
                             ),
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundImage: AssetImage(avatarPath),
+                            child: PlayerAvatarWidget(
+                              avatarPath: avatarPath,
+                              size: 40,
                             ),
                           ),
                           const SizedBox(width: 10),

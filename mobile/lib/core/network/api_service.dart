@@ -293,6 +293,41 @@ class ApiService {
     return fallback;
   }
 
+  /// استخراج جميع قيم النقاط الموجبة من دليل احتساب النقاط في لوحة التحكم
+  List<int> getScoringButtonsForGame(String slug, {List<int> fallback = const [5, 10]}) {
+    final normalized = slug == 'taboo'
+        ? 'forbidden-words'
+        : (slug == 'quotes' ? 'famous-quotes' : (slug == 'amthal' ? 'amthal-shaabiya' : slug));
+
+    final games = _cachedGames ?? const [];
+    for (final g in games) {
+      if (g['slug'] == slug || g['slug'] == normalized) {
+        final guide = g['scoring_guide'];
+        if (guide is List) {
+          final values = <int>{};
+          for (final rule in guide) {
+            if (rule is Map) {
+              final text = rule['points']?.toString() ?? '';
+              final match = RegExp(r'\d+').firstMatch(text);
+              if (match != null) {
+                final val = int.tryParse(match.group(0)!) ?? 0;
+                if (val > 0) values.add(val);
+              }
+            }
+          }
+          if (values.isNotEmpty) {
+            final sorted = values.toList()..sort();
+            return sorted;
+          }
+        }
+        final direct = g['points_per_correct'];
+        if (direct is int && direct > 0) return [direct];
+        if (direct is num && direct > 0) return [direct.toInt()];
+      }
+    }
+    return fallback;
+  }
+
   /// جلب لعبة محددة بالـ slug
   Future<Map<String, dynamic>?> getGameBySlug(String slug) async {
     try {

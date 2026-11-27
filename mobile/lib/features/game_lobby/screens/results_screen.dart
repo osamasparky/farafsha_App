@@ -5,6 +5,7 @@ import '../../../core/network/api_service.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 
 class ResultsScreen extends StatefulWidget {
   final GameSession? session;
@@ -284,12 +285,9 @@ class _ResultsScreenState extends State<ResultsScreen> {
                           shape: BoxShape.circle,
                           border: Border.all(color: LammaColors.gold500, width: 3),
                         ),
-                        child: ClipOval(
-                          child: Image.asset(
-                            mvpAvatar,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
-                          ),
+                        child: PlayerAvatarWidget(
+                          avatarPath: mvpAvatar,
+                          size: 48,
                         ),
                       ),
                       const SizedBox(width: 14),

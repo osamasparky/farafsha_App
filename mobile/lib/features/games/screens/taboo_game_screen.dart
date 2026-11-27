@@ -9,6 +9,7 @@ import '../../../core/network/api_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/pause_dialog.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 
 class TabooCardItem {
   final int id;
@@ -584,9 +585,9 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          CircleAvatar(
-                            radius: 14,
-                            backgroundImage: AssetImage(activePlayer.avatar),
+                          PlayerAvatarWidget(
+                            avatarPath: activePlayer.avatar,
+                            size: 28,
                           ),
                           const SizedBox(width: 8),
                           Text(
@@ -625,42 +626,68 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     // عداد الإجابات الصحيحة
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_turnCorrectCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFF4FD1A5),
+                    Container(
+                      width: 86,
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1D3B38).withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFF4FD1A5).withValues(alpha: 0.4)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$_turnCorrectCount',
+                            style: GoogleFonts.cairo(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              height: 1.1,
+                              color: const Color(0xFF4FD1A5),
+                            ),
                           ),
-                        ),
-                        Text(
-                          'صح (+1)',
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFCFC6E4),
+                          Text(
+                            'صح (+1)',
+                            style: GoogleFonts.cairo(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFB5F2DC),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 18),
 
                     // الدائرة التنازلية للوقت
-                    SizedBox(
-                      width: 90,
-                      height: 90,
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: const Color(0xFF1A0F40).withValues(alpha: 0.9),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (_secondsLeft <= 10 ? const Color(0xFFFF5252) : const Color(0xFFFF9E4C))
+                                .withValues(alpha: 0.28),
+                            blurRadius: 16,
+                          ),
+                        ],
+                      ),
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          CircularProgressIndicator(
-                            value: progress,
-                            strokeWidth: 7,
-                            backgroundColor: const Color(0xFF1A0F40),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              _secondsLeft <= 10 ? const Color(0xFFFF5252) : const Color(0xFFFF9E4C),
+                          SizedBox(
+                            width: 80,
+                            height: 80,
+                            child: CircularProgressIndicator(
+                              value: progress,
+                              strokeWidth: 6.5,
+                              strokeCap: StrokeCap.round,
+                              backgroundColor: Colors.white.withValues(alpha: 0.1),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                _secondsLeft <= 10 ? const Color(0xFFFF5252) : const Color(0xFFFF9E4C),
+                              ),
                             ),
                           ),
                           Column(
@@ -669,16 +696,19 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                               Text(
                                 '$_secondsLeft',
                                 style: GoogleFonts.cairo(
-                                  fontSize: 28,
+                                  fontSize: 25,
                                   fontWeight: FontWeight.w900,
+                                  height: 1.0,
                                   color: Colors.white,
                                 ),
                               ),
+                              const SizedBox(height: 2),
                               Text(
                                 'ثانية',
                                 style: GoogleFonts.cairo(
                                   fontSize: 10,
                                   fontWeight: FontWeight.w700,
+                                  height: 1.0,
                                   color: const Color(0xFFCFC6E4),
                                 ),
                               ),
@@ -688,56 +718,74 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                       ),
                     ),
 
-                    const SizedBox(width: 24),
+                    const SizedBox(width: 18),
 
                     // عداد المخالفات
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          '$_turnFoulCount',
-                          style: GoogleFonts.cairo(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w900,
-                            color: const Color(0xFFFF5252),
+                    Container(
+                      width: 86,
+                      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 10),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF3E182E).withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(18),
+                        border: Border.all(color: const Color(0xFFFF5252).withValues(alpha: 0.4)),
+                      ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$_turnFoulCount',
+                            style: GoogleFonts.cairo(
+                              fontSize: 22,
+                              fontWeight: FontWeight.w900,
+                              height: 1.1,
+                              color: const Color(0xFFFF6B7A),
+                            ),
                           ),
-                        ),
-                        Text(
-                          'مخالفة (-1)',
-                          style: GoogleFonts.cairo(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFFCFC6E4),
+                          Text(
+                            'مخالفة (-1)',
+                            style: GoogleFonts.cairo(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: const Color(0xFFFFC1C8),
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ],
                 ),
 
                 const SizedBox(height: 14),
 
-                // كارت التابو المائل
+                // كارت التابو بتصميم فرفشة ثلاثي الأبعاد
                 Expanded(
                   child: Center(
                     child: Transform.rotate(
-                      angle: -0.015,
+                      angle: -0.01,
                       child: Container(
                         width: double.infinity,
                         constraints: const BoxConstraints(maxWidth: 360),
                         decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
+                          gradient: const LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [Color(0xFF281154), Color(0xFF170834)],
+                          ),
+                          borderRadius: BorderRadius.circular(26),
+                          border: Border.all(
+                            color: teamColor.withValues(alpha: 0.65),
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
-                              color: teamColor.withOpacity(0.35),
-                              blurRadius: 16,
-                              spreadRadius: 2,
+                              color: teamColor.withValues(alpha: 0.35),
+                              blurRadius: 20,
+                              spreadRadius: 1,
                             ),
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.4),
-                              blurRadius: 25,
-                              offset: const Offset(0, 10),
+                              color: Colors.black.withValues(alpha: 0.45),
+                              blurRadius: 24,
+                              offset: const Offset(0, 12),
                             ),
                           ],
                         ),
@@ -747,34 +795,46 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                             // رأس الكارت مع الكلمة الرئيسية
                             Container(
                               width: double.infinity,
-                              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+                              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 18),
                               decoration: BoxDecoration(
                                 gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
                                   colors: isFarfoosh
-                                      ? [const Color(0xFF6A5AF0), const Color(0xFF3B2CB0)]
-                                      : [const Color(0xFFFF7A3D), const Color(0xFFD64D12)],
+                                      ? [const Color(0xFF7B61FF), const Color(0xFF472FD8)]
+                                      : [const Color(0xFFFF8A4C), const Color(0xFFD84E16)],
                                 ),
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
                               ),
                               child: Column(
                                 children: [
-                                  Text(
-                                    'اشرح الكلمة دي لفريقك:',
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFFF1EDFF),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
+                                    decoration: BoxDecoration(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      borderRadius: BorderRadius.circular(99),
+                                    ),
+                                    child: Text(
+                                      'اشرح الكلمة دي لفريقك 🎯',
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        color: Colors.white.withValues(alpha: 0.95),
+                                      ),
                                     ),
                                   ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    card.prompt,
-                                    style: GoogleFonts.cairo(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      color: Colors.white,
+                                  const SizedBox(height: 6),
+                                  FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      card.prompt,
+                                      style: GoogleFonts.cairo(
+                                        fontSize: 30,
+                                        fontWeight: FontWeight.w900,
+                                        color: Colors.white,
+                                      ),
+                                      textAlign: TextAlign.center,
                                     ),
-                                    textAlign: TextAlign.center,
                                   ),
                                 ],
                               ),
@@ -782,44 +842,63 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
                             // قائمة الكلمات الممنوعة
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 12.0),
+                              padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.stretch,
                                 children: [
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      const Icon(Icons.block_rounded, color: Color(0xFFA3264F), size: 18),
+                                      const Icon(Icons.block_rounded, color: Color(0xFFFF6B8B), size: 17),
                                       const SizedBox(width: 6),
                                       Text(
-                                        'ممنوع تقول (الكلمات المحظورة):',
+                                        'ممنوع تقول (الكلمات المحظورة)',
                                         style: GoogleFonts.cairo(
-                                          fontSize: 14,
+                                          fontSize: 13,
                                           fontWeight: FontWeight.w900,
-                                          color: const Color(0xFFA3264F),
+                                          color: const Color(0xFFFF8DA6),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(height: 8),
+                                  const SizedBox(height: 10),
                                   ...card.forbiddenWords.map(
                                     (word) => Container(
-                                      margin: const EdgeInsets.only(bottom: 6),
-                                      height: 36,
+                                      margin: const EdgeInsets.only(bottom: 7),
+                                      height: 38,
+                                      padding: const EdgeInsets.symmetric(horizontal: 14),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFDE3EE),
-                                        borderRadius: BorderRadius.circular(12),
-                                        border: Border.all(color: const Color(0xFFFFCADB)),
-                                      ),
-                                      child: Center(
-                                        child: Text(
-                                          word,
-                                          style: GoogleFonts.cairo(
-                                            fontSize: 15,
-                                            fontWeight: FontWeight.w800,
-                                            color: const Color(0xFF8E1F4E),
-                                          ),
+                                        color: const Color(0xFF351968),
+                                        borderRadius: BorderRadius.circular(13),
+                                        border: Border.all(
+                                          color: const Color(0xFFFF5E7E).withValues(alpha: 0.35),
                                         ),
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Container(
+                                            width: 6,
+                                            height: 6,
+                                            decoration: const BoxDecoration(
+                                              shape: BoxShape.circle,
+                                              color: Color(0xFFFF6B8B),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Flexible(
+                                            child: Text(
+                                              word,
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                              style: GoogleFonts.cairo(
+                                                fontSize: 15,
+                                                fontWeight: FontWeight.w800,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
@@ -837,31 +916,48 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
                 // صف أزرار التحكم (تخطي، قال ممنوعة، صح!)
                 Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     // زر تخطي
                     Expanded(
-                      flex: 1,
+                      flex: 2,
                       child: GestureDetector(
                         onTap: _skipsLeft > 0 ? _onSkip : null,
                         child: AnimatedOpacity(
                           duration: const Duration(milliseconds: 200),
                           opacity: _skipsLeft > 0 ? 1.0 : 0.4,
                           child: Container(
-                            height: 64,
+                            height: 68,
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.08),
+                              color: const Color(0xFF2B1459),
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(color: Colors.white24),
+                              border: const Border(
+                                bottom: BorderSide(color: Color(0xFF170933), width: 4),
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withValues(alpha: 0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 const Icon(Icons.skip_next_rounded, color: Colors.white, size: 22),
                                 const SizedBox(height: 2),
-                                Text(
-                                  'تخطي ($_skipsLeft)',
-                                  style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white),
+                                FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    'تخطي ($_skipsLeft)',
+                                    maxLines: 1,
+                                    style: GoogleFonts.cairo(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w800,
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),
@@ -873,25 +969,26 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
                     // زر قال ممنوعة (مخالفة)
                     Expanded(
-                      flex: 1,
+                      flex: 3,
                       child: GestureDetector(
                         onTap: _onFoul,
                         child: Container(
-                          height: 64,
+                          height: 68,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0xFFE0566B), Color(0xFFB23A50)],
+                              colors: [Color(0xFFFF5E78), Color(0xFFC8344E)],
                             ),
                             borderRadius: BorderRadius.circular(20),
                             border: const Border(
-                              bottom: BorderSide(color: Color(0xFF7A2236), width: 4),
+                              bottom: BorderSide(color: Color(0xFF831D31), width: 4),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFE0566B).withOpacity(0.3),
-                                blurRadius: 10,
+                                color: const Color(0xFFFF5E78).withValues(alpha: 0.35),
+                                blurRadius: 12,
                                 offset: const Offset(0, 4),
                               ),
                             ],
@@ -899,11 +996,19 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.close_rounded, color: Colors.white, size: 24),
+                              const Icon(Icons.close_rounded, color: Colors.white, size: 22),
                               const SizedBox(height: 2),
-                              Text(
-                                'قال ممنوعة (-1)',
-                                style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.white),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'قال ممنوعة (-1)',
+                                  maxLines: 1,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w900,
+                                    color: Colors.white,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
@@ -914,25 +1019,26 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
                     // زر صح! (الكبير والأخضر)
                     Expanded(
-                      flex: 2,
+                      flex: 4,
                       child: GestureDetector(
                         onTap: _onCorrect,
                         child: Container(
-                          height: 72,
+                          height: 68,
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
                           decoration: BoxDecoration(
                             gradient: const LinearGradient(
                               begin: Alignment.topCenter,
                               end: Alignment.bottomCenter,
-                              colors: [Color(0xFF4FD1A5), Color(0xFF2E9D7B)],
+                              colors: [Color(0xFF4FD1A5), Color(0xFF2B9C79)],
                             ),
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(20),
                             border: const Border(
-                              bottom: BorderSide(color: Color(0xFF1A6B52), width: 5),
+                              bottom: BorderSide(color: Color(0xFF1A6B52), width: 4),
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFF4FD1A5).withOpacity(0.4),
-                                blurRadius: 20,
+                                color: const Color(0xFF4FD1A5).withValues(alpha: 0.4),
+                                blurRadius: 18,
                                 offset: const Offset(0, 6),
                               ),
                             ],
@@ -940,14 +1046,18 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              const Icon(Icons.check_rounded, color: Color(0xFF0E2A22), size: 28),
+                              const Icon(Icons.check_rounded, color: Color(0xFF0E2A22), size: 24),
                               const SizedBox(height: 2),
-                              Text(
-                                'صح! (+1)',
-                                style: GoogleFonts.cairo(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w900,
-                                  color: const Color(0xFF0E2A22),
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                child: Text(
+                                  'صح! (+1)',
+                                  maxLines: 1,
+                                  style: GoogleFonts.cairo(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w900,
+                                    color: const Color(0xFF0E2A22),
+                                  ),
                                 ),
                               ),
                             ],

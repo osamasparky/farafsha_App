@@ -483,6 +483,22 @@ class _PlayersScreenState extends State<PlayersScreen> {
   }
 
   String _getAvatarForPlayer(String name, int index) {
+    // استخدام صورة البروفايل الفعلية للاعب المسجل في جميع الألعاب
+    if (!AuthService.instance.isGuest) {
+      String loggedInName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
+      if (loggedInName.isEmpty) {
+        loggedInName = AuthService.instance.userName.trim();
+      }
+      if (loggedInName.isNotEmpty && name.trim() == loggedInName) {
+        final serverAvatar = ApiService.instance.currentUser?['avatar']?.toString().trim() ?? '';
+        final localAvatar = AuthService.instance.userAvatar.trim();
+        final resolved = serverAvatar.isNotEmpty ? serverAvatar : localAvatar;
+        if (resolved.isNotEmpty) {
+          return resolved;
+        }
+      }
+    }
+
     final matched = kDefaultPlayers.where((p) => p.name.trim() == name.trim()).firstOrNull;
     if (matched != null) {
       return matched.avatar;

@@ -7,6 +7,7 @@ import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/pause_dialog.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 
 class AmthalGameScreen extends StatefulWidget {
   final GameSession? session;
@@ -332,9 +333,9 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      CircleAvatar(
-                        radius: 12,
-                        backgroundImage: AssetImage(active.avatar),
+                      PlayerAvatarWidget(
+                        avatarPath: active.avatar,
+                        size: 24,
                       ),
                       const SizedBox(width: 8),
                       Text(
@@ -384,12 +385,9 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
                                       ]
                                     : null,
                               ),
-                              child: ClipOval(
-                                child: Image.asset(
-                                  p.avatar,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => const Icon(Icons.person, color: Colors.white),
-                                ),
+                              child: PlayerAvatarWidget(
+                                avatarPath: p.avatar,
+                                size: isActive ? 50 : 44,
                               ),
                             ),
                             const SizedBox(height: 4),

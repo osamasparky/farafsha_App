@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/models/game_session.dart';
@@ -106,7 +105,10 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
 
   Future<void> _loadGameCards() async {
     setState(() => _isLoading = true);
-    final cards = await ApiService.instance.getGameCards('autobus-complete');
+    final gamesFuture = ApiService.instance.getGames(forceRefresh: true);
+    final cardsFuture = ApiService.instance.getGameCards('autobus-complete');
+    await gamesFuture;
+    final cards = await cardsFuture;
     if (mounted) {
       setState(() {
         _cards = cards.isNotEmpty ? cards : _getFallbackCards();
@@ -185,30 +187,18 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
     );
   }
 
-  // الضغط على زر "أتوبيس كومبليت!" الشهير
+  // الضغط على زر "أتوبيس كومبليت!" يوقف الجولة فوراً ويفتح كشف النقاط بدون عداد ثواني
   void _onAutobusCompletePressed() {
-    if (_isStoppingCountdown) return;
-
     SettingsService.instance.triggerHaptic(isHeavy: true);
     SoundService.instance.playCorrect();
-
-    setState(() {
-      _isStoppingCountdown = true;
-      _stopSecondsLeft = 10;
-    });
-
     _timer?.cancel();
-    _stopTimer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (_stopSecondsLeft > 0) {
-        setState(() => _stopSecondsLeft--);
-        if (_stopSecondsLeft <= 3) {
-          HapticFeedback.heavyImpact();
-        }
-      } else {
-        _stopTimer?.cancel();
-        _openScoringSheet();
-      }
-    });
+    _stopTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _isStoppingCountdown = false;
+      });
+    }
+    _openScoringSheet();
   }
 
   void _resumeStopTimer() {
@@ -305,42 +295,26 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                   ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'قاعدة النقاط: 10 للفريدة | 5 للمكررة | 0 للفارغ أو الخطأ',
-                  style: GoogleFonts.cairo(
-                    fontSize: 12,
-                    color: const Color(0xFFFFCC80),
-                    fontWeight: FontWeight.w700,
-                  ),
+                Builder(
+                  builder: (_) {
+                    final guidePoints = ApiService.instance.getScoringButtonsForGame(
+                      'autobus-complete',
+                      fallback: const [5, 10],
+                    );
+                    final ruleText = guidePoints.length >= 2
+                        ? 'قاعدة النقاط: ${guidePoints.last} للفريدة | ${guidePoints.first} للمكررة | 0 للفارغ أو الخطأ'
+                        : 'قاعدة النقاط: +${guidePoints.first} للإجابة الصحيحة | 0 للفارغ أو الخطأ';
+                    return Text(
+                      ruleText,
+                      style: GoogleFonts.cairo(
+                        fontSize: 12,
+                        color: const Color(0xFFFFCC80),
+                        fontWeight: FontWeight.w700,
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: 14),
-
-                // إجابات مقترحة للمذيع
-                if (_currentCard?['acceptable_alternatives'] is Map) ...[
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.black.withValues(alpha: 0.25),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.white12),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'أمثلة إجابات صحيحة للمساعدة:',
-                          style: GoogleFonts.cairo(fontSize: 11, color: Colors.white70, fontWeight: FontWeight.bold),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          _currentCard!['answer']?.toString() ?? '',
-                          style: GoogleFonts.cairo(fontSize: 11, color: const Color(0xFFD9CCF2)),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                ],
 
                 // بطاقات الفرق لإضافة النقاط بسرعة
                 Expanded(
@@ -399,41 +373,31 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                             // أزرار إضافة النقاط السريعة (مبنية على دليل احتساب النقاط من لوحة التحكم)
                             Builder(
                               builder: (_) {
-                                final base = _session?.pointsPerCorrect ??
-                                    ApiService.instance.getPointsForGame('autobus-complete', fallback: 5);
-                                final mid = base * 2;
-                                final high = base * 4;
+                                final scoreButtons = ApiService.instance.getScoringButtonsForGame(
+                                  'autobus-complete',
+                                  fallback: const [5, 10],
+                                );
+                                final pillColors = [
+                                  Colors.amber,
+                                  const Color(0xFF35B88E),
+                                  const Color(0xFFFF8A4C),
+                                  const Color(0xFFA35BFF),
+                                ];
                                 return Wrap(
                                   spacing: 6,
-                                  children: [
-                                    _buildScorePill(
-                                      label: '+$base',
-                                      color: Colors.amber,
+                                  children: List.generate(scoreButtons.length, (idx) {
+                                    final pts = scoreButtons[idx];
+                                    final color = pillColors[idx % pillColors.length];
+                                    return _buildScorePill(
+                                      label: '+$pts',
+                                      color: color,
                                       onTap: () {
                                         setModalState(() {
-                                          _addScoreToTeam(teamName, i, base);
+                                          _addScoreToTeam(teamName, i, pts);
                                         });
                                       },
-                                    ),
-                                    _buildScorePill(
-                                      label: '+$mid',
-                                      color: const Color(0xFF35B88E),
-                                      onTap: () {
-                                        setModalState(() {
-                                          _addScoreToTeam(teamName, i, mid);
-                                        });
-                                      },
-                                    ),
-                                    _buildScorePill(
-                                      label: '+$high',
-                                      color: const Color(0xFFFF8A4C),
-                                      onTap: () {
-                                        setModalState(() {
-                                          _addScoreToTeam(teamName, i, high);
-                                        });
-                                      },
-                                    ),
-                                  ],
+                                    );
+                                  }),
                                 );
                               },
                             ),
