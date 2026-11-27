@@ -18,40 +18,16 @@ class DominoSetupScreen extends StatefulWidget {
 
 class _DominoSetupScreenState extends State<DominoSetupScreen> {
   int _playersCount = 2; // 2, 3, 4
-  String _playMode = 'draw'; // draw (سحب), block (بلوك)
+  static const String _playMode = 'draw'; // السحب فقط في كل الطرق
   bool _teamMode = true; // في حالة 4 لاعبين: فرق 2 ضد 2 أو فردي
   int _targetScore = 101; // 101, 151, 201
   bool _isCreating = false;
-  late final TextEditingController _hostNameController;
 
-  @override
-  void initState() {
-    super.initState();
+  String get _profileHostName {
     final authName = AuthService.instance.userName.trim();
     final apiName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
-    final resolved = (authName.isNotEmpty && authName != 'زائر فرفشة')
-        ? authName
-        : (apiName.isNotEmpty ? apiName : '');
-    _hostNameController = TextEditingController(text: resolved);
-  }
-
-  @override
-  void dispose() {
-    _hostNameController.dispose();
-    super.dispose();
-  }
-
-  String get _dealSummary {
-    final boneyard = _playMode == 'block'
-        ? 0
-        : (_playersCount == 2 ? 14 : (_playersCount == 3 ? 7 : 0));
-    final modeText = _playMode == 'draw' && boneyard > 0
-        ? 'المخزن $boneyard قطعة، واللي مش معاه يسحب.'
-        : 'مفيش سحب، واللي مش معاه يدق.';
-    final teamText = _playersCount == 4
-        ? (_teamMode ? ' (فرق 2 ضد 2) ' : ' (فردي) ')
-        : ' ';
-    return 'كل لاعب 7 قطع$teamText· $modeText أول ما حد يخلّص قطعه ياخد مجموع نقط اللي معاهم.';
+    if (authName.isNotEmpty && authName != 'زائر فرفشة') return authName;
+    return apiName;
   }
 
   Future<void> _startOnlineRoom() async {
@@ -60,14 +36,7 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
     HapticFeedback.heavyImpact();
 
     try {
-      final typedName = _hostNameController.text.trim();
-      final authName = AuthService.instance.userName.trim();
-      final apiName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
-      final hostName = typedName.isNotEmpty
-          ? typedName
-          : (authName.isNotEmpty && authName != 'زائر فرفشة')
-              ? authName
-              : apiName;
+      final hostName = _profileHostName;
 
       final res = await ApiService.instance.createRoom(
         gameSlug: 'domino',
@@ -115,10 +84,10 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
     HapticFeedback.heavyImpact();
 
     try {
-      final typedName = _hostNameController.text.trim();
+      final hostName = _profileHostName;
       final res = await ApiService.instance.matchmakeRoom(
         gameSlug: 'domino',
-        playerName: typedName.isNotEmpty ? typedName : null,
+        playerName: hostName.isNotEmpty ? hostName : null,
         maxPlayers: _playersCount,
         teamMode: _playersCount == 4 && _teamMode,
         targetScore: _targetScore,
@@ -151,12 +120,13 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
 
   void _startLocalVsBots() {
     HapticFeedback.heavyImpact();
+    final name = _profileHostName;
     context.push('/local-domino', extra: {
       'playersCount': _playersCount,
       'playMode': _playMode,
       'teamMode': _playersCount == 4 && _teamMode,
       'targetScore': _targetScore,
-      'playerName': _hostNameController.text.trim().isNotEmpty ? _hostNameController.text.trim() : 'أنت',
+      'playerName': name.isNotEmpty ? name : 'أنت',
     });
   }
 
@@ -321,35 +291,9 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
                         ),
                       ],
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 18),
 
-                      // 2. طريقة اللعب
-                      Text(
-                        'طريقة اللعب',
-                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFFCFC6E4)),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          _buildOptionCard(
-                            selected: _playMode == 'draw',
-                            title: 'سحب',
-                            subtitle: 'اللي مش معاه يسحب من المخزن',
-                            onTap: () => setState(() => _playMode = 'draw'),
-                          ),
-                          const SizedBox(width: 8),
-                          _buildOptionCard(
-                            selected: _playMode == 'block',
-                            title: 'بلوك',
-                            subtitle: 'مفيش سحب، اللي مش معاه يدق',
-                            onTap: () => setState(() => _playMode = 'block'),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      // 3. الجيم بيخلص عند
+                      // 2. الجيم بيخلص عند
                       Text(
                         'الجيم بيخلص عند',
                         style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFFCFC6E4)),
@@ -393,61 +337,7 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 14),
-
-                      // اسم المضيف (تلقائي من الحساب مع إمكانية التعديل)
-                      Text(
-                        'اسمك في الغرفة (المضيف 👑)',
-                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFFCFC6E4)),
-                      ),
-                      const SizedBox(height: 6),
-                      TextField(
-                        controller: _hostNameController,
-                        style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w700),
-                        decoration: InputDecoration(
-                          hintText: 'اكتب اسمك...',
-                          hintStyle: GoogleFonts.cairo(color: Colors.white38),
-                          filled: true,
-                          fillColor: Colors.black.withValues(alpha: 0.28),
-                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0x44A35BFF)),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: Color(0x44A35BFF)),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(14),
-                            borderSide: const BorderSide(color: LammaColors.gold500, width: 1.5),
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 14),
-
-                      // ملخص القواعد المباشر
-                      Container(
-                        padding: const EdgeInsets.all(14),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.28),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: Colors.white12),
-                        ),
-                        child: Text(
-                          _dealSummary,
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.cairo(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                            color: const Color(0xFFEADFFF),
-                            height: 1.55,
-                          ),
-                        ),
-                      ),
-
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 24),
 
                       GameButton(
                         text: _isCreating ? 'جاري فتح الغرفة...' : 'لعب أونلاين (إنشاء غرفة) ◀',
