@@ -46,9 +46,11 @@ Route::prefix('games')->group(function () {
 // مسارات غرف اللعب أونلاين
 Route::prefix('rooms')->group(function () {
     Route::post('/', [RoomController::class, 'store']);
+    Route::post('/matchmake', [RoomController::class, 'matchmake']);
     Route::get('/{code}', [RoomController::class, 'show']);
     Route::get('/{code}/state', [RoomController::class, 'state']);
     Route::post('/{code}/join', [RoomController::class, 'join']);
+    Route::post('/{code}/add-bot', [RoomController::class, 'addBot']);
     Route::post('/{code}/start', [RoomController::class, 'start']);
     Route::post('/{code}/answer', [RoomController::class, 'answer']);
     Route::get('/{code}/voice-token', [RoomController::class, 'getVoiceToken']);

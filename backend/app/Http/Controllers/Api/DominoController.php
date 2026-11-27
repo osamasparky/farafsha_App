@@ -263,6 +263,8 @@ class DominoController extends Controller
             (string) ($state['play_mode'] ?? 'draw')
         );
 
+        self::runBotTurnsIfNeeded($room, $newState);
+
         $room->update([
             'current_round' => $nextRoundNum,
             'game_state' => $newState,
@@ -292,6 +294,8 @@ class DominoController extends Controller
 
     private function persistAndSyncScores(Room $room, array &$state): void
     {
+        self::runBotTurnsIfNeeded($room, $state);
+
         // تحديث نقاط اللاعبين في الغرفة لتتطابق مع match_scores
         if (!empty($state['round_ended'])) {
             $is2v2 = !empty($state['team_mode']) && !empty($state['teams']);
@@ -319,6 +323,62 @@ class DominoController extends Controller
             'round_ended' => !empty($state['round_ended']),
             'match_over' => !empty($state['match_over']),
         ]));
+    }
+
+    public static function runBotTurnsIfNeeded(Room $room, array &$state): void
+    {
+        $guard = 0;
+        while (empty($state['round_ended']) && empty($state['match_over']) && $guard < 16) {
+            $guard++;
+            $turnPid = (int) ($state['current_turn_player_id'] ?? 0);
+            $player = $room->players->firstWhere('id', $turnPid) ?? RoomPlayer::find($turnPid);
+            if (!$player || !str_starts_with((string) $player->session_token, 'bot_')) {
+                break;
+            }
+
+            $hand = $state['hands'][(string) $turnPid] ?? [];
+            $bestIdx = null;
+            $bestSide = 'right';
+            $bestSum = -1;
+
+            foreach ($hand as $idx => $tile) {
+                $sum = ((int) $tile[0]) + ((int) $tile[1]);
+                if (DominoEngine::canPlayTile($tile, $state['left_end'] ?? null, $state['right_end'] ?? null, 'right') && $sum > $bestSum) {
+                    $bestIdx = $idx;
+                    $bestSide = 'right';
+                    $bestSum = $sum;
+                } elseif (DominoEngine::canPlayTile($tile, $state['left_end'] ?? null, $state['right_end'] ?? null, 'left') && $sum > $bestSum) {
+                    $bestIdx = $idx;
+                    $bestSide = 'left';
+                    $bestSum = $sum;
+                }
+            }
+
+            if ($bestIdx !== null) {
+                DominoEngine::placeTile($state, $turnPid, $bestIdx, $bestSide);
+                continue;
+            }
+
+            if (($state['play_mode'] ?? 'draw') === 'draw' && !empty($state['boneyard'])) {
+                $drawn = array_shift($state['boneyard']);
+                $state['hands'][(string) $turnPid][] = $drawn;
+                $newIdx = count($state['hands'][(string) $turnPid]) - 1;
+                if (DominoEngine::canPlayTile($drawn, $state['left_end'] ?? null, $state['right_end'] ?? null, 'right')) {
+                    DominoEngine::placeTile($state, $turnPid, $newIdx, 'right');
+                } elseif (DominoEngine::canPlayTile($drawn, $state['left_end'] ?? null, $state['right_end'] ?? null, 'left')) {
+                    DominoEngine::placeTile($state, $turnPid, $newIdx, 'left');
+                }
+                continue;
+            }
+
+            $state['consecutive_passes'] = ((int) ($state['consecutive_passes'] ?? 0)) + 1;
+            $state['last_move'] = ['type' => 'pass', 'player_id' => $turnPid];
+            if ($state['consecutive_passes'] >= count($state['turn_order'])) {
+                DominoEngine::resolveRoundEnd($state, null, true);
+                break;
+            }
+            DominoEngine::advanceTurn($state);
+        }
     }
 
     private function safeBroadcast($event): void

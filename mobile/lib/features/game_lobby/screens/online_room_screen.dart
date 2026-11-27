@@ -259,6 +259,23 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
     );
   }
 
+  Future<void> _onAddBot() async {
+    try {
+      HapticFeedback.selectionClick();
+      await ApiService.instance.addRoomBot(_code);
+      await _fetchRoomState();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', ''), style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _onStartGame() async {
     if (_isStarting) return;
     setState(() => _isStarting = true);
@@ -661,6 +678,23 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
                 ),
 
                 const SizedBox(height: 10),
+
+                if (_isHost && _players.length < _maxPlayers) ...[
+                  OutlinedButton.icon(
+                    onPressed: _onAddBot,
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: Color(0xFFA35BFF), width: 1.5),
+                      minimumSize: const Size(double.infinity, 48),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                    ),
+                    icon: const Icon(Icons.smart_toy_rounded, color: LammaColors.gold500),
+                    label: Text(
+                      'إضافة لاعب ذكي من السيرفر (NPC 🤖)',
+                      style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13),
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                ],
 
                 // زر ابدأ اللعبة (للمضيف فقط) أو شريط الانتظار (للضيوف)
                 if (_isHost)

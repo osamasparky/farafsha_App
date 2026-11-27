@@ -1438,4 +1438,45 @@ class ApiService {
 
   Future<Map<String, dynamic>> nextDominoRound(String code, {String? playerToken}) =>
       _dominoPost(code, 'next-round', playerToken: playerToken);
+
+  /// البحث عن غرفة أونلاين عشوائية أو إنشاء غرفة انتظار جديدة
+  Future<Map<String, dynamic>> matchmakeRoom({
+    required String gameSlug,
+    String? playerName,
+    int maxPlayers = 2,
+    bool? teamMode,
+    int? targetScore,
+    String? playMode,
+  }) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/rooms/matchmake'),
+          headers: _headers,
+          body: jsonEncode({
+            'game_slug': gameSlug,
+            if (playerName != null && playerName.isNotEmpty) 'player_name': playerName,
+            'max_players': maxPlayers,
+            'round_duration_seconds': 25,
+            if (teamMode != null) 'team_mode': teamMode,
+            if (targetScore != null) 'target_score': targetScore,
+            if (playMode != null) 'play_mode': playMode,
+          }),
+        )
+        .timeout(const Duration(seconds: 10));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200 || res.statusCode == 201) return data;
+    throw Exception(data['message'] ?? 'تعذر إيجاد غرفة');
+  }
+
+  /// إضافة لاعب ذكي (NPC) من السيرفر للغرفة
+  Future<void> addRoomBot(String code) async {
+    final res = await http
+        .post(Uri.parse('$baseUrl/rooms/$code/add-bot'), headers: _headers)
+        .timeout(const Duration(seconds: 8));
+    if (res.statusCode != 200) {
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      throw Exception(data['message'] ?? 'تعذر إضافة البوت');
+    }
+  }
 }

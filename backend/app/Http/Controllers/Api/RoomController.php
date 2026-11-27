@@ -219,6 +219,8 @@ class RoomController extends Controller
                 $playMode
             );
 
+            DominoController::runBotTurnsIfNeeded($room, $dominoState);
+
             $room->update([
                 'status' => 'playing',
                 'current_round' => 1,
@@ -759,6 +761,74 @@ class RoomController extends Controller
         return response()->json([
             'status' => 'success',
             'message' => 'تمت مغادرة الغرفة بنجاح.',
+        ]);
+    }
+
+    /**
+     * البحث عن غرفة انتظار متاحة للاعب عشوائي أو إنشاء غرفة جديدة تلقائياً
+     */
+    public function matchmake(Request $request): JsonResponse
+    {
+        $user = auth('sanctum')->user();
+        $gameSlug = $request->input('game_slug', 'domino');
+        $game = Game::where('slug', $gameSlug)->firstOrFail();
+        $playerName = trim((string) ($request->input('player_name') ?: ($user?->name ?: 'لاعب فرفشة')));
+
+        $openRoom = Room::where('game_id', $game->id)
+            ->where('status', 'waiting')
+            ->where('last_active_at', '>=', now()->subMinutes(15))
+            ->withCount('players')
+            ->orderByDesc('id')
+            ->get()
+            ->first(fn ($r) => $r->players_count < $r->max_players);
+
+        if ($openRoom) {
+            $request->merge(['player_name' => $playerName]);
+            return $this->join($request, $openRoom->code);
+        }
+
+        $request->merge([
+            'game_id' => $game->id,
+            'host_name' => $playerName,
+        ]);
+
+        return $this->store($request);
+    }
+
+    /**
+     * إضافة لاعب ذكي (NPC) من السيرفر لإكمال الغرفة في حال عدم توفر لاعبين أونلاين
+     */
+    public function addBot(Request $request, string $code): JsonResponse
+    {
+        $room = Room::where('code', $code)->with('players')->firstOrFail();
+        if ($room->status !== 'waiting') {
+            return response()->json(['status' => 'error', 'message' => 'اللعبة بدأت بالفعل.'], 422);
+        }
+
+        if ($room->players->count() >= $room->max_players) {
+            return response()->json(['status' => 'error', 'message' => 'الغرفة ممتلئة بالكامل.'], 422);
+        }
+
+        $botNames = ['بوت فرفشة 🤖', 'سارة (NPC) 🤖', 'محمود (NPC) 🤖', 'كريم (NPC) 🤖'];
+        $existingCount = $room->players->where(fn ($p) => str_starts_with((string) $p->session_token, 'bot_'))->count();
+        $botName = $botNames[$existingCount % count($botNames)];
+
+        $bot = RoomPlayer::create([
+            'room_id' => $room->id,
+            'user_id' => null,
+            'player_name' => $botName,
+            'avatar' => 'assets/images/av-karim.webp',
+            'is_host' => false,
+            'is_ready' => true,
+            'score' => 0,
+            'connection_status' => 'online',
+            'session_token' => 'bot_' . Str::random(24),
+            'last_seen_at' => now(),
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'bot' => $bot,
         ]);
     }
 

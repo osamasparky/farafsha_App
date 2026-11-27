@@ -109,6 +109,57 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
     }
   }
 
+  Future<void> _matchmakeRandom() async {
+    if (_isCreating) return;
+    setState(() => _isCreating = true);
+    HapticFeedback.heavyImpact();
+
+    try {
+      final typedName = _hostNameController.text.trim();
+      final res = await ApiService.instance.matchmakeRoom(
+        gameSlug: 'domino',
+        playerName: typedName.isNotEmpty ? typedName : null,
+        maxPlayers: _playersCount,
+        teamMode: _playersCount == 4 && _teamMode,
+        targetScore: _targetScore,
+        playMode: _playMode,
+      );
+
+      final code = res['room']?['code']?.toString() ?? '';
+      final token = res['token']?.toString();
+      final isHost = res['player']?['is_host'] == true || res['player']?['is_host'] == 1;
+
+      if (mounted && code.isNotEmpty) {
+        context.pushReplacement('/online-room', extra: {
+          'code': code,
+          'token': token,
+          'isHost': isHost,
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isCreating = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString().replaceAll('Exception: ', ''), style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
+  void _startLocalVsBots() {
+    HapticFeedback.heavyImpact();
+    context.push('/local-domino', extra: {
+      'playersCount': _playersCount,
+      'playMode': _playMode,
+      'teamMode': _playersCount == 4 && _teamMode,
+      'targetScore': _targetScore,
+      'playerName': _hostNameController.text.trim().isNotEmpty ? _hostNameController.text.trim() : 'أنت',
+    });
+  }
+
   void _showRulesDialog() {
     showDialog(
       context: context,
@@ -404,10 +455,47 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
                       const SizedBox(height: 20),
 
                       GameButton(
-                        text: _isCreating ? 'جاري فتح الغرفة...' : 'يلا نرصّ ◀',
+                        text: _isCreating ? 'جاري فتح الغرفة...' : 'لعب أونلاين (إنشاء غرفة) ◀',
                         showArrow: false,
-                        height: 56,
+                        height: 54,
                         onPressed: _isCreating ? () {} : _startOnlineRoom,
+                      ),
+
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFF35B88E), width: 1.5),
+                                minimumSize: const Size(0, 48),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              onPressed: _startLocalVsBots,
+                              icon: const Icon(Icons.smart_toy_rounded, color: Color(0xFF6FD9B5), size: 18),
+                              label: Text(
+                                'لعب محلي (ضد البوت)',
+                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: OutlinedButton.icon(
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: Color(0xFFA35BFF), width: 1.5),
+                                minimumSize: const Size(0, 48),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                              ),
+                              onPressed: _isCreating ? null : _matchmakeRandom,
+                              icon: const Icon(Icons.public_rounded, color: LammaColors.gold500, size: 18),
+                              label: Text(
+                                'لاعب عشوائي 🌐',
+                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
 
                       const SizedBox(height: 10),

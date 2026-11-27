@@ -366,10 +366,16 @@ class AuthController extends Controller
 
         $identifier = trim($validated['identifier']);
         $password = $validated['password'];
+        $normalizedPhone = $this->normalizePhone($identifier);
+        $digitsOnly = preg_replace('/\D+/', '', $identifier);
+        $noPlusNormalized = ltrim($normalizedPhone, '+');
 
-        // البحث إما بالبريد الإلكتروني أو برقم الهاتف
-        $user = User::where('email', $identifier)
+        // البحث إما بالبريد الإلكتروني أو برقم الهاتف بجميع صيغه
+        $user = User::where('email', strtolower($identifier))
             ->orWhere('phone', $identifier)
+            ->orWhere('phone', $normalizedPhone)
+            ->orWhere('phone', $noPlusNormalized)
+            ->when(!empty($digitsOnly), fn ($q) => $q->orWhere('phone', $digitsOnly))
             ->first();
 
         if (!$user || !Hash::check($password, $user->password)) {

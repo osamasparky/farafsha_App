@@ -8,6 +8,7 @@ import '../../../core/services/livekit_voice_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../widgets/domino_board_widgets.dart';
 
 /// شاشة طاولة الدومينو الأونلاين (بالعرض Landscape — مطابقة لتصاميم Domino2 / Domino3 / Domino4 / DominoEnd)
 class DominoOnlineScreen extends StatefulWidget {
@@ -34,6 +35,7 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
   bool _isFetching = false;
   bool _isSubmitting = false;
   bool _isAppActive = true;
+  bool _isPortrait = false;
 
   Map<String, dynamic> _domino = {};
   List<Map<String, dynamic>> _players = [];
@@ -46,11 +48,7 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    // قفل الشاشة بالوضع الأفقي (Landscape) أثناء مباراة الدومينو حسب المواصفات
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
+    _applyOrientation();
     _fetchState();
 
     _syncTimer = Timer.periodic(const Duration(milliseconds: 2000), (_) {
@@ -68,6 +66,26 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
         }
       }
     });
+  }
+
+  void _applyOrientation() {
+    if (_isPortrait) {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.portraitDown,
+      ]);
+    } else {
+      SystemChrome.setPreferredOrientations([
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+    }
+  }
+
+  void _toggleOrientation() {
+    HapticFeedback.selectionClick();
+    setState(() => _isPortrait = !_isPortrait);
+    _applyOrientation();
   }
 
   @override
@@ -432,6 +450,20 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                           },
                         ),
                         GestureDetector(
+                          onTap: _toggleOrientation,
+                          child: Container(
+                            width: 36,
+                            height: 36,
+                            margin: const EdgeInsets.only(left: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black38,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 18),
+                          ),
+                        ),
+                        GestureDetector(
                           onTap: () => _showPauseDialog(),
                           child: Container(
                             width: 36,
@@ -718,62 +750,14 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
     final showLeftSlot = _isMyTurn && sel != null && _canPlayOn(sel, 'left') && _board.isNotEmpty;
     final showRightSlot = _isMyTurn && sel != null && _canPlayOn(sel, 'right');
 
-    if (_board.isEmpty) {
-      if (showRightSlot) {
-        return GestureDetector(
-          onTap: () => _playTile(sel, 'right'),
-          child: const _DashedDropSlot(isVertical: false),
-        );
-      }
-      return Text(
-        _isMyTurn ? 'اختار أعلى دبل عندك عشان تبدأ 🎯' : 'الطاولة فاضية — في انتظار البداية...',
-        style: GoogleFonts.cairo(color: Colors.white60, fontSize: 13, fontWeight: FontWeight.w700),
-      );
-    }
-
-    final List<Widget> items = [];
-    if (showLeftSlot) {
-      items.add(GestureDetector(
-        onTap: () => _playTile(sel, 'left'),
-        child: const _DashedDropSlot(isVertical: false),
-      ));
-    }
-
-    for (final tile in _board) {
-      final isDouble = tile[0] == tile[1];
-      final isLast = lastPlayedTile != null &&
-          lastPlayedTile.length == 2 &&
-          ((lastPlayedTile[0] == tile[0] && lastPlayedTile[1] == tile[1]) ||
-              (lastPlayedTile[0] == tile[1] && lastPlayedTile[1] == tile[0]));
-
-      items.add(_DominoTileWidget(
-        a: tile[0],
-        b: tile[1],
-        isVertical: isDouble,
-        isLastPlayed: isLast,
-        scale: _board.length > 12 ? 0.56 : 0.68,
-      ));
-    }
-
-    if (showRightSlot) {
-      items.add(GestureDetector(
-        onTap: () => _playTile(sel, 'right'),
-        child: const _DashedDropSlot(isVertical: false),
-      ));
-    }
-
-    return Center(
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        child: Wrap(
-          alignment: WrapAlignment.center,
-          crossAxisAlignment: WrapCrossAlignment.center,
-          spacing: 3,
-          runSpacing: 6,
-          children: items,
-        ),
-      ),
+    return SnakeDominoBoard(
+      board: _board,
+      lastPlayedTile: lastPlayedTile,
+      showLeftSlot: showLeftSlot,
+      showRightSlot: showRightSlot,
+      onTapLeftSlot: sel != null ? () => _playTile(sel, 'left') : null,
+      onTapRightSlot: sel != null ? () => _playTile(sel, 'right') : null,
+      emptyMessage: _isMyTurn ? 'اختار أعلى دبل عندك عشان تبدأ 🎯' : 'الطاولة فاضية — في انتظار البداية...',
     );
   }
 
@@ -1244,125 +1228,21 @@ class _BoneyardPanel extends StatelessWidget {
   }
 }
 
-class _DashedDropSlot extends StatelessWidget {
-  final bool isVertical;
-  const _DashedDropSlot({required this.isVertical});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: isVertical ? 30 : 54,
-      height: isVertical ? 54 : 30,
-      decoration: BoxDecoration(
-        color: LammaColors.gold500.withValues(alpha: 0.16),
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: LammaColors.gold500, width: 1.8),
-        boxShadow: [BoxShadow(color: LammaColors.gold500.withValues(alpha: 0.35), blurRadius: 8)],
-      ),
-      child: const Icon(Icons.add_rounded, color: LammaColors.gold500, size: 16),
-    );
-  }
-}
-
 class _DominoTileWidget extends StatelessWidget {
   final int a;
   final int b;
   final bool isVertical;
-  final bool isLastPlayed;
   final double scale;
 
   const _DominoTileWidget({
     required this.a,
     required this.b,
     this.isVertical = true,
-    this.isLastPlayed = false,
     this.scale = 1.0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final w = (isVertical ? 44.0 : 80.0) * scale;
-    final h = (isVertical ? 84.0 : 42.0) * scale;
-
-    return Container(
-      width: w,
-      height: h,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFDF8EE),
-        borderRadius: BorderRadius.circular(8 * scale),
-        border: Border.all(
-          color: isLastPlayed ? Colors.cyanAccent : const Color(0xFFD6C7AE),
-          width: isLastPlayed ? 2.2 : 1.4,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: isLastPlayed ? Colors.cyanAccent.withValues(alpha: 0.55) : Colors.black.withValues(alpha: 0.35),
-            offset: const Offset(0, 2),
-            blurRadius: isLastPlayed ? 10 : 3,
-          ),
-        ],
-      ),
-      child: isVertical
-          ? Column(
-              children: [
-                Expanded(child: _PipFace(value: a, scale: scale)),
-                Container(height: 1.5, width: w * 0.75, color: const Color(0xFF9E8E76)),
-                Expanded(child: _PipFace(value: b, scale: scale)),
-              ],
-            )
-          : Row(
-              children: [
-                Expanded(child: _PipFace(value: a, scale: scale)),
-                Container(width: 1.5, height: h * 0.75, color: const Color(0xFF9E8E76)),
-                Expanded(child: _PipFace(value: b, scale: scale)),
-              ],
-            ),
-    );
-  }
-}
-
-class _PipFace extends StatelessWidget {
-  final int value;
-  final double scale;
-
-  const _PipFace({required this.value, required this.scale});
-
-  static const Map<int, List<int>> _pipMap = {
-    0: [],
-    1: [4],
-    2: [0, 8],
-    3: [0, 4, 8],
-    4: [0, 2, 6, 8],
-    5: [0, 2, 4, 6, 8],
-    6: [0, 2, 3, 5, 6, 8],
-  };
-
-  @override
-  Widget build(BuildContext context) {
-    final active = _pipMap[value] ?? const [];
-    final dotSize = 5.4 * scale;
-
-    return Padding(
-      padding: EdgeInsets.all(4.2 * scale),
-      child: GridView.builder(
-        physics: const NeverScrollableScrollPhysics(),
-        shrinkWrap: true,
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 3),
-        itemCount: 9,
-        itemBuilder: (_, idx) {
-          if (!active.contains(idx)) return const SizedBox.shrink();
-          return Center(
-            child: Container(
-              width: dotSize,
-              height: dotSize,
-              decoration: BoxDecoration(
-                color: value == 6 ? const Color(0xFFB91C1C) : const Color(0xFF1F1638),
-                shape: BoxShape.circle,
-              ),
-            ),
-          );
-        },
-      ),
-    );
+    return DominoTileWidget(a: a, b: b, isVertical: isVertical, scale: scale);
   }
 }

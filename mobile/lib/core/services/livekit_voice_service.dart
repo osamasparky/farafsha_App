@@ -61,10 +61,20 @@ class LiveKitVoiceService extends ChangeNotifier {
       // 2. مغادرة أي غرفة سابقة
       await leaveVoiceRoom();
 
-      // 3. تهيئة غرفة LiveKit مع إعدادات الصوت فقط
+      // 3. تهيئة غرفة LiveKit مع تفعيل إلغاء الصدى والضوضاء لمنع صدى الصوت تماماً
       const roomOptions = RoomOptions(
         adaptiveStream: true,
         dynacast: true,
+        defaultAudioCaptureOptions: AudioCaptureOptions(
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          highPassFilter: true,
+          typingNoiseDetection: true,
+        ),
+        defaultAudioOutputOptions: AudioOutputOptions(
+          speakerOn: false,
+        ),
         defaultAudioPublishOptions: AudioPublishOptions(
           dtx: true,
         ),
@@ -95,10 +105,10 @@ class LiveKitVoiceService extends ChangeNotifier {
           _handleDisconnect();
         });
 
-      // 4. الاتصال بالسيرفر وتفعيل السبيكر الخارجي للمكالمة الجماعية
+      // 4. الاتصال بالسيرفر (سماعة المكالمة الافتراضية تمنع ارتداد الصوت للمايك)
       await _room!.connect(serverUrl, token);
       try {
-        await Hardware.instance.setSpeakerphoneOn(true);
+        await Hardware.instance.setSpeakerphoneOn(false);
       } catch (_) {}
 
       _isConnected = true;
