@@ -94,25 +94,39 @@ class AuthService extends ChangeNotifier {
 
       // إذا كان مسجلاً ولديه توكن، يتم جلب أحدث بيانات في الخلفية للتأكد من صلاحية الجلسة
       if (_isLoggedIn && _authToken != null && _authToken!.isNotEmpty) {
-        ApiService.instance.getCurrentUser(_authToken!).then((userData) {
-          if (userData != null) {
-            _userName = userData['name']?.toString() ?? _userName;
-            _userEmail = userData['email']?.toString() ?? _userEmail;
-            _userPhone = userData['phone']?.toString() ?? _userPhone;
-            _userAvatar = userData['avatar']?.toString() ?? _userAvatar;
-            _totalPoints = (userData['total_points'] ?? userData['total_score'] ?? _totalPoints) as int;
-            _wins = (userData['wins'] ?? userData['wins_count'] ?? _wins) as int;
-            _gamesPlayed = (userData['games_played'] ?? _gamesPlayed) as int;
-            _syncWithApiService();
-            notifyListeners();
-          }
-        }).catchError((_) {});
+        refreshProfile();
       }
 
       notifyListeners();
     } catch (e) {
       debugPrint('⚠️ Error initializing AuthService: $e');
     }
+  }
+
+  /// تحديث بيانات المستخدم من السيرفر وتحديث الكاش المحلي
+  Future<void> refreshProfile() async {
+    if (!_isLoggedIn || _authToken == null || _authToken!.isEmpty) return;
+    try {
+      final userData = await ApiService.instance.getCurrentUser(_authToken!);
+      if (userData != null) {
+        final serverName = userData['name']?.toString().trim();
+        final serverEmail = userData['email']?.toString().trim();
+        final serverPhone = userData['phone']?.toString().trim();
+        final serverAvatar = userData['avatar']?.toString().trim();
+        if (serverName != null && serverName.isNotEmpty) _userName = serverName;
+        if (serverEmail != null && serverEmail.isNotEmpty) _userEmail = serverEmail;
+        if (serverPhone != null && serverPhone.isNotEmpty) _userPhone = serverPhone;
+        if (serverAvatar != null && serverAvatar.isNotEmpty) _userAvatar = serverAvatar;
+        _totalPoints = (userData['total_points'] ?? userData['total_score'] ?? _totalPoints) as int;
+        _wins = (userData['wins'] ?? userData['wins_count'] ?? _wins) as int;
+        _gamesPlayed = (userData['games_played'] ?? _gamesPlayed) as int;
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString('auth_user_name', _userName);
+        await prefs.setString('auth_user_avatar', _userAvatar);
+        _syncWithApiService();
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   /// مزامنة جلسة المستخدم والمصادقة مع شبكة ApiService
@@ -526,7 +540,8 @@ class AuthService extends ChangeNotifier {
     await prefs.setString('auth_user_email', _userEmail);
     await prefs.setString('auth_user_dialect', _userDialect);
 
-    // إرسال التحديث للسيرفر
+    // مزامنة التحديث فوراً مع ApiService وإرساله للسيرفر
+    _syncWithApiService();
     try {
       await ApiService.instance.updateProfile(
         name: _userName,

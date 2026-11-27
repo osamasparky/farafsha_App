@@ -91,6 +91,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
   void initState() {
     super.initState();
     _resetToDefaults();
+    AuthService.instance.refreshProfile();
   }
 
   void _resetToDefaults() {
@@ -490,9 +491,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
         loggedInName = AuthService.instance.userName.trim();
       }
       if (loggedInName.isNotEmpty && name.trim() == loggedInName) {
-        final serverAvatar = ApiService.instance.currentUser?['avatar']?.toString().trim() ?? '';
         final localAvatar = AuthService.instance.userAvatar.trim();
-        final resolved = serverAvatar.isNotEmpty ? serverAvatar : localAvatar;
+        final serverAvatar = ApiService.instance.currentUser?['avatar']?.toString().trim() ?? '';
+        final resolved = localAvatar.isNotEmpty ? localAvatar : serverAvatar;
         if (resolved.isNotEmpty) {
           return resolved;
         }

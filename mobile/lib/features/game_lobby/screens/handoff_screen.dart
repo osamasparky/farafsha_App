@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 
 class HandoffScreen extends StatelessWidget {
   final String playerName;
@@ -124,16 +125,9 @@ class HandoffScreen extends StatelessWidget {
                           ),
                         ],
                       ),
-                      child: ClipOval(
-                        child: Image.asset(
-                          playerAvatar,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.person,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        ),
+                      child: PlayerAvatarWidget(
+                        avatarPath: playerAvatar,
+                        size: 140,
                       ),
                     ),
                   ],

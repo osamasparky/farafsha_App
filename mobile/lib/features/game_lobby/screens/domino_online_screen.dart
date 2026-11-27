@@ -4,10 +4,12 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/auth_service.dart';
 import '../../../core/services/livekit_voice_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
+import '../../../core/widgets/player_avatar_widget.dart';
 import '../widgets/domino_board_widgets.dart';
 
 /// شاشة طاولة الدومينو الأونلاين (بالعرض Landscape — مطابقة لتصاميم Domino2 / Domino3 / Domino4 / DominoEnd)
@@ -682,13 +684,11 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                                     backgroundColor: Colors.white12,
                                   ),
                                 ),
-                                CircleAvatar(
-                                  radius: 18,
-                                  backgroundColor: const Color(0xFF4A1E9A),
-                                  child: Text(
-                                    (myPlayer?['player_name']?.toString() ?? 'أ').characters.first,
-                                    style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900),
-                                  ),
+                                PlayerAvatarWidget(
+                                  avatarPath: (myPlayer?['avatar']?.toString().trim().isNotEmpty == true)
+                                      ? myPlayer!['avatar'].toString()
+                                      : AuthService.instance.userAvatar,
+                                  size: 36,
                                 ),
                               ],
                             ),
