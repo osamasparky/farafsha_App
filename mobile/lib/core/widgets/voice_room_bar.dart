@@ -38,9 +38,17 @@ class VoiceRoomBar extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 onTap: isConnecting
                     ? null
-                    : () {
+                    : () async {
                         HapticFeedback.mediumImpact();
-                        voice.joinVoiceRoom(roomCode: roomCode, playerToken: playerToken);
+                        final ok = await voice.joinVoiceRoom(roomCode: roomCode, playerToken: playerToken);
+                        if (!ok && voice.lastError != null && context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(voice.lastError!, style: GoogleFonts.cairo(fontWeight: FontWeight.w700)),
+                              backgroundColor: Colors.redAccent,
+                            ),
+                          );
+                        }
                       },
                 child: Container(
                   height: 44,

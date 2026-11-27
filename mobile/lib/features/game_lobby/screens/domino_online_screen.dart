@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
+import '../../../core/services/livekit_voice_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
@@ -365,6 +366,71 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                             ),
                           ),
                         const Spacer(),
+                        // زر المايك والدردشة الصوتية LiveKit داخل مباراة الدومينو
+                        ListenableBuilder(
+                          listenable: LiveKitVoiceService.instance,
+                          builder: (context, _) {
+                            final voice = LiveKitVoiceService.instance;
+                            final connected = voice.isConnected;
+                            final muted = voice.isMuted;
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                GestureDetector(
+                                  onTap: () async {
+                                    HapticFeedback.selectionClick();
+                                    if (!connected) {
+                                      final ok = await voice.joinVoiceRoom(
+                                        roomCode: widget.roomCode,
+                                        playerToken: widget.playerToken,
+                                      );
+                                      if (!ok && voice.lastError != null && context.mounted) {
+                                        _showError(voice.lastError!);
+                                      }
+                                    } else {
+                                      await voice.toggleMute();
+                                    }
+                                  },
+                                  child: Container(
+                                    height: 36,
+                                    padding: const EdgeInsets.symmetric(horizontal: 10),
+                                    decoration: BoxDecoration(
+                                      color: connected
+                                          ? (muted ? Colors.redAccent.withValues(alpha: 0.25) : const Color(0xFF25D366).withValues(alpha: 0.22))
+                                          : Colors.black38,
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(
+                                        color: connected
+                                            ? (muted ? Colors.redAccent : const Color(0xFF25D366))
+                                            : Colors.white12,
+                                      ),
+                                    ),
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(
+                                          connected
+                                              ? (muted ? Icons.mic_off_rounded : Icons.mic_rounded)
+                                              : Icons.headset_mic_rounded,
+                                          color: connected
+                                              ? (muted ? Colors.redAccent : const Color(0xFF25D366))
+                                              : Colors.white70,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          connected ? (muted ? 'مكتوم' : 'المايك') : 'صوت',
+                                          style: GoogleFonts.cairo(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            );
+                          },
+                        ),
                         GestureDetector(
                           onTap: () => _showPauseDialog(),
                           child: Container(

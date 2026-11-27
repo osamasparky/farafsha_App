@@ -22,6 +22,24 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
   bool _teamMode = true; // في حالة 4 لاعبين: فرق 2 ضد 2 أو فردي
   int _targetScore = 101; // 101, 151, 201
   bool _isCreating = false;
+  late final TextEditingController _hostNameController;
+
+  @override
+  void initState() {
+    super.initState();
+    final authName = AuthService.instance.userName.trim();
+    final apiName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
+    final resolved = (authName.isNotEmpty && authName != 'زائر فرفشة')
+        ? authName
+        : (apiName.isNotEmpty ? apiName : '');
+    _hostNameController = TextEditingController(text: resolved);
+  }
+
+  @override
+  void dispose() {
+    _hostNameController.dispose();
+    super.dispose();
+  }
 
   String get _dealSummary {
     final boneyard = _playMode == 'block'
@@ -42,9 +60,14 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
     HapticFeedback.heavyImpact();
 
     try {
-      final hostName = AuthService.instance.userName.trim().isNotEmpty
-          ? AuthService.instance.userName.trim()
-          : (ApiService.instance.currentUser?['name']?.toString().trim() ?? '');
+      final typedName = _hostNameController.text.trim();
+      final authName = AuthService.instance.userName.trim();
+      final apiName = ApiService.instance.currentUser?['name']?.toString().trim() ?? '';
+      final hostName = typedName.isNotEmpty
+          ? typedName
+          : (authName.isNotEmpty && authName != 'زائر فرفشة')
+              ? authName
+              : apiName;
 
       final res = await ApiService.instance.createRoom(
         gameSlug: 'domino',
@@ -58,6 +81,10 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
 
       final code = res['room']?['code']?.toString() ?? '';
       final token = res['token']?.toString();
+
+      if (code.isEmpty) {
+        throw Exception('تعذر استلام رمز الغرفة من السيرفر');
+      }
 
       if (mounted) {
         context.pushReplacement('/online-room', extra: {
@@ -320,7 +347,39 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
                         }).toList(),
                       ),
 
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 14),
+
+                      // اسم المضيف (تلقائي من الحساب مع إمكانية التعديل)
+                      Text(
+                        'اسمك في الغرفة (المضيف 👑)',
+                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: const Color(0xFFCFC6E4)),
+                      ),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: _hostNameController,
+                        style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w700),
+                        decoration: InputDecoration(
+                          hintText: 'اكتب اسمك...',
+                          hintStyle: GoogleFonts.cairo(color: Colors.white38),
+                          filled: true,
+                          fillColor: Colors.black.withValues(alpha: 0.28),
+                          contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: Color(0x44A35BFF)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: Color(0x44A35BFF)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(14),
+                            borderSide: const BorderSide(color: LammaColors.gold500, width: 1.5),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 14),
 
                       // ملخص القواعد المباشر
                       Container(

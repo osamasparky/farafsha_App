@@ -15,6 +15,7 @@ class LiveKitVoiceService extends ChangeNotifier {
   bool _isMuted = false;
   bool _isSpeakerMuted = false;
   String? _currentRoomCode;
+  String? _lastError;
   List<String> _activeSpeakers = [];
   int _participantCount = 0;
 
@@ -23,6 +24,7 @@ class LiveKitVoiceService extends ChangeNotifier {
   bool get isMuted => _isMuted;
   bool get isSpeakerMuted => _isSpeakerMuted;
   String? get currentRoomCode => _currentRoomCode;
+  String? get lastError => _lastError;
   List<String> get activeSpeakers => _activeSpeakers;
   int get participantCount => _participantCount;
 
@@ -47,6 +49,7 @@ class LiveKitVoiceService extends ChangeNotifier {
     if (_isConnecting) return false;
 
     _isConnecting = true;
+    _lastError = null;
     notifyListeners();
 
     try {
@@ -92,8 +95,11 @@ class LiveKitVoiceService extends ChangeNotifier {
           _handleDisconnect();
         });
 
-      // 4. الاتصال بالسيرفر
+      // 4. الاتصال بالسيرفر وتفعيل السبيكر الخارجي للمكالمة الجماعية
       await _room!.connect(serverUrl, token);
+      try {
+        await Hardware.instance.setSpeakerphoneOn(true);
+      } catch (_) {}
 
       _isConnected = true;
       _isConnecting = false;
@@ -105,6 +111,7 @@ class LiveKitVoiceService extends ChangeNotifier {
       } catch (micErr) {
         debugPrint('⚠️ Initial mic enable warning (device might start muted): $micErr');
         _isMuted = true;
+        _lastError = 'يرجى السماح بصلاحية الميكروفون للتحدث';
       }
       _isSpeakerMuted = false;
       _currentRoomCode = roomCode;
@@ -115,6 +122,7 @@ class LiveKitVoiceService extends ChangeNotifier {
       return true;
     } catch (e) {
       debugPrint('⚠️ LiveKit Voice Connect Error: $e');
+      _lastError = 'تعذر الاتصال بالغرفة الصوتية، حاول مجدداً';
       _handleDisconnect();
       return false;
     }

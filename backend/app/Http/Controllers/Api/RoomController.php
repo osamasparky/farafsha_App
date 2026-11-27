@@ -374,7 +374,11 @@ class RoomController extends Controller
                 'round_duration_seconds' => $room->round_duration_seconds,
                 'round_ended' => $roundEnded,
                 'round_started_at' => $gameState['round_started_at'] ?? null,
-                'game' => $room->game,
+                'game' => $room->game ? [
+                    'id' => $room->game->id,
+                    'name' => $room->game->name,
+                    'slug' => $room->game->slug,
+                ] : null,
                 'total_players' => $players->count(),
                 'answered_count' => count($answers),
             ],

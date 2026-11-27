@@ -269,7 +269,8 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
       _hasNavigated = true;
       _syncTimer?.cancel();
       if (mounted) {
-        context.pushReplacement('/online-gameplay', extra: {
+        final targetRoute = _gameSlug == 'domino' ? '/online-domino' : '/online-gameplay';
+        context.pushReplacement(targetRoute, extra: {
           'code': _code,
           'token': _playerToken,
           'isHost': _isHost,
