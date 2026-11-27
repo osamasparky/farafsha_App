@@ -43,15 +43,21 @@ class _HomeScreenState extends State<HomeScreen> {
       setState(() => _isLoading = true);
     }
     final results = await Future.wait([
-      ApiService.instance.getGames(forceRefresh: forceRefresh),
+      ApiService.instance.getGames(forceRefresh: true),
       ApiService.instance.getBanners(forceRefresh: forceRefresh),
     ]);
 
     if (mounted) {
       final games = results[0];
       final banners = results[1];
+      final localAllowed = games.where((g) {
+        final gm = g['game_mode']?.toString() ?? 'all';
+        return g['is_active'] != false &&
+            ['all', 'local_only', 'hybrid', 'local_and_lammah'].contains(gm);
+      }).toList();
+
       setState(() {
-        _games = games.isNotEmpty ? games : _fallbackGames();
+        _games = games.isNotEmpty ? localAllowed : _fallbackGames();
         _banners = banners.isNotEmpty ? banners : _fallbackBanners();
         _isLoading = false;
       });

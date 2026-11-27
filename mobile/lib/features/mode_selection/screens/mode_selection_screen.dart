@@ -432,6 +432,7 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
   ];
 
   bool _isLoadingGames = true;
+  bool _hasApiGames = false;
   List<Map<String, dynamic>> _availableGames = [];
 
   @override
@@ -446,12 +447,17 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
       final games = await ApiService.instance.getGames(forceRefresh: true);
       if (mounted) {
         setState(() {
-          // فلترة ألعاب المحلية: all, local_only, hybrid, local_and_lammah
+          // فلترة ألعاب طريقة اللمّة: all, lammah, local_and_lammah, online_and_lammah
+          _hasApiGames = true;
           _availableGames = games.where((g) {
             final gm = g['game_mode']?.toString() ?? 'all';
             return g['is_active'] != false &&
-                ['all', 'local_only', 'hybrid', 'local_and_lammah'].contains(gm);
+                ['all', 'lammah', 'local_and_lammah', 'online_and_lammah'].contains(gm);
           }).toList();
+          if (_availableGames.isNotEmpty &&
+              !_availableGames.any((g) => g['slug'] == _selectedGameSlug)) {
+            _selectedGameSlug = _availableGames.first['slug']?.toString() ?? _selectedGameSlug;
+          }
           _isLoadingGames = false;
         });
       }
@@ -461,7 +467,7 @@ class _LammahSetupSheetState extends State<_LammahSetupSheet> {
   }
 
   List<Map<String, dynamic>> get _displayGames {
-    if (_availableGames.isNotEmpty) return _availableGames;
+    if (_hasApiGames) return _availableGames;
     return const [
       {'name': 'أمثال شعبية', 'slug': 'amthal-shaabiya', 'category': 'أمثال'},
       {'name': 'جمل مشهورة', 'slug': 'famous-quotes', 'category': 'إفيهات'},
@@ -927,6 +933,7 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
   bool _isLoadingJoin = false;
 
   List<Map<String, dynamic>> _availableGames = [];
+  bool _hasApiGames = false;
 
   @override
   void initState() {
@@ -951,19 +958,24 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
       final games = await ApiService.instance.getGames(forceRefresh: true);
       if (mounted) {
         setState(() {
-          // فلترة ألعاب الأونلاين: all, online_only, hybrid
+          // فلترة ألعاب الأونلاين: all, online_only, hybrid, online_and_lammah
+          _hasApiGames = true;
           _availableGames = games.where((g) {
             final gm = g['game_mode']?.toString() ?? 'all';
             return g['is_active'] != false &&
-                ['all', 'online_only', 'hybrid'].contains(gm);
+                ['all', 'online_only', 'hybrid', 'online_and_lammah'].contains(gm);
           }).toList();
+          if (_availableGames.isNotEmpty &&
+              !_availableGames.any((g) => g['slug'] == _selectedGameSlug)) {
+            _selectedGameSlug = _availableGames.first['slug']?.toString() ?? _selectedGameSlug;
+          }
         });
       }
     } catch (_) {}
   }
 
   List<Map<String, dynamic>> get _displayGames {
-    if (_availableGames.isNotEmpty) return _availableGames;
+    if (_hasApiGames) return _availableGames;
     return const [
       {'name': 'أمثال شعبية', 'slug': 'amthal-shaabiya', 'category': 'أمثال'},
       {'name': 'جمل مشهورة', 'slug': 'famous-quotes', 'category': 'إفيهات'},

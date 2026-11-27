@@ -90,18 +90,45 @@ class GameResource extends Resource
                                             ->default('choice')
                                             ->required(),
 
-                                        Forms\Components\Select::make('game_mode')
-                                            ->label('نمط اللعب المتاح')
+                                        Forms\Components\CheckboxList::make('game_mode')
+                                            ->label('أنماط اللعب المتاحة')
                                             ->options([
-                                                'all' => 'كافة الأنماط (محلي + طريقة اللمّة + أونلاين) 🌟',
+                                                'local' => 'لعب محلي (جهاز واحد - Pass & Play) 📱',
                                                 'lammah' => 'طريقة اللمّة (المذيع والقعدة) 👥',
-                                                'local_only' => 'لعب محلي فقط (جهاز واحد - Pass & Play) 📱',
-                                                'online_only' => 'أونلاين فقط (غرف متعددة الأجهزة) 🌐',
-                                                'hybrid' => 'هجين (محلي وأونلاين) 🔄',
-                                                'local_and_lammah' => 'محلي وطريقة اللمّة 👥📱',
+                                                'online' => 'أونلاين (غرف متعددة الأجهزة) 🌐',
                                             ])
-                                            ->default('all')
-                                            ->required(),
+                                            ->columns(1)
+                                            ->required()
+                                            ->minItems(1)
+                                            ->afterStateHydrated(function (Forms\Components\CheckboxList $component, $state) {
+                                                $modes = match ($state) {
+                                                    'all' => ['local', 'lammah', 'online'],
+                                                    'hybrid' => ['local', 'online'],
+                                                    'local_and_lammah' => ['local', 'lammah'],
+                                                    'online_and_lammah' => ['online', 'lammah'],
+                                                    'local_only' => ['local'],
+                                                    'lammah' => ['lammah'],
+                                                    'online_only' => ['online'],
+                                                    default => is_array($state) ? $state : ['local', 'lammah', 'online'],
+                                                };
+                                                $component->state($modes);
+                                            })
+                                            ->dehydrateStateUsing(function ($state): string {
+                                                $modes = is_array($state) ? $state : [];
+                                                $hasLocal = in_array('local', $modes, true);
+                                                $hasLammah = in_array('lammah', $modes, true);
+                                                $hasOnline = in_array('online', $modes, true);
+
+                                                if ($hasLocal && $hasLammah && $hasOnline) return 'all';
+                                                if ($hasLocal && $hasOnline) return 'hybrid';
+                                                if ($hasLocal && $hasLammah) return 'local_and_lammah';
+                                                if ($hasOnline && $hasLammah) return 'online_and_lammah';
+                                                if ($hasLocal) return 'local_only';
+                                                if ($hasLammah) return 'lammah';
+                                                if ($hasOnline) return 'online_only';
+
+                                                return 'all';
+                                            }),
 
                                         Forms\Components\TextInput::make('age_group')
                                             ->label('الفئة العمرية')
@@ -325,18 +352,19 @@ class GameResource extends Resource
                 Tables\Columns\BadgeColumn::make('game_mode')
                     ->label('نمط اللعب')
                     ->colors([
-                        'success' => fn ($state) => in_array($state, ['all', 'hybrid', 'local_and_lammah']),
+                        'success' => fn ($state) => in_array($state, ['all', 'hybrid', 'local_and_lammah', 'online_and_lammah']),
                         'warning' => fn ($state) => in_array($state, ['lammah']),
                         'info' => fn ($state) => in_array($state, ['local_only']),
                         'primary' => fn ($state) => in_array($state, ['online_only']),
                     ])
                     ->formatStateUsing(fn ($state) => match ($state) {
-                        'all' => 'كافة الأنماط 🌟',
+                        'all' => 'محلي + لمّة + أونلاين 🌟',
                         'lammah' => 'طريقة اللمّة 👥',
                         'local_only' => 'محلي فقط 📱',
                         'online_only' => 'أونلاين فقط 🌐',
                         'hybrid' => 'محلي وأونلاين 🔄',
                         'local_and_lammah' => 'محلي ولمّة 👥📱',
+                        'online_and_lammah' => 'لمّة وأونلاين 🌐👥',
                         default => $state ?? 'كافة الأنماط 🌟',
                     }),
 
