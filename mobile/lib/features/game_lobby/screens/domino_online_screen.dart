@@ -727,21 +727,23 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
   Widget _buildScoreChip(bool teamMode, int targetScore, Map<String, dynamic> matchScores) {
     String label;
     if (teamMode) {
-      label = 'إحنا ${matchScores['team_a'] ?? 0}  |  هم ${matchScores['team_b'] ?? 0}  / $targetScore';
+      label = 'إحنا ${matchScores['team_a'] ?? 0}  هم ${matchScores['team_b'] ?? 0}';
+    } else if (_players.length == 2) {
+      final myScore = matchScores['$_myPlayerId'] ?? 0;
+      final opp = _players.firstWhere((p) => p['id'] != _myPlayerId, orElse: () => {});
+      final oppScore = matchScores['${opp['id']}'] ?? 0;
+      label = 'أنت $myScore  هو $oppScore';
     } else {
-      final parts = _players.map((p) {
-        final pid = p['id'];
-        final name = pid == _myPlayerId ? 'أنا' : (p['player_name']?.toString() ?? '');
-        return '$name ${matchScores['$pid'] ?? 0}';
-      }).join(' | ');
-      label = '$parts / $targetScore';
+      final myScore = matchScores['$_myPlayerId'] ?? 0;
+      final others = _players.where((p) => p['id'] != _myPlayerId).map((p) => '${matchScores['${p['id']}'] ?? 0}').join(' | ');
+      label = 'أنت $myScore | $others';
     }
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: Colors.black38,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
       ),
       child: Text(

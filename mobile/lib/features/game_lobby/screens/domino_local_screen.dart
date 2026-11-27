@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../../core/network/api_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/settings_service.dart';
 import '../../../core/services/sound_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
@@ -36,7 +37,6 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
   final Random _rng = Random();
   bool _isPortrait = true; // دعم الشاشة بالطول افتراضياً مع زر تبديل للعرض
   bool _autoDraw = false; // زرار السحب الأوتوماتيك أو اليدوي
-  int _roundNumber = 1;
   int _currentTurn = 0; // 0 = أنت
   int? _leftEnd;
   int? _rightEnd;
@@ -360,9 +360,14 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
   @override
   Widget build(BuildContext context) {
     final is2v2 = widget.teamMode && widget.playersCount == 4;
-    final scoreLabel = is2v2
-        ? 'إحنا $_teamAScore | هم $_teamBScore / ${widget.targetScore}'
-        : '${List.generate(widget.playersCount, (i) => '${_names[i]} ${_scores[i]}').join(' | ')} / ${widget.targetScore}';
+    final String scoreLabel;
+    if (is2v2) {
+      scoreLabel = 'إحنا $_teamAScore  هم $_teamBScore';
+    } else if (widget.playersCount == 2) {
+      scoreLabel = 'أنت ${_scores[0]}  هو ${_scores[1]}';
+    } else {
+      scoreLabel = 'أنت ${_scores[0]} | ${List.generate(widget.playersCount - 1, (i) => '${_scores[i + 1]}').join(' | ')}';
+    }
 
     final myValid = _hasValidMove(0);
     final canDraw = _currentTurn == 0 && !myValid && widget.playMode == 'draw' && _boneyard.isNotEmpty;
@@ -395,19 +400,49 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: Colors.black38,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
+                          child: Align(
+                            alignment: Alignment.centerRight,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black38,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
+                              ),
+                              child: Text(
+                                scoreLabel,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11.5),
+                              ),
                             ),
-                            child: Text(
-                              'جولة $_roundNumber · $scoreLabel',
-                              textAlign: TextAlign.center,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+                          ),
+                        ),
+                        // زر الصوت (أيقونة فقط)
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            final next = !SettingsService.instance.soundEffects;
+                            SettingsService.instance.setSoundEffects(next);
+                            setState(() {});
+                          },
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            margin: const EdgeInsets.only(left: 5),
+                            decoration: BoxDecoration(
+                              color: SettingsService.instance.soundEffects
+                                  ? const Color(0xFF25D366).withValues(alpha: 0.2)
+                                  : Colors.black38,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: SettingsService.instance.soundEffects ? const Color(0xFF25D366) : Colors.white12,
+                              ),
+                            ),
+                            child: Icon(
+                              SettingsService.instance.soundEffects ? Icons.volume_up_rounded : Icons.volume_off_rounded,
+                              color: SettingsService.instance.soundEffects ? const Color(0xFF25D366) : Colors.white54,
+                              size: 18,
                             ),
                           ),
                         ),
@@ -658,7 +693,6 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                               if (_matchOver) {
                                 context.go('/home');
                               } else {
-                                _roundNumber++;
                                 _dealRound(preferredStarter: _winnerIdx);
                               }
                             },
