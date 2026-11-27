@@ -46,5 +46,13 @@ void main() {
       expect(info.isUpdateAvailable, false);
       expect(info.currentBuildNumber, 8);
     });
+
+    test('Detects newer store semantic versions accurately', () {
+      expect(AppUpdateService.isStoreVersionNewer('1.0.1', '1.0.0'), true);
+      expect(AppUpdateService.isStoreVersionNewer('1.1.0', '1.0.9'), true);
+      expect(AppUpdateService.isStoreVersionNewer('2.0.0', '1.9.9'), true);
+      expect(AppUpdateService.isStoreVersionNewer('1.0.0', '1.0.0'), false);
+      expect(AppUpdateService.isStoreVersionNewer('1.0.0', '1.0.1'), false);
+    });
   });
 }

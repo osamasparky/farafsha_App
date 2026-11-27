@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/network/api_service.dart';
 import 'core/router/app_router.dart';
+import 'core/services/app_update_service.dart';
 import 'core/services/auth_service.dart';
 import 'core/services/deep_link_service.dart';
 import 'core/services/settings_service.dart';
@@ -46,8 +47,48 @@ void main() async {
   });
 }
 
-class LammahApp extends StatelessWidget {
+class LammahApp extends StatefulWidget {
   const LammahApp({super.key});
+
+  @override
+  State<LammahApp> createState() => _LammahAppState();
+}
+
+class _LammahAppState extends State<LammahApp> with WidgetsBindingObserver {
+  DateTime? _lastResumeUpdateCheck;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _checkStoreUpdateOnResume();
+    }
+  }
+
+  Future<void> _checkStoreUpdateOnResume() async {
+    final now = DateTime.now();
+    if (_lastResumeUpdateCheck != null &&
+        now.difference(_lastResumeUpdateCheck!) < const Duration(seconds: 60)) {
+      return;
+    }
+    _lastResumeUpdateCheck = now;
+
+    final info = await AppUpdateService.instance.checkUpdate();
+    if (info != null && info.isForceUpdate) {
+      appRouter.go('/force-update', extra: info);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {

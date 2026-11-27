@@ -52,7 +52,7 @@ final appRouter = GoRouter(
               message:
                   'يتوفر إصدار جديد من تطبيق فرفشة بميزات وتحسينات جديدة. يرجى التحديث الآن للمتابعة!',
               storeUrl:
-                  'https://play.google.com/store/apps/details?id=com.farafsha.app',
+                  'https://play.google.com/store/apps/details?id=${AppConfig.androidPackageName}',
               directDownloadUrl: 'https://farafsha.com/farafsha.aab',
             );
         return ForceUpdateScreen(updateInfo: updateInfo);
