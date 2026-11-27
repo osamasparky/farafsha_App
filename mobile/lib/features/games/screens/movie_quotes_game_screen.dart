@@ -156,7 +156,7 @@ class _MovieQuotesGameScreenState extends State<MovieQuotesGameScreen> {
     setState(() {
       _selectedChoiceIndex = index;
       _isAnswered = true;
-      _session.recordAnswer(isCorrect: isCorrect, points: 3);
+      _session.recordAnswer(isCorrect: isCorrect, points: _session.pointsPerCorrect);
     });
 
     if (isCorrect) {

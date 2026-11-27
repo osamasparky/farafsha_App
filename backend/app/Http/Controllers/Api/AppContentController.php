@@ -69,7 +69,6 @@ class AppContentController extends Controller
         $authUser = $request->user('sanctum');
 
         $users = User::where('status', 'active')
-            ->where('is_admin', false)
             ->orderByDesc('total_score')
             ->orderByDesc('wins_count')
             ->orderBy('id')
@@ -108,7 +107,6 @@ class AppContentController extends Controller
         $currentUser = $entries->firstWhere('is_current_user', true);
         if (!$currentUser && $authUser) {
             $higherCount = User::where('status', 'active')
-                ->where('is_admin', false)
                 ->where('total_score', '>', (int) ($authUser->total_score ?? 0))
                 ->count();
 
@@ -161,8 +159,10 @@ class AppContentController extends Controller
         }
 
         $user->refresh();
-        $calculatedLevel = max(1, (int) floor($user->total_score / 500) + 1);
-        if ($calculatedLevel > $user->level) {
+        $calculatedLevel = Level::where('min_points', '<=', $user->total_score)
+            ->orderByDesc('level_number')
+            ->value('level_number') ?? 1;
+        if ($calculatedLevel != $user->level) {
             $user->update(['level' => $calculatedLevel]);
         }
 
@@ -385,7 +385,8 @@ class AppContentController extends Controller
                     'points_in_level' => $pointsInLevel,
                     'needed_for_next' => $neededForNext,
                     'next_level_min' => $nextMin,
-                    'progress_percent' => round($progress * 100, 1),
+                    'is_max_level' => $nextLevel === null,
+                    'progress_percent' => $nextLevel === null ? 100.0 : round($progress * 100, 1),
                 ],
                 'badges' => $badges,
             ],

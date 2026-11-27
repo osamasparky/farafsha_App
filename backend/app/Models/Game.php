@@ -94,7 +94,46 @@ class Game extends Model
 
     protected $appends = [
         'cover_image_url',
+        'points_per_correct',
     ];
+
+    /**
+     * استخراج نقاط الإجابة الأساسية وبونص السرعة من دليل احتساب النقاط (Scoring System)
+     */
+    public function resolveScoringGuide(): array
+    {
+        $basePoints = null;
+        $speedBonus = 0;
+
+        if (!empty($this->scoring_guide) && is_array($this->scoring_guide)) {
+            foreach ($this->scoring_guide as $rule) {
+                $pointsText = (string) ($rule['points'] ?? '');
+                if (!preg_match('/(\d+)/', $pointsText, $matches)) {
+                    continue;
+                }
+                $val = (int) $matches[1];
+                if ($val <= 0) {
+                    continue;
+                }
+
+                $meta = mb_strtolower(($rule['condition'] ?? '') . ' ' . ($rule['note'] ?? ''));
+                $isSpeedRule = str_contains($meta, 'سرعة') || str_contains($meta, 'بونص') || str_contains($meta, 'speed') || str_contains($meta, 'bonus');
+
+                if ($basePoints === null) {
+                    $basePoints = $val;
+                } elseif ($isSpeedRule && $speedBonus === 0) {
+                    $speedBonus = $val;
+                }
+            }
+        }
+
+        return [$basePoints ?? 3, $speedBonus];
+    }
+
+    public function getPointsPerCorrectAttribute(): int
+    {
+        return $this->resolveScoringGuide()[0];
+    }
 
     public function getActivitylogOptions(): LogOptions
     {

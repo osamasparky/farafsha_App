@@ -396,38 +396,46 @@ class _AutobusGameScreenState extends State<AutobusGameScreen> with SingleTicker
                                 ],
                               ),
                             ),
-                            // أزرار إضافة النقاط السريعة
-                            Wrap(
-                              spacing: 6,
-                              children: [
-                                _buildScorePill(
-                                  label: '+5',
-                                  color: Colors.amber,
-                                  onTap: () {
-                                    setModalState(() {
-                                      _addScoreToTeam(teamName, i, 5);
-                                    });
-                                  },
-                                ),
-                                _buildScorePill(
-                                  label: '+10',
-                                  color: const Color(0xFF35B88E),
-                                  onTap: () {
-                                    setModalState(() {
-                                      _addScoreToTeam(teamName, i, 10);
-                                    });
-                                  },
-                                ),
-                                _buildScorePill(
-                                  label: '+20',
-                                  color: const Color(0xFFFF8A4C),
-                                  onTap: () {
-                                    setModalState(() {
-                                      _addScoreToTeam(teamName, i, 20);
-                                    });
-                                  },
-                                ),
-                              ],
+                            // أزرار إضافة النقاط السريعة (مبنية على دليل احتساب النقاط من لوحة التحكم)
+                            Builder(
+                              builder: (_) {
+                                final base = _session?.pointsPerCorrect ??
+                                    ApiService.instance.getPointsForGame('autobus-complete', fallback: 5);
+                                final mid = base * 2;
+                                final high = base * 4;
+                                return Wrap(
+                                  spacing: 6,
+                                  children: [
+                                    _buildScorePill(
+                                      label: '+$base',
+                                      color: Colors.amber,
+                                      onTap: () {
+                                        setModalState(() {
+                                          _addScoreToTeam(teamName, i, base);
+                                        });
+                                      },
+                                    ),
+                                    _buildScorePill(
+                                      label: '+$mid',
+                                      color: const Color(0xFF35B88E),
+                                      onTap: () {
+                                        setModalState(() {
+                                          _addScoreToTeam(teamName, i, mid);
+                                        });
+                                      },
+                                    ),
+                                    _buildScorePill(
+                                      label: '+$high',
+                                      color: const Color(0xFFFF8A4C),
+                                      onTap: () {
+                                        setModalState(() {
+                                          _addScoreToTeam(teamName, i, high);
+                                        });
+                                      },
+                                    ),
+                                  ],
+                                );
+                              },
                             ),
                           ],
                         ),

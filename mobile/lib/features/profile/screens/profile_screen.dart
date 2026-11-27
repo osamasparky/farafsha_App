@@ -29,6 +29,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Color _levelColor = const Color(0xFFE879F9);
   int _pointsInLevel = 0;
   int _neededForNext = 100;
+  int _nextLevelMin = 100;
+  bool _isMaxLevel = false;
   double _progressPercent = 0.0;
 
   List<Map<String, dynamic>> _badges = [];
@@ -81,6 +83,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
             _levelTitle = lvl['title'] ?? _levelTitle;
             _pointsInLevel = lvl['points_in_level'] ?? _pointsInLevel;
             _neededForNext = lvl['needed_for_next'] ?? _neededForNext;
+            _nextLevelMin = lvl['next_level_min'] ?? _nextLevelMin;
+            _isMaxLevel = lvl['is_max_level'] == true;
             _progressPercent = (lvl['progress_percent'] as num?)?.toDouble() ?? _progressPercent;
             if (lvl['color'] != null) {
               _levelColor = _parseColor(lvl['color'].toString(), const Color(0xFFE879F9));
@@ -1431,11 +1435,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'التقدم نحو المستوى التالي',
+                              _isMaxLevel ? 'المستوى الأعلى' : 'التقدم نحو المستوى التالي',
                               style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _levelColor),
                             ),
                             Text(
-                              '$_pointsInLevel / $_neededForNext نقطة للترقية',
+                              _isMaxLevel
+                                  ? 'وصلت لأعلى مستوى ($_totalPoints نقطة) 👑'
+                                  : '$_totalPoints / $_nextLevelMin نقطة (متبقي ${(_nextLevelMin - _totalPoints).clamp(0, _nextLevelMin)})',
                               style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800, color: Colors.white70),
                             ),
                           ],

@@ -24,8 +24,7 @@ class LeaderboardResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->where('status', 'active')
-            ->where('is_admin', false);
+            ->where('status', 'active');
     }
 
     public static function canCreate(): bool

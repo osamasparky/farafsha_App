@@ -579,7 +579,9 @@ class _PlayersScreenState extends State<PlayersScreen> {
       ]);
     }
 
-    // 2. جلب الأسئلة الفعلية
+    // 2. جلب الأسئلة الفعلية وإعدادات النقاط من لوحة التحكم
+    await ApiService.instance.getGames();
+    final pointsPerCorrect = ApiService.instance.getPointsForGame(widget.gameSlug);
     final cardsRaw = await ApiService.instance.getGameCards(widget.gameSlug, limit: widget.totalRounds);
     final questions = cardsRaw.map((c) => GameQuestion.fromMap(c)).toList();
 
@@ -589,6 +591,7 @@ class _PlayersScreenState extends State<PlayersScreen> {
       gameTitle: widget.gameTitle,
       gameRoute: widget.targetRoute,
       totalRounds: widget.totalRounds,
+      pointsPerCorrect: pointsPerCorrect,
       players: gamePlayers,
       questions: questions,
       currentRoundIndex: 0,

@@ -10,6 +10,7 @@ use App\Events\RoundStarted;
 use App\Http\Controllers\Controller;
 use App\Models\ContentItem;
 use App\Models\Game;
+use App\Models\Level;
 use App\Models\Room;
 use App\Models\RoomPlayer;
 use App\Models\User;
@@ -364,7 +365,7 @@ class RoomController extends Controller
         if ($isCorrect) {
             $duration = max(10, $room->round_duration_seconds);
             $timeTaken = min($duration, max(1, (float) ($validated['time_taken_seconds'] ?? 5)));
-            [$basePoints, $maxSpeedBonus] = $this->resolveScoringFromGuide($room->game?->scoring_guide);
+            [$basePoints, $maxSpeedBonus] = $room->game ? $room->game->resolveScoringGuide() : [3, 0];
 
             $speedRatio = max(0, ($duration - $timeTaken) / $duration);
             $speedBonus = $maxSpeedBonus > 0 ? (int) round($speedRatio * $maxSpeedBonus) : 0;
@@ -555,9 +556,12 @@ class RoomController extends Controller
                         if ($rankIndex === 0 && $player->score > 0) {
                             $user->increment('wins_count');
                         }
-                        // احتساب الترقية في المستوى
-                        $calculatedLevel = max(1, (int) floor($user->total_score / 500) + 1);
-                        if ($calculatedLevel > $user->level) {
+                        // احتساب الترقية في المستوى من جدول المستويات في لوحة التحكم
+                        $user->refresh();
+                        $calculatedLevel = Level::where('min_points', '<=', $user->total_score)
+                            ->orderByDesc('level_number')
+                            ->value('level_number') ?? 1;
+                        if ($calculatedLevel != $user->level) {
                             $user->update(['level' => $calculatedLevel]);
                         }
                     }
@@ -671,37 +675,6 @@ class RoomController extends Controller
             'status' => 'success',
             'message' => 'تمت مغادرة الغرفة بنجاح.',
         ]);
-    }
-
-    private function resolveScoringFromGuide(?array $scoringGuide): array
-    {
-        $basePoints = null;
-        $speedBonus = 0;
-
-        if (!empty($scoringGuide)) {
-            foreach ($scoringGuide as $rule) {
-                $pointsText = (string) ($rule['points'] ?? '');
-                if (!preg_match('/(\d+)/', $pointsText, $matches)) {
-                    continue;
-                }
-                $val = (int) $matches[1];
-                if ($val <= 0) {
-                    continue;
-                }
-
-                $meta = mb_strtolower(($rule['condition'] ?? '') . ' ' . ($rule['note'] ?? ''));
-                $isSpeedRule = str_contains($meta, 'سرعة') || str_contains($meta, 'بونص') || str_contains($meta, 'speed') || str_contains($meta, 'bonus');
-
-                if ($basePoints === null) {
-                    $basePoints = $val;
-                } elseif ($isSpeedRule && $speedBonus === 0) {
-                    $speedBonus = $val;
-                }
-            }
-        }
-
-        // قيم افتراضية متوازنة في حال عدم ضبط دليل احتساب النقاط
-        return [$basePoints ?? 5, $speedBonus];
     }
 
     private function safeBroadcast($event): void

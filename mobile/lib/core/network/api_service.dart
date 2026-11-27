@@ -262,6 +262,37 @@ class ApiService {
     return _loadSeedGames();
   }
 
+  /// استخراج نقاط الإجابة الصحيحة للعبة من دليل احتساب النقاط في لوحة التحكم
+  int getPointsForGame(String slug, {int fallback = 3}) {
+    final normalized = slug == 'taboo'
+        ? 'forbidden-words'
+        : (slug == 'quotes' ? 'famous-quotes' : (slug == 'amthal' ? 'amthal-shaabiya' : slug));
+
+    final games = _cachedGames ?? const [];
+    for (final g in games) {
+      if (g['slug'] == slug || g['slug'] == normalized) {
+        final direct = g['points_per_correct'];
+        if (direct is int && direct > 0) return direct;
+        if (direct is num && direct > 0) return direct.toInt();
+
+        final guide = g['scoring_guide'];
+        if (guide is List) {
+          for (final rule in guide) {
+            if (rule is Map) {
+              final text = rule['points']?.toString() ?? '';
+              final match = RegExp(r'\d+').firstMatch(text);
+              if (match != null) {
+                final val = int.tryParse(match.group(0)!) ?? 0;
+                if (val > 0) return val;
+              }
+            }
+          }
+        }
+      }
+    }
+    return fallback;
+  }
+
   /// جلب لعبة محددة بالـ slug
   Future<Map<String, dynamic>?> getGameBySlug(String slug) async {
     try {

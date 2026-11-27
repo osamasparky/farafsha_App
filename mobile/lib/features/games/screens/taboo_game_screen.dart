@@ -246,8 +246,8 @@ class _TabooGameScreenState extends State<TabooGameScreen> {
 
     setState(() {
       _turnCorrectCount++;
-      // إضافة نقطة للاعب والفريق
-      _session.activePlayer.score += 1;
+      // إضافة نقاط الإجابة من دليل احتساب النقاط في لوحة التحكم
+      _session.activePlayer.score += _session.pointsPerCorrect;
       _session.activePlayer.correctAnswers += 1;
       _currentCardIndex++;
     });

@@ -95,10 +95,11 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
   }
 
   void _scoreForTeam(int teamIndex) {
+    final pts = ApiService.instance.getPointsForGame(widget.gameSlug, fallback: 1);
     SettingsService.instance.triggerHaptic(isHeavy: true);
     SoundService.instance.playCorrect();
     setState(() {
-      _teams[teamIndex]['score'] = (_teams[teamIndex]['score'] as int) + 1;
+      _teams[teamIndex]['score'] = (_teams[teamIndex]['score'] as int) + pts;
       _lastScoredTeam = _teams[teamIndex]['name'] as String;
     });
 
@@ -110,7 +111,7 @@ class _LammaHostGameScreenState extends State<LammaHostGameScreen> {
             const Icon(Icons.stars_rounded, color: LammaColors.gold500),
             const SizedBox(width: 8),
             Text(
-              '+1 نقطة لـ ${_teams[teamIndex]['name']} 🎉',
+              '+$pts نقطة لـ ${_teams[teamIndex]['name']} 🎉',
               style: GoogleFonts.cairo(fontWeight: FontWeight.w700),
             ),
           ],

@@ -81,6 +81,7 @@ class GameSession {
   final String gameTitle;
   final String gameRoute;
   final int totalRounds;
+  final int pointsPerCorrect;
   final List<GamePlayer> players;
   final List<GameQuestion> questions;
   int currentRoundIndex; // 0-based
@@ -90,6 +91,7 @@ class GameSession {
     required this.gameTitle,
     required this.gameRoute,
     required this.totalRounds,
+    this.pointsPerCorrect = 3,
     required this.players,
     required this.questions,
     this.currentRoundIndex = 0,

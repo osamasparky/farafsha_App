@@ -164,7 +164,7 @@ class _AmthalGameScreenState extends State<AmthalGameScreen> {
     setState(() {
       _selectedOptionIndex = index;
       _isAnswered = true;
-      _session.recordAnswer(isCorrect: isCorrect, points: 3);
+      _session.recordAnswer(isCorrect: isCorrect, points: _session.pointsPerCorrect);
     });
 
     if (isCorrect) {
