@@ -1082,9 +1082,24 @@ class _TopSeatWidget extends StatelessWidget {
             borderRadius: BorderRadius.circular(10),
             border: Border.all(color: Colors.white24),
           ),
-          child: Text(
-            '$tileCount 🁣',
-            style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 9,
+                height: 15,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFA35BFF), Color(0xFF6A24C9)]),
+                  borderRadius: BorderRadius.circular(2.5),
+                  border: Border.all(color: Colors.white38, width: 0.7),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$tileCount',
+                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+              ),
+            ],
           ),
         ),
       ],

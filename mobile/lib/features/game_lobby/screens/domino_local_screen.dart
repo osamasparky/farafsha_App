@@ -357,6 +357,47 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
     }
   }
 
+  Widget _buildOpponentBadge(int pIdx) {
+    final isTurn = _currentTurn == pIdx && !_roundEnded;
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 3),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: isTurn ? const Color(0xFF5A25B8) : Colors.black38,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: isTurn ? LammaColors.gold500 : Colors.white12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircleAvatar(
+            radius: 11,
+            backgroundColor: const Color(0xFF6A24C9),
+            child: Text(
+              _names[pIdx].characters.first,
+              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 10.5),
+            ),
+          ),
+          const SizedBox(width: 5),
+          Container(
+            width: 9,
+            height: 15,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(colors: [Color(0xFFA35BFF), Color(0xFF6A24C9)]),
+              borderRadius: BorderRadius.circular(2.5),
+              border: Border.all(color: Colors.white38, width: 0.7),
+            ),
+          ),
+          const SizedBox(width: 3),
+          Text(
+            '${_hands[pIdx].length}',
+            style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final is2v2 = widget.teamMode && widget.playersCount == 4;
@@ -400,22 +441,27 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
-                          child: Align(
-                            alignment: Alignment.centerRight,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              decoration: BoxDecoration(
-                                color: Colors.black38,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(
+                                  color: Colors.black38,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
+                                ),
+                                child: Text(
+                                  scoreLabel,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+                                ),
                               ),
-                              child: Text(
-                                scoreLabel,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11.5),
-                              ),
-                            ),
+                              if (widget.playersCount == 2) ...[
+                                const SizedBox(width: 6),
+                                _buildOpponentBadge(1),
+                              ],
+                            ],
                           ),
                         ),
                         // زر الصوت (أيقونة فقط)
@@ -509,44 +555,15 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                     ),
                   ),
 
-                  // مقاعد الخصوم (أفاتار + عدد القطع فقط لتوفير المساحة)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: List.generate(widget.playersCount - 1, (idx) {
-                        final pIdx = idx + 1;
-                        final isTurn = _currentTurn == pIdx && !_roundEnded;
-                        return Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 6),
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: isTurn ? const Color(0xFF5A25B8) : Colors.black26,
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: isTurn ? LammaColors.gold500 : Colors.white12),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              CircleAvatar(
-                                radius: 12,
-                                backgroundColor: const Color(0xFF6A24C9),
-                                child: Text(
-                                  _names[pIdx].characters.first,
-                                  style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                '${_hands[pIdx].length} 🁣',
-                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
-                              ),
-                            ],
-                          ),
-                        );
-                      }),
+                  // مقاعد الخصوم (للـ 3 و 4 لاعبين فقط؛ في 2 لاعبين يظهر بالأعلى)
+                  if (widget.playersCount > 2)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: List.generate(widget.playersCount - 1, (idx) => _buildOpponentBadge(idx + 1)),
+                      ),
                     ),
-                  ),
 
                   const SizedBox(height: 6),
 
