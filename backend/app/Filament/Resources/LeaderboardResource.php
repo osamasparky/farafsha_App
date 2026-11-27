@@ -3,22 +3,35 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\LeaderboardResource\Pages;
-use App\Models\LeaderboardEntry;
+use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class LeaderboardResource extends Resource
 {
-    protected static ?string $model = LeaderboardEntry::class;
+    protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-trophy';
     protected static ?string $navigationGroup = 'اللعب والمنافسات';
     protected static ?string $modelLabel = 'متصدر';
     protected static ?string $pluralModelLabel = 'لوحة الصدارة والمتصدرين';
     protected static ?int $navigationSort = 2;
+
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->where('status', 'active')
+            ->where('is_admin', false);
+    }
+
+    public static function canCreate(): bool
+    {
+        return false;
+    }
 
     public static function form(Form $form): Form
     {
@@ -28,46 +41,29 @@ class LeaderboardResource extends Resource
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
-                                Forms\Components\TextInput::make('player_name')
+                                Forms\Components\TextInput::make('name')
                                     ->label('اسم اللاعب')
-                                    ->required()
-                                    ->maxLength(60),
+                                    ->disabled(),
 
-                                Forms\Components\Select::make('period_type')
-                                    ->label('فترة الترتيب')
-                                    ->options([
-                                        'weekly' => 'هذا الأسبوع (Weekly)',
-                                        'monthly' => 'هذا الشهر (Monthly)',
-                                        'all_time' => 'كل الوقت (All-Time)',
-                                    ])
-                                    ->required(),
-
-                                Forms\Components\TextInput::make('rank')
-                                    ->label('المركز في الترتيب')
-                                    ->numeric()
-                                    ->required(),
-
-                                Forms\Components\TextInput::make('score')
+                                Forms\Components\TextInput::make('total_score')
                                     ->label('مجموع النقاط')
                                     ->numeric()
                                     ->required(),
 
-                                Forms\Components\TextInput::make('wins')
+                                Forms\Components\TextInput::make('wins_count')
                                     ->label('عدد مرات الفوز')
                                     ->numeric()
                                     ->default(0),
 
-                                Forms\Components\TextInput::make('badge')
-                                    ->label('اللقب / الشارة')
-                                    ->placeholder('مثال: بطل الأسبوع 👑')
-                                    ->maxLength(60),
+                                Forms\Components\TextInput::make('games_played')
+                                    ->label('عدد المباريات')
+                                    ->numeric()
+                                    ->default(0),
 
-                                Forms\Components\TextInput::make('avatar')
-                                    ->label('مسار صورة الأفاتار')
-                                    ->default('assets/images/av-ahmed.png'),
-
-                                Forms\Components\Toggle::make('is_current_user')
-                                    ->label('حساب اللاعب الحالي (أنت)'),
+                                Forms\Components\TextInput::make('level')
+                                    ->label('المستوى')
+                                    ->numeric()
+                                    ->default(1),
                             ]),
                     ]),
             ]);
@@ -79,58 +75,43 @@ class LeaderboardResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('rank')
                     ->label('المركز')
-                    ->sortable()
-                    ->alignCenter(),
+                    ->rowIndex()
+                    ->alignCenter()
+                    ->badge()
+                    ->color('warning'),
 
-                Tables\Columns\TextColumn::make('player_name')
+                Tables\Columns\TextColumn::make('name')
                     ->label('اللاعب')
                     ->searchable()
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('period_type')
-                    ->label('الفترة')
-                    ->formatStateUsing(fn ($state) => match ($state) {
-                        'weekly' => 'هذا الأسبوع',
-                        'monthly' => 'هذا الشهر',
-                        'all_time' => 'كل الوقت',
-                        default => $state,
-                    })
-                    ->badge()
-                    ->color(fn ($state) => match ($state) {
-                        'weekly' => 'info',
-                        'monthly' => 'warning',
-                        'all_time' => 'success',
-                        default => 'gray',
-                    }),
-
-                Tables\Columns\TextColumn::make('score')
+                Tables\Columns\TextColumn::make('total_score')
                     ->label('النقاط')
                     ->numeric()
                     ->sortable()
                     ->color('warning')
                     ->weight('bold'),
 
-                Tables\Columns\TextColumn::make('wins')
+                Tables\Columns\TextColumn::make('wins_count')
                     ->label('الفوز')
+                    ->numeric()
+                    ->sortable()
+                    ->color('success'),
+
+                Tables\Columns\TextColumn::make('games_played')
+                    ->label('المباريات')
+                    ->numeric()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('badge')
-                    ->label('الشارة')
-                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('level')
+                    ->label('المستوى')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
             ])
-            ->defaultSort('score', 'desc')
-            ->filters([
-                Tables\Filters\SelectFilter::make('period_type')
-                    ->label('تصفية حسب الفترة')
-                    ->options([
-                        'weekly' => 'هذا الأسبوع',
-                        'monthly' => 'هذا الشهر',
-                        'all_time' => 'كل الوقت',
-                    ]),
-            ])
+            ->defaultSort('total_score', 'desc')
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ]);
     }
 
@@ -138,7 +119,6 @@ class LeaderboardResource extends Resource
     {
         return [
             'index' => Pages\ListLeaderboards::route('/'),
-            'create' => Pages\CreateLeaderboard::route('/create'),
             'edit' => Pages\EditLeaderboard::route('/{record}/edit'),
         ];
     }
