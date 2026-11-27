@@ -380,6 +380,7 @@ class RoomController extends Controller
                     'slug' => $room->game->slug,
                 ] : null,
                 'total_players' => $players->count(),
+                'max_players' => (int) $room->max_players,
                 'answered_count' => count($answers),
             ],
             'card' => $publicCard,

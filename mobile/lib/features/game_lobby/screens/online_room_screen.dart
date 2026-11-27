@@ -91,7 +91,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
         _gameSlug = game?['slug']?.toString() ?? '';
         _totalRounds = (room['total_rounds'] as int?) ?? 10;
         _roundDuration = (room['round_duration_seconds'] as int?) ?? 20;
-        _maxPlayers = (room['total_players'] as int?) ?? 8;
+        _maxPlayers = (room['max_players'] as int?) ?? (room['total_players'] as int?) ?? 8;
 
         _players = leaderboard.map((p) {
           final isH = p['is_host'] == true || p['is_host'] == 1;
