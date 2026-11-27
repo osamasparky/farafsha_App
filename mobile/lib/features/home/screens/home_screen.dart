@@ -557,7 +557,11 @@ class _HomeScreenState extends State<HomeScreen> {
           if (!isUnlocked) {
             _showGuestLockedModal(context, game['name'] ?? 'اللعبة');
           } else {
-            context.push('/game-setup', extra: game);
+            if (game['slug'] == 'domino') {
+              context.push('/domino-setup');
+            } else {
+              context.push('/game-setup', extra: game);
+            }
           }
         },
         child: Container(

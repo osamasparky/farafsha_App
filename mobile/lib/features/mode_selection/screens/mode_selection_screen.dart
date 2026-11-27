@@ -917,7 +917,8 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
   int _roundDuration = 20;
   int _dominoMaxPlayers = 4;
   bool _dominoTeamMode = true; // فردي أو 2 ضد 2
-  int _dominoTargetScore = 100;
+  String _dominoPlayMode = 'draw'; // draw (سحب) | block (بلوك)
+  int _dominoTargetScore = 101;
   bool _isLoadingHost = false;
 
   // Join state
@@ -996,6 +997,7 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
         maxPlayers: isDomino ? _dominoMaxPlayers : 8,
         teamMode: isDomino ? (_dominoMaxPlayers == 4 && _dominoTeamMode) : null,
         targetScore: isDomino ? _dominoTargetScore : null,
+        playMode: isDomino ? _dominoPlayMode : null,
       );
 
       final code = res['room']?['code']?.toString() ?? '';
@@ -1405,7 +1407,7 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
           ),
           const SizedBox(height: 6),
           Row(
-            children: [100, 50].map((pts) {
+            children: [101, 151, 201].map((pts) {
               final isSel = _dominoTargetScore == pts;
               return Expanded(
                 child: GestureDetector(
@@ -1420,7 +1422,7 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
                     ),
                     child: Center(
                       child: Text(
-                        'حتى $pts نقطة ${pts == 100 ? "🏆" : "⚡"}',
+                        '$pts نقطة',
                         style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
                       ),
                     ),
@@ -1428,6 +1430,45 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
                 ),
               );
             }).toList(),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _dominoPlayMode = 'draw'),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _dominoPlayMode == 'draw' ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _dominoPlayMode == 'draw' ? Colors.white : Colors.white24),
+                    ),
+                    child: Center(
+                      child: Text('سحب من المخزن', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _dominoPlayMode = 'block'),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: _dominoPlayMode == 'block' ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: _dominoPlayMode == 'block' ? Colors.white : Colors.white24),
+                    ),
+                    child: Center(
+                      child: Text('بلوك (دق)', style: GoogleFonts.cairo(fontSize: 12, fontWeight: FontWeight.w800, color: Colors.white)),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ] else ...[
         // عدد الجولات

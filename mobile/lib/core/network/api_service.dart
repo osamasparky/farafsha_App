@@ -1178,6 +1178,7 @@ class ApiService {
     int maxPlayers = 8,
     bool? teamMode,
     int? targetScore,
+    String? playMode,
   }) async {
     final resolvedName = (hostName != null && hostName.trim().isNotEmpty)
         ? hostName.trim()
@@ -1193,6 +1194,7 @@ class ApiService {
       'max_players': maxPlayers,
       if (teamMode != null) 'team_mode': teamMode,
       if (targetScore != null) 'target_score': targetScore,
+      if (playMode != null) 'play_mode': playMode,
     };
 
     final res = await http.post(

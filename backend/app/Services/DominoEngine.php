@@ -27,9 +27,10 @@ class DominoEngine
         array $playerIds,
         bool $teamMode = false,
         array $matchScores = [],
-        int $targetScore = 100,
+        int $targetScore = 101,
         int $roundNumber = 1,
-        ?int $preferredStarterId = null
+        ?int $preferredStarterId = null,
+        string $playMode = 'draw'
     ): array {
         $deck = self::buildDeck();
         $hands = [];
@@ -40,7 +41,7 @@ class DominoEngine
             $index += 7;
         }
 
-        $boneyard = array_values(array_slice($deck, $index));
+        $boneyard = $playMode === 'block' ? [] : array_values(array_slice($deck, $index));
         $is2v2 = $teamMode && count($playerIds) === 4;
 
         $teams = [];
@@ -68,6 +69,7 @@ class DominoEngine
 
         return [
             'game_type' => 'domino',
+            'play_mode' => $playMode,
             'round_number' => $roundNumber,
             'target_score' => max(10, $targetScore),
             'team_mode' => $is2v2,
@@ -288,6 +290,7 @@ class DominoEngine
             'points_won' => $roundPoints,
             'blocked' => $blocked,
             'remaining_pips' => collect($hands)->map(fn ($h) => self::handPipSum($h))->toArray(),
+            'losing_hands' => $hands,
         ];
     }
 
@@ -309,8 +312,9 @@ class DominoEngine
 
         return [
             'game_type' => 'domino',
+            'play_mode' => $state['play_mode'] ?? 'draw',
             'round_number' => (int) ($state['round_number'] ?? 1),
-            'target_score' => (int) ($state['target_score'] ?? 100),
+            'target_score' => (int) ($state['target_score'] ?? 101),
             'team_mode' => !empty($state['team_mode']),
             'teams' => $state['teams'] ?? [],
             'match_scores' => $state['match_scores'] ?? [],

@@ -107,6 +107,10 @@ class DominoController extends Controller
             return response()->json(['status' => 'error', 'message' => 'لديك بلاطة صالحة للعب بالفعل.'], 422);
         }
 
+        if (($state['play_mode'] ?? 'draw') === 'block') {
+            return response()->json(['status' => 'error', 'message' => 'طريقة اللعب بلوك: لا يوجد سحب، اضغط دق للتخطي.'], 422);
+        }
+
         if (empty($state['boneyard'])) {
             return response()->json(['status' => 'error', 'message' => 'السوق فارغ، استخدم التخطي.'], 422);
         }
@@ -150,8 +154,8 @@ class DominoController extends Controller
             return response()->json(['status' => 'error', 'message' => 'لديك بلاطة صالحة للعب.'], 422);
         }
 
-        if (!empty($state['boneyard'])) {
-            return response()->json(['status' => 'error', 'message' => 'يجب السحب من السوق أولاً.'], 422);
+        if (($state['play_mode'] ?? 'draw') !== 'block' && !empty($state['boneyard'])) {
+            return response()->json(['status' => 'error', 'message' => 'يجب السحب من المخزن أولاً.'], 422);
         }
 
         $this->applyPass($state, (int) $player->id);
@@ -253,9 +257,10 @@ class DominoController extends Controller
             $state['turn_order'],
             !empty($state['team_mode']),
             $state['match_scores'] ?? [],
-            (int) ($state['target_score'] ?? 100),
+            (int) ($state['target_score'] ?? 101),
             $nextRoundNum,
-            $starterId
+            $starterId,
+            (string) ($state['play_mode'] ?? 'draw')
         );
 
         $room->update([

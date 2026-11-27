@@ -17,6 +17,7 @@ import '../../features/game_lobby/screens/handoff_screen.dart';
 import '../../features/game_lobby/screens/online_room_screen.dart';
 import '../../features/game_lobby/screens/online_gameplay_screen.dart';
 import '../../features/game_lobby/screens/domino_online_screen.dart';
+import '../../features/game_lobby/screens/domino_setup_screen.dart';
 import '../../features/game_lobby/screens/join_room_screen.dart';
 import '../../features/game_lobby/screens/results_screen.dart';
 import '../../features/games/screens/amthal_game_screen.dart';
@@ -338,6 +339,16 @@ final appRouter = GoRouter(
           isHost: extra['isHost'] as bool? ?? false,
         );
       },
+    ),
+    GoRoute(
+      path: '/domino-setup',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('online')) {
+          return '/mode-select';
+        }
+        return null;
+      },
+      builder: (context, state) => const DominoSetupScreen(),
     ),
     GoRoute(
       path: '/online-domino',

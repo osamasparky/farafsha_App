@@ -45,6 +45,7 @@ class RoomController extends Controller
             'difficulty' => 'nullable|string',
             'team_mode' => 'nullable|boolean',
             'target_score' => 'nullable|integer|min:20|max:500',
+            'play_mode' => 'nullable|in:draw,block',
         ])->validate();
 
         $game = Game::find($validated['game_id']);
@@ -60,8 +61,9 @@ class RoomController extends Controller
 
         $initialGameState = $isDomino ? [
             'game_type' => 'domino',
+            'play_mode' => $validated['play_mode'] ?? 'draw',
             'team_mode' => (bool) ($validated['team_mode'] ?? false),
-            'target_score' => (int) ($validated['target_score'] ?? 100),
+            'target_score' => (int) ($validated['target_score'] ?? 101),
         ] : [];
 
         $room = Room::create([
@@ -204,14 +206,17 @@ class RoomController extends Controller
 
             $existingState = $room->game_state ?? [];
             $teamMode = !empty($existingState['team_mode']) && $players->count() === 4;
-            $targetScore = (int) ($existingState['target_score'] ?? 100);
+            $targetScore = (int) ($existingState['target_score'] ?? 101);
+            $playMode = (string) ($existingState['play_mode'] ?? 'draw');
 
             $dominoState = DominoEngine::dealRound(
                 $players->pluck('id')->toArray(),
                 $teamMode,
                 [],
                 $targetScore,
-                1
+                1,
+                null,
+                $playMode
             );
 
             $room->update([
