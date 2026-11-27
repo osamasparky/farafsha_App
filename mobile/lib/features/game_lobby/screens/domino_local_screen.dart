@@ -35,6 +35,7 @@ class DominoLocalScreen extends StatefulWidget {
 class _DominoLocalScreenState extends State<DominoLocalScreen> {
   final Random _rng = Random();
   bool _isPortrait = true; // دعم الشاشة بالطول افتراضياً مع زر تبديل للعرض
+  bool _autoDraw = false; // زرار السحب الأوتوماتيك أو اليدوي
   int _roundNumber = 1;
   int _currentTurn = 0; // 0 = أنت
   int? _leftEnd;
@@ -193,7 +194,24 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
     setState(() {});
     if (_currentTurn != 0 && !_roundEnded && !_matchOver) {
       _scheduleBotTurn();
+    } else if (_currentTurn == 0 && _autoDraw && !_roundEnded && !_matchOver) {
+      _scheduleAutoDrawIfNeeded();
     }
+  }
+
+  void _scheduleAutoDrawIfNeeded() {
+    if (!_autoDraw || _currentTurn != 0 || _roundEnded || _matchOver) return;
+    if (_hasValidMove(0) || widget.playMode != 'draw' || _boneyard.isEmpty) return;
+
+    Future.delayed(const Duration(milliseconds: 420), () {
+      if (!mounted || !_autoDraw || _currentTurn != 0 || _roundEnded || _matchOver) return;
+      if (!_hasValidMove(0) && _boneyard.isNotEmpty) {
+        setState(() => _hands[0].add(_boneyard.removeAt(0)));
+        if (!_hasValidMove(0) && _boneyard.isNotEmpty) {
+          _scheduleAutoDrawIfNeeded();
+        }
+      }
+    });
   }
 
   void _scheduleBotTurn() {
@@ -453,25 +471,58 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                     ),
                   ),
 
-                  // أزرار السحب / الدق + شريط الحالة
+                  // أزرار السحب الأوتوماتيك/اليدوي + الدق + شريط الحالة
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          _statusBanner,
-                          style: GoogleFonts.cairo(color: LammaColors.gold300, fontWeight: FontWeight.w800, fontSize: 12),
+                        Expanded(
+                          child: Text(
+                            _statusBanner,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.cairo(color: LammaColors.gold300, fontWeight: FontWeight.w800, fontSize: 12),
+                          ),
                         ),
-                        if (canDraw)
+                        if (widget.playMode == 'draw') ...[
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _autoDraw = !_autoDraw);
+                              if (_autoDraw) _scheduleAutoDrawIfNeeded();
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              margin: const EdgeInsets.only(left: 8),
+                              decoration: BoxDecoration(
+                                color: _autoDraw ? const Color(0xFF35B88E).withValues(alpha: 0.25) : Colors.black26,
+                                borderRadius: BorderRadius.circular(14),
+                                border: Border.all(color: _autoDraw ? const Color(0xFF35B88E) : Colors.white24),
+                              ),
+                              child: Text(
+                                _autoDraw ? 'سحب: تلقائي ⚡' : 'سحب: يدوي ✋',
+                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+                              ),
+                            ),
+                          ),
+                        ],
+                        if (canDraw && !_autoDraw)
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFF8A4C)),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFF8A4C),
+                              minimumSize: const Size(0, 34),
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                            ),
                             onPressed: _onDrawMyTile,
                             child: Text('اسحب (${_boneyard.length})', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
                           )
                         else if (canPass)
                           ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.redAccent),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.redAccent,
+                              minimumSize: const Size(0, 34),
+                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                            ),
                             onPressed: _onPassMyTurn,
                             child: Text('دق (باص)', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
                           )

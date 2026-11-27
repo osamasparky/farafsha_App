@@ -1,7 +1,30 @@
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import '../../../core/theme/lamma_theme.dart';
 
-/// لوح الدومينو الملتف تلقائياً (Snake / S-Curve) ليبقى كل الورق ظاهراً على الشاشة بدون Scroll
+class _PlacedNode {
+  final double x;
+  final double y;
+  final double w;
+  final double h;
+  final bool isVertical;
+  final int a;
+  final int b;
+  final bool isLast;
+
+  _PlacedNode({
+    required this.x,
+    required this.y,
+    required this.w,
+    required this.h,
+    required this.isVertical,
+    required this.a,
+    required this.b,
+    required this.isLast,
+  });
+}
+
+/// لوح الدومينو المتصل بشكل مربع/ثعباني (ضلعين أفقيين مع ضلع عمودي من قطعتين على الأقل) بدون Scroll
 class SnakeDominoBoard extends StatelessWidget {
   final List<List<int>> board;
   final List<dynamic>? lastPlayedTile;
@@ -44,87 +67,189 @@ class SnakeDominoBoard extends StatelessWidget {
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final maxW = constraints.maxWidth.isFinite ? constraints.maxWidth : 300.0;
-        final maxH = constraints.maxHeight.isFinite ? constraints.maxHeight : 300.0;
-        final totalItems = board.length + (showLeftSlot ? 1 : 0) + (showRightSlot ? 1 : 0);
+        final availW = constraints.maxWidth.isFinite ? constraints.maxWidth : 340.0;
+        final availH = constraints.maxHeight.isFinite ? constraints.maxHeight : 220.0;
+        final isPortrait = availH > availW;
 
-        // حساب الحجم المناسب تلقائياً ليبقى كل الورق مرئياً بدون أي تمرير (Zero Scroll)
-        double scale = 0.72;
-        if (totalItems > 22) {
-          scale = 0.44;
-        } else if (totalItems > 16) {
-          scale = 0.50;
-        } else if (totalItems > 10) {
-          scale = 0.58;
-        }
-        if (maxW < 300) {
-          scale *= 0.86;
-        }
+        const double longSide = 68.0;
+        const double shortSide = 36.0;
+        const double gap = 3.0;
 
-        final tileW = 76.0 * scale;
-        final perRow = (maxW / (tileW + 4)).floor().clamp(3, 9);
+        // عدد البلاطات في الضلع الأفقي قبل الالتفاف بضلع عمودي من 2 ورقة على الأقل
+        final int rowCap = isPortrait ? 4 : 7;
+        const int legCap = 2; // ضلع المربع يحتوي على ورقتين على الأقل قبل اللف
 
-        final List<Widget> allItems = [];
-        if (showLeftSlot && onTapLeftSlot != null) {
-          allItems.add(GestureDetector(
-            onTap: onTapLeftSlot,
-            child: DominoDropSlot(isVertical: false, scale: scale),
-          ));
-        }
+        // حساب مواضع جميع البلاطات كسلسلة متصلة تماماً
+        final List<_PlacedNode> nodes = [];
+        double curX = 0;
+        double curY = 0;
+        // 0 = يمين، 1 = أسفل (ضلع يمين)، 2 = يسار، 3 = أسفل (ضلع يسار)
+        int dir = 0;
+        int stepInSegment = 0;
 
-        for (final tile in board) {
+        for (int i = 0; i < board.length; i++) {
+          final tile = board[i];
           final isDouble = tile[0] == tile[1];
           final isLast = lastPlayedTile != null &&
               lastPlayedTile!.length == 2 &&
               ((lastPlayedTile![0] == tile[0] && lastPlayedTile![1] == tile[1]) ||
                   (lastPlayedTile![0] == tile[1] && lastPlayedTile![1] == tile[0]));
 
-          allItems.add(DominoTileWidget(
-            a: tile[0],
-            b: tile[1],
-            isVertical: isDouble,
-            isLastPlayed: isLast,
-            scale: scale,
-          ));
+          // في المسار الأفقي: الدبل يكون عمودياً والعادي أفقياً
+          // في المسار العمودي (ضلع المربع): الدبل يكون أفقياً والعادي عمودياً
+          final bool verticalTile = (dir == 0 || dir == 2) ? isDouble : !isDouble;
+          final double w = verticalTile ? shortSide : longSide;
+          final double h = verticalTile ? longSide : shortSide;
+
+          // عكس ترتيب الأرقام في المسار العكسي (من اليمين لليسار) للحفاظ على تطابق الأرقام بصرياً
+          final int dispA = (dir == 2 && !verticalTile) ? tile[1] : tile[0];
+          final int dispB = (dir == 2 && !verticalTile) ? tile[0] : tile[1];
+
+          double drawX = curX;
+          double drawY = curY;
+
+          if (dir == 0) {
+            // توسيط الدبل عمودياً على خط السلسلة الأفقي
+            drawY = curY + (shortSide - h) / 2;
+            nodes.add(_PlacedNode(x: drawX, y: drawY, w: w, h: h, isVertical: verticalTile, a: dispA, b: dispB, isLast: isLast));
+            stepInSegment++;
+            if (stepInSegment >= rowCap) {
+              // الانتقال للضلع العمودي لأسفل بمحاذاة نهاية البلاطة الأخيرة
+              dir = 1;
+              stepInSegment = 0;
+              curX = drawX + w - shortSide;
+              curY = math.max(curY + shortSide, drawY + h) + gap;
+            } else {
+              curX = drawX + w + gap;
+            }
+          } else if (dir == 1) {
+            // ضلع عمودي لأسفل (ورقتين على الأقل)
+            nodes.add(_PlacedNode(x: drawX, y: drawY, w: w, h: h, isVertical: verticalTile, a: dispA, b: dispB, isLast: isLast));
+            stepInSegment++;
+            if (stepInSegment >= legCap) {
+              // الانعطاف لليسار
+              dir = 2;
+              stepInSegment = 0;
+              curX = drawX + w - longSide - gap - shortSide;
+              curY = drawY + h - shortSide;
+              // نبدأ البلاطة التالية مباشرة على يسار آخر بلاطة في الضلع العمودي
+              curX = drawX - gap;
+            } else {
+              curY = drawY + h + gap;
+            }
+          } else if (dir == 2) {
+            // مسار أفقي من اليمين لليسار
+            drawX = curX - w;
+            drawY = curY + (shortSide - h) / 2;
+            nodes.add(_PlacedNode(x: drawX, y: drawY, w: w, h: h, isVertical: verticalTile, a: dispA, b: dispB, isLast: isLast));
+            stepInSegment++;
+            if (stepInSegment >= rowCap) {
+              // الانعطاف لأسفل من الطرف الأيسر
+              dir = 3;
+              stepInSegment = 0;
+              curX = drawX;
+              curY = math.max(curY + shortSide, drawY + h) + gap;
+            } else {
+              curX = drawX - gap;
+            }
+          } else {
+            // ضلع عمودي لأسفل من اليسار
+            nodes.add(_PlacedNode(x: drawX, y: drawY, w: w, h: h, isVertical: verticalTile, a: dispA, b: dispB, isLast: isLast));
+            stepInSegment++;
+            if (stepInSegment >= legCap) {
+              // الانعطاف لليمين
+              dir = 0;
+              stepInSegment = 0;
+              curX = drawX + w + gap;
+              curY = drawY + h - shortSide;
+            } else {
+              curY = drawY + h + gap;
+            }
+          }
         }
 
-        if (showRightSlot && onTapRightSlot != null) {
-          allItems.add(GestureDetector(
-            onTap: onTapRightSlot,
-            child: DominoDropSlot(isVertical: false, scale: scale),
-          ));
+        // إضافة فتحات التوصيل المنقطة (Drop Slots) عند الطرفين
+        final first = nodes.first;
+        final last = nodes.last;
+
+        double minX = nodes.map((n) => n.x).reduce(math.min);
+        double minY = nodes.map((n) => n.y).reduce(math.min);
+        double maxX = nodes.map((n) => n.x + n.w).reduce(math.max);
+        double maxY = nodes.map((n) => n.y + n.h).reduce(math.max);
+
+        const double slotW = 52;
+        const double slotH = 34;
+
+        final double leftSlotX = first.x - slotW - gap;
+        final double leftSlotY = first.y + (first.h - slotH) / 2;
+
+        double rightSlotX;
+        double rightSlotY;
+        if (dir == 0) {
+          rightSlotX = last.x + last.w + gap;
+          rightSlotY = last.y + (last.h - slotH) / 2;
+        } else if (dir == 2) {
+          rightSlotX = last.x - slotW - gap;
+          rightSlotY = last.y + (last.h - slotH) / 2;
+        } else {
+          rightSlotX = last.x + (last.w - slotH) / 2;
+          rightSlotY = last.y + last.h + gap;
         }
 
-        // تقسيم العناصر إلى صفوف ثعبانية (صف من اليسار لليمين، ثم صف من اليمين لليسار)
-        final List<List<Widget>> rows = [];
-        for (int i = 0; i < allItems.length; i += perRow) {
-          final chunk = allItems.sublist(i, (i + perRow).clamp(0, allItems.length));
-          final rowIdx = rows.length;
-          rows.add(rowIdx.isOdd ? chunk.reversed.toList() : chunk);
+        if (showLeftSlot) {
+          minX = math.min(minX, leftSlotX);
+          minY = math.min(minY, leftSlotY);
         }
+        if (showRightSlot) {
+          maxX = math.max(maxX, rightSlotX + slotW);
+          maxY = math.max(maxY, rightSlotY + slotH);
+          minX = math.min(minX, rightSlotX);
+        }
+
+        final canvasW = math.max(100.0, maxX - minX + 16);
+        final canvasH = math.max(80.0, maxY - minY + 16);
+        final offX = -minX + 8;
+        final offY = -minY + 8;
 
         return Center(
           child: FittedBox(
-            fit: BoxFit.scaleDown,
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: maxW, maxHeight: maxH * 1.35),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: List.generate(rows.length, (rIdx) {
-                  return Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: rows[rIdx]
-                          .map((w) => Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 2),
-                                child: w,
-                              ))
-                          .toList(),
+            fit: BoxFit.contain,
+            child: SizedBox(
+              width: canvasW,
+              height: canvasH,
+              child: Stack(
+                children: [
+                  for (final n in nodes)
+                    Positioned(
+                      left: n.x + offX,
+                      top: n.y + offY,
+                      child: DominoTileWidget(
+                        a: n.a,
+                        b: n.b,
+                        isVertical: n.isVertical,
+                        isLastPlayed: n.isLast,
+                        scale: 0.84,
+                      ),
                     ),
-                  );
-                }),
+                  if (showLeftSlot && onTapLeftSlot != null)
+                    Positioned(
+                      left: leftSlotX + offX,
+                      top: leftSlotY + offY,
+                      child: GestureDetector(
+                        onTap: onTapLeftSlot,
+                        child: const DominoDropSlot(isVertical: false, scale: 0.85),
+                      ),
+                    ),
+                  if (showRightSlot && onTapRightSlot != null)
+                    Positioned(
+                      left: rightSlotX + offX,
+                      top: rightSlotY + offY,
+                      child: GestureDetector(
+                        onTap: onTapRightSlot,
+                        child: DominoDropSlot(isVertical: dir == 1 || dir == 3, scale: 0.85),
+                      ),
+                    ),
+                ],
               ),
             ),
           ),
@@ -142,13 +267,13 @@ class DominoDropSlot extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: (isVertical ? 36 : 64) * scale,
-      height: (isVertical ? 64 : 36) * scale,
+      width: (isVertical ? 36 : 60) * scale,
+      height: (isVertical ? 60 : 36) * scale,
       decoration: BoxDecoration(
-        color: LammaColors.gold500.withValues(alpha: 0.18),
+        color: LammaColors.gold500.withValues(alpha: 0.22),
         borderRadius: BorderRadius.circular(7 * scale),
         border: Border.all(color: LammaColors.gold500, width: 1.8),
-        boxShadow: [BoxShadow(color: LammaColors.gold500.withValues(alpha: 0.35), blurRadius: 8)],
+        boxShadow: [BoxShadow(color: LammaColors.gold500.withValues(alpha: 0.4), blurRadius: 8)],
       ),
       child: Icon(Icons.add_rounded, color: LammaColors.gold500, size: 18 * scale),
     );
@@ -174,8 +299,8 @@ class DominoTileWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final w = (isVertical ? 44.0 : 80.0) * scale;
-    final h = (isVertical ? 84.0 : 42.0) * scale;
+    final w = (isVertical ? 42.8 : 80.9) * scale;
+    final h = (isVertical ? 80.9 : 42.8) * scale;
 
     return Container(
       width: w,
@@ -185,7 +310,7 @@ class DominoTileWidget extends StatelessWidget {
         borderRadius: BorderRadius.circular(8 * scale),
         border: Border.all(
           color: isLastPlayed ? Colors.cyanAccent : const Color(0xFFD6C7AE),
-          width: isLastPlayed ? 2.2 : 1.4,
+          width: isLastPlayed ? 2.2 : 1.3,
         ),
         boxShadow: [
           BoxShadow(
@@ -199,14 +324,14 @@ class DominoTileWidget extends StatelessWidget {
           ? Column(
               children: [
                 Expanded(child: _PipFace(value: a, scale: scale)),
-                Container(height: 1.5, width: w * 0.75, color: const Color(0xFF9E8E76)),
+                Container(height: 1.5, width: w * 0.72, color: const Color(0xFF9E8E76)),
                 Expanded(child: _PipFace(value: b, scale: scale)),
               ],
             )
           : Row(
               children: [
                 Expanded(child: _PipFace(value: a, scale: scale)),
-                Container(width: 1.5, height: h * 0.75, color: const Color(0xFF9E8E76)),
+                Container(width: 1.5, height: h * 0.72, color: const Color(0xFF9E8E76)),
                 Expanded(child: _PipFace(value: b, scale: scale)),
               ],
             ),
@@ -252,10 +377,10 @@ class _PipFace extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = _pipMap[value] ?? const [];
-    final dotSize = 5.4 * scale;
+    final dotSize = 5.2 * scale;
 
     return Padding(
-      padding: EdgeInsets.all(4.2 * scale),
+      padding: EdgeInsets.all(4.0 * scale),
       child: GridView.builder(
         physics: const NeverScrollableScrollPhysics(),
         shrinkWrap: true,

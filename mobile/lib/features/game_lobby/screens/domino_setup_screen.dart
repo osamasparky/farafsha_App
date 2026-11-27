@@ -210,16 +210,20 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
             children: [
               // الشريط العلوي
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     IconButton(
-                      icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 30),
+                      icon: const Icon(Icons.chevron_right_rounded, color: Colors.white, size: 28),
                       onPressed: () => context.canPop() ? context.pop() : context.go('/home'),
                     ),
+                    Text(
+                      'إعداد الدومينو 🁣',
+                      style: GoogleFonts.cairo(fontSize: 20, fontWeight: FontWeight.w900, color: Colors.white),
+                    ),
                     IconButton(
-                      icon: const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 24),
+                      icon: const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 22),
                       onPressed: _showRulesDialog,
                     ),
                   ],
@@ -229,50 +233,41 @@ class _DominoSetupScreenState extends State<DominoSetupScreen> {
               Expanded(
                 child: SingleChildScrollView(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
+                  padding: const EdgeInsets.symmetric(horizontal: 18),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      // أيقونة الثلاث بلاطات ثلاثية الأبعاد + العنوان
+                      // أيقونة الثلاث بلاطات ثلاثية الأبعاد
                       Center(
                         child: SizedBox(
-                          height: 112,
-                          width: 190,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Transform.translate(
-                                offset: const Offset(-46, 6),
-                                child: Transform.rotate(
-                                  angle: -10 * math.pi / 180,
-                                  child: const _MiniHeroTile(a: 5, b: 2),
+                          height: 86,
+                          width: 170,
+                          child: Transform.scale(
+                            scale: 0.82,
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Transform.translate(
+                                  offset: const Offset(-46, 6),
+                                  child: Transform.rotate(
+                                    angle: -10 * math.pi / 180,
+                                    child: const _MiniHeroTile(a: 5, b: 2),
+                                  ),
                                 ),
-                              ),
-                              Transform.translate(
-                                offset: const Offset(46, 8),
-                                child: Transform.rotate(
-                                  angle: 10 * math.pi / 180,
-                                  child: const _MiniHeroTile(a: 1, b: 4),
+                                Transform.translate(
+                                  offset: const Offset(46, 8),
+                                  child: Transform.rotate(
+                                    angle: 10 * math.pi / 180,
+                                    child: const _MiniHeroTile(a: 1, b: 4),
+                                  ),
                                 ),
-                              ),
-                              const _MiniHeroTile(a: 6, b: 6, isGold: true),
-                            ],
+                                const _MiniHeroTile(a: 6, b: 6, isGold: true),
+                              ],
+                            ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 8),
-                      Center(
-                        child: Text(
-                          'دومينو',
-                          style: GoogleFonts.cairo(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w900,
-                            color: Colors.white,
-                            height: 1.1,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 18),
 
                       // 1. عدد اللاعبين
                       Text(

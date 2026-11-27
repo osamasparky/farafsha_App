@@ -36,6 +36,7 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
   bool _isSubmitting = false;
   bool _isAppActive = true;
   bool _isPortrait = false;
+  bool _autoDraw = false; // زرار السحب الأوتوماتيك أو اليدوي
 
   Map<String, dynamic> _domino = {};
   List<Map<String, dynamic>> _players = [];
@@ -126,6 +127,9 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
         _turnDuration = (domino['turn_duration_seconds'] as int?) ?? 25;
         _remainingSeconds = (domino['remaining_seconds'] as int?) ?? 25;
       });
+      if (_autoDraw && _isMyTurn && !_hasAnyValidMove && _playMode == 'draw' && (domino['boneyard_count'] as int? ?? 0) > 0 && !_isSubmitting) {
+        _drawTile();
+      }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     } finally {
@@ -463,6 +467,32 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                             child: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 18),
                           ),
                         ),
+                        if (_playMode == 'draw')
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _autoDraw = !_autoDraw);
+                              if (_autoDraw && _isMyTurn && !_hasAnyValidMove && boneyardCount > 0) {
+                                _drawTile();
+                              }
+                            },
+                            child: Container(
+                              height: 36,
+                              margin: const EdgeInsets.only(left: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              decoration: BoxDecoration(
+                                color: _autoDraw ? const Color(0xFF35B88E).withValues(alpha: 0.25) : Colors.black38,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _autoDraw ? const Color(0xFF35B88E) : Colors.white12),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  _autoDraw ? 'سحب: تلقائي ⚡' : 'سحب: يدوي ✋',
+                                  style: GoogleFonts.cairo(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800),
+                                ),
+                              ),
+                            ),
+                          ),
                         GestureDetector(
                           onTap: () => _showPauseDialog(),
                           child: Container(
