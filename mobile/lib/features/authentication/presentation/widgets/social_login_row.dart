@@ -1,3 +1,5 @@
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -157,15 +159,16 @@ class _SocialLoginRowState extends State<SocialLoginRow> {
       onTap: () => _handleProviderLogin(providerKey),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        width: 52,
-        height: 52,
+        width: 54,
+        height: 54,
+        padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: bgColor,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1.6),
+          shape: BoxShape.circle,
+          border: Border.all(color: borderColor, width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: (glowColor ?? borderColor).withOpacity(0.35),
+              color: (glowColor ?? borderColor).withOpacity(0.32),
               blurRadius: 14,
               offset: const Offset(0, 4),
             ),
@@ -178,7 +181,11 @@ class _SocialLoginRowState extends State<SocialLoginRow> {
                   height: 20,
                   child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                 )
-              : icon,
+              : SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: FittedBox(fit: BoxFit.contain, child: icon),
+                ),
         ),
       ),
     );
@@ -190,42 +197,46 @@ class _SocialLoginRowState extends State<SocialLoginRow> {
         return _buildSocialIconBtn(
           providerKey: 'google',
           bgColor: Colors.white,
-          borderColor: const Color(0xFFDADCE0),
+          borderColor: const Color(0xFFE2E4E8),
           glowColor: const Color(0xFF4285F4),
-          icon: SvgPicture.string(_googleSvg),
+          icon: SvgPicture.string(_googleSvg, width: 22, height: 22),
         );
       case 'apple':
+        // إخفاء زر Apple على أجهزة أندرويد لعدم دعمه أصلاً وإبقاء الواجهة نظيفة
+        if (!kIsWeb && !Platform.isIOS && !Platform.isMacOS) {
+          return null;
+        }
         return _buildSocialIconBtn(
           providerKey: 'apple',
-          bgColor: const Color(0xFF000000),
-          borderColor: const Color(0xFF333333),
+          bgColor: const Color(0xFF141416),
+          borderColor: Colors.white24,
           glowColor: Colors.white24,
-          icon: SvgPicture.string(_appleSvg),
+          icon: SvgPicture.string(_appleSvg, width: 22, height: 22),
         );
       case 'facebook':
         return _buildSocialIconBtn(
           providerKey: 'facebook',
           bgColor: const Color(0xFF1877F2),
-          borderColor: const Color(0xFF2E89FF),
+          borderColor: const Color(0xFF4C9AFF),
           glowColor: const Color(0xFF1877F2),
-          icon: SvgPicture.string(_facebookSvg),
+          icon: SvgPicture.string(_facebookSvg, width: 22, height: 22),
         );
       case 'twitter':
       case 'x':
         return _buildSocialIconBtn(
           providerKey: 'twitter',
-          bgColor: const Color(0xFF000000),
-          borderColor: const Color(0xFF2C3238),
+          bgColor: const Color(0xFF14171A),
+          borderColor: Colors.white24,
           glowColor: const Color(0xFF1DA1F2),
-          icon: SvgPicture.string(_twitterXSvg),
+          icon: SvgPicture.string(_twitterXSvg, width: 20, height: 20),
         );
       case 'linkedin':
         return _buildSocialIconBtn(
           providerKey: 'linkedin',
           bgColor: const Color(0xFF0A66C2),
-          borderColor: const Color(0xFF1B84EC),
+          borderColor: const Color(0xFF378FE9),
           glowColor: const Color(0xFF0A66C2),
-          icon: SvgPicture.string(_linkedinSvg),
+          icon: SvgPicture.string(_linkedinSvg, width: 20, height: 20),
         );
       default:
         return null;

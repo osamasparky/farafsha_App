@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../../core/services/app_update_service.dart';
 import '../../../core/services/asset_sync_service.dart';
 import '../../../core/services/auth_service.dart';
+import '../../../core/services/deep_link_service.dart';
 import '../../../core/theme/lamma_theme.dart';
 import '../../../core/widgets/game_button.dart';
 
@@ -76,6 +77,16 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
 
     if (AppUpdateService.instance.isForceUpdateRequired) {
       context.go('/force-update', extra: AppUpdateService.instance.currentUpdateInfo);
+      return;
+    }
+
+    final pendingRoomCode = DeepLinkService.instance.consumePendingRoomCode();
+    if (pendingRoomCode != null && pendingRoomCode.isNotEmpty) {
+      if (!AuthService.instance.isLoggedIn && !AuthService.instance.isGuest) {
+        await AuthService.instance.loginAsGuest();
+      }
+      if (!mounted) return;
+      context.go('/join-room?code=$pendingRoomCode');
       return;
     }
 

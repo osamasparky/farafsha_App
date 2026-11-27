@@ -9,6 +9,14 @@ class DeepLinkService {
 
   static const MethodChannel _channel = MethodChannel('com.farafsha.app/deeplink');
   bool _initialized = false;
+  String? _pendingRoomCode;
+
+  /// استهلاك رمز الغرفة المعلق عند فتح التطبيق من رابط خارجي (Cold Start)
+  String? consumePendingRoomCode() {
+    final code = _pendingRoomCode;
+    _pendingRoomCode = null;
+    return code;
+  }
 
   Future<void> init() async {
     if (_initialized) return;
@@ -19,7 +27,7 @@ class DeepLinkService {
       if (call.method == 'onLink') {
         final link = call.arguments?.toString();
         if (link != null && link.isNotEmpty) {
-          _handleLinkString(link);
+          _handleLinkString(link, isColdStart: false);
         }
       }
     });
@@ -28,16 +36,14 @@ class DeepLinkService {
     try {
       final initialLink = await _channel.invokeMethod<String>('getInitialLink');
       if (initialLink != null && initialLink.isNotEmpty) {
-        Future.delayed(const Duration(milliseconds: 600), () {
-          _handleLinkString(initialLink);
-        });
+        _handleLinkString(initialLink, isColdStart: true);
       }
     } catch (e) {
       debugPrint('⚠️ Initial link check error: $e');
     }
   }
 
-  void _handleLinkString(String link) {
+  void _handleLinkString(String link, {required bool isColdStart}) {
     debugPrint('🔗 DeepLink received: $link');
     final uri = Uri.tryParse(link);
     if (uri == null) return;
@@ -66,8 +72,12 @@ class DeepLinkService {
     if (roomCode != null && roomCode.isNotEmpty) {
       final cleanCode = roomCode.replaceAll(RegExp(r'\D'), '');
       if (cleanCode.length >= 4) {
-        debugPrint('🎯 Navigating directly to /join-room with code: $cleanCode');
-        appRouter.push('/join-room?code=$cleanCode');
+        _pendingRoomCode = cleanCode;
+        if (!isColdStart) {
+          debugPrint('🎯 Navigating directly to /join-room with code: $cleanCode');
+          _pendingRoomCode = null;
+          appRouter.push('/join-room?code=$cleanCode');
+        }
       }
     }
   }

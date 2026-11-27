@@ -36,6 +36,13 @@ class _JoinRoomScreenState extends State<JoinRoomScreen> {
       for (int i = 0; i < 6 && i < clean.length; i++) {
         _controllers[i].text = clean[i];
       }
+      if (clean.length == 6 && currentUserName.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_isLoading) {
+            _onJoin();
+          }
+        });
+      }
     }
   }
 
