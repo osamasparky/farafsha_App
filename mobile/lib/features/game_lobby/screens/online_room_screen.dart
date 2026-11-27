@@ -25,17 +25,20 @@ class OnlineRoomScreen extends StatefulWidget {
   State<OnlineRoomScreen> createState() => _OnlineRoomScreenState();
 }
 
-class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
+class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBindingObserver {
   late String _code;
   late String? _playerToken;
   late bool _isHost;
 
   Timer? _syncTimer;
   bool _isLoading = true;
+  bool _isFetching = false;
+  bool _isAppActive = true;
   bool _isStarting = false;
   bool _hasNavigated = false;
 
   String _gameTitle = 'لعبة أونلاين';
+  String _gameSlug = '';
   int _totalRounds = 10;
   int _roundDuration = 20;
   int _maxPlayers = 8;
@@ -44,25 +47,34 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _code = widget.roomCode;
     _playerToken = widget.playerToken;
     _isHost = widget.isHost;
 
     _fetchRoomState();
-    // بدء مزامنة حالة الغرفة الذكية كل 3 ثوانٍ لتخفيف الحمل وجلب اللاعبين بسلاسة
-    _syncTimer = Timer.periodic(const Duration(milliseconds: 3000), (_) {
-      _fetchRoomState();
+    // بدء مزامنة حالة الغرفة كل 2.5 ثانية مع منع تداخل الطلبات
+    _syncTimer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
+      if (_isAppActive) _fetchRoomState();
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppActive = state == AppLifecycleState.resumed;
+    if (_isAppActive) _fetchRoomState();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _syncTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _fetchRoomState() async {
-    if (!mounted || _hasNavigated) return;
+    if (!mounted || _hasNavigated || _isFetching) return;
+    _isFetching = true;
 
     try {
       final res = await ApiService.instance.getRoomState(_code, token: _playerToken);
@@ -76,6 +88,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
       setState(() {
         _isLoading = false;
         _gameTitle = game?['name']?.toString() ?? 'فرفشة أونلاين';
+        _gameSlug = game?['slug']?.toString() ?? '';
         _totalRounds = (room['total_rounds'] as int?) ?? 10;
         _roundDuration = (room['round_duration_seconds'] as int?) ?? 20;
         _maxPlayers = (room['total_players'] as int?) ?? 8;
@@ -99,11 +112,12 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
         }
       });
 
-      // إذا بدأت اللعبة، ننتقل فوراً لشاشة اللعب المتزامن
+      // إذا بدأت اللعبة، ننتقل فوراً لشاشة اللعب المناسبة
       if (status == 'playing' && !_hasNavigated) {
         _hasNavigated = true;
         _syncTimer?.cancel();
-        context.pushReplacement('/online-gameplay', extra: {
+        final targetRoute = _gameSlug == 'domino' ? '/online-domino' : '/online-gameplay';
+        context.pushReplacement(targetRoute, extra: {
           'code': _code,
           'token': _playerToken,
           'isHost': _isHost,
@@ -111,6 +125,8 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> {
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
+    } finally {
+      _isFetching = false;
     }
   }
 

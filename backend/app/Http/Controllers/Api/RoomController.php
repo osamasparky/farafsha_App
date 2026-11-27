@@ -14,6 +14,7 @@ use App\Models\Level;
 use App\Models\Room;
 use App\Models\RoomPlayer;
 use App\Models\User;
+use App\Services\DominoEngine;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -42,12 +43,26 @@ class RoomController extends Controller
             'total_rounds' => 'nullable|integer|min:3|max:20',
             'round_duration_seconds' => 'nullable|integer|min:10|max:120',
             'difficulty' => 'nullable|string',
+            'team_mode' => 'nullable|boolean',
+            'target_score' => 'nullable|integer|min:20|max:500',
         ])->validate();
+
+        $game = Game::find($validated['game_id']);
+        $isDomino = $game?->slug === 'domino';
+        $maxPlayers = $isDomino
+            ? max(2, min(4, (int) ($validated['max_players'] ?? 4)))
+            : ($validated['max_players'] ?? 8);
 
         // توليد رمز غرفة عشوائي مكون من 6 أرقام فريدة
         do {
             $code = (string) random_int(100000, 999999);
         } while (Room::where('code', $code)->exists());
+
+        $initialGameState = $isDomino ? [
+            'game_type' => 'domino',
+            'team_mode' => (bool) ($validated['team_mode'] ?? false),
+            'target_score' => (int) ($validated['target_score'] ?? 100),
+        ] : [];
 
         $room = Room::create([
             'code' => $code,
@@ -55,11 +70,11 @@ class RoomController extends Controller
             'host_name' => $validated['host_name'],
             'game_id' => $validated['game_id'],
             'status' => 'waiting',
-            'max_players' => $validated['max_players'] ?? 8,
+            'max_players' => $maxPlayers,
             'total_rounds' => $validated['total_rounds'] ?? 10,
-            'round_duration_seconds' => $validated['round_duration_seconds'] ?? 20,
+            'round_duration_seconds' => $validated['round_duration_seconds'] ?? ($isDomino ? 25 : 20),
             'difficulty' => $validated['difficulty'] ?? 'medium',
-            'game_state' => [],
+            'game_state' => $initialGameState,
             'last_active_at' => now(),
         ]);
 
@@ -165,7 +180,7 @@ class RoomController extends Controller
      */
     public function start(Request $request, string $code): JsonResponse
     {
-        $room = Room::where('code', $code)->firstOrFail();
+        $room = Room::where('code', $code)->with(['game', 'players'])->firstOrFail();
 
         // التحقق من صلاحية المضيف
         $playerToken = $request->header('X-Player-Token') ?: ($request->input('player_token') ?: $request->query('token'));
@@ -175,6 +190,44 @@ class RoomController extends Controller
         } else {
             $user = auth('sanctum')->user();
             abort_unless($user && $user->id === $room->host_user_id, 403, 'غير مصرح: بدء اللعبة متاح لمضيف الغرفة فقط.');
+        }
+
+        // مسار مخصص لبدء لعبة الدومينو (2 أو 3 أو 4 لاعبين، فردي أو 2 ضد 2)
+        if ($room->game?->slug === 'domino') {
+            $players = $room->players()->orderBy('id')->get();
+            if ($players->count() < 2 || $players->count() > 4) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تتطلب لعبة الدومينو من 2 إلى 4 لاعبين للبدء.',
+                ], 422);
+            }
+
+            $existingState = $room->game_state ?? [];
+            $teamMode = !empty($existingState['team_mode']) && $players->count() === 4;
+            $targetScore = (int) ($existingState['target_score'] ?? 100);
+
+            $dominoState = DominoEngine::dealRound(
+                $players->pluck('id')->toArray(),
+                $teamMode,
+                [],
+                $targetScore,
+                1
+            );
+
+            $room->update([
+                'status' => 'playing',
+                'current_round' => 1,
+                'game_state' => $dominoState,
+                'last_active_at' => now(),
+            ]);
+
+            $this->safeBroadcast(new GameStarted($room, ['game_type' => 'domino']));
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'تم بدء لعبة الدومينو بنجاح!',
+                'room' => $room->fresh(['game', 'players']),
+            ]);
         }
 
         // جلب أسئلة الجولات عشوائياً
@@ -299,6 +352,12 @@ class RoomController extends Controller
         $myPlayer = $playerToken ? $room->players->firstWhere('session_token', $playerToken) : null;
         $myAnswer = ($myPlayer && isset($answers[$myPlayer->id])) ? $answers[$myPlayer->id] : null;
 
+        // حالة الدومينو الآمنة (إخفاء بلاطات الخصوم)
+        $isDomino = $room->game?->slug === 'domino' && (($gameState['game_type'] ?? '') === 'domino');
+        $dominoState = $isDomino
+            ? DominoEngine::buildPublicStateForPlayer($gameState, $myPlayer?->id, $room->round_duration_seconds)
+            : null;
+
         return response()->json([
             'status' => 'success',
             'room' => [
@@ -315,12 +374,15 @@ class RoomController extends Controller
                 'answered_count' => count($answers),
             ],
             'card' => $publicCard,
+            'domino_state' => $dominoState,
             'revealed_answer' => $revealedAnswer,
             'explanation' => $explanation,
             'leaderboard' => $leaderboard,
             'my_player' => $myPlayer,
             'my_answer' => $myAnswer,
-            'is_game_over' => $room->status === 'finished' || ($roundEnded && $room->current_round >= $room->total_rounds),
+            'is_game_over' => $isDomino
+                ? ($room->status === 'finished' || !empty($gameState['match_over']))
+                : ($room->status === 'finished' || ($roundEnded && $room->current_round >= $room->total_rounds)),
         ]);
     }
 
@@ -547,13 +609,26 @@ class RoomController extends Controller
 
         // تحديث إحصائيات المستخدمين المسجلين في قاعدة البيانات (مرة واحدة فقط)
         if (!$alreadyFinished) {
+            $isDomino = $room->game?->slug === 'domino';
+            $topScore = $rankedPlayers->first()?->score ?? 0;
+            [$dominoWinPts, $dominoPartPts] = $isDomino && $room->game
+                ? $room->game->resolveScoringGuide()
+                : [15, 5];
+
             foreach ($rankedPlayers as $rankIndex => $player) {
                 if ($player->user_id) {
                     $user = User::find($player->user_id);
                     if ($user) {
                         $user->increment('games_played');
-                        $user->increment('total_score', $player->score);
-                        if ($rankIndex === 0 && $player->score > 0) {
+                        $isWinner = $topScore > 0 && ($isDomino ? $player->score === $topScore : $rankIndex === 0);
+                        $earnedForLeaderboard = $isDomino
+                            ? ($isWinner ? $dominoWinPts : $dominoPartPts)
+                            : $player->score;
+
+                        if ($earnedForLeaderboard > 0) {
+                            $user->increment('total_score', $earnedForLeaderboard);
+                        }
+                        if ($isWinner) {
                             $user->increment('wins_count');
                         }
                         // احتساب الترقية في المستوى من جدول المستويات في لوحة التحكم

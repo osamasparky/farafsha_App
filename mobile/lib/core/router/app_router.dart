@@ -16,6 +16,7 @@ import '../../features/game_lobby/screens/players_screen.dart';
 import '../../features/game_lobby/screens/handoff_screen.dart';
 import '../../features/game_lobby/screens/online_room_screen.dart';
 import '../../features/game_lobby/screens/online_gameplay_screen.dart';
+import '../../features/game_lobby/screens/domino_online_screen.dart';
 import '../../features/game_lobby/screens/join_room_screen.dart';
 import '../../features/game_lobby/screens/results_screen.dart';
 import '../../features/games/screens/amthal_game_screen.dart';
@@ -332,6 +333,23 @@ final appRouter = GoRouter(
       builder: (context, state) {
         final extra = state.extra as Map<String, dynamic>? ?? {};
         return OnlineGameplayScreen(
+          roomCode: extra['code']?.toString() ?? '',
+          playerToken: extra['token']?.toString(),
+          isHost: extra['isHost'] as bool? ?? false,
+        );
+      },
+    ),
+    GoRoute(
+      path: '/online-domino',
+      redirect: (context, state) {
+        if (!AuthService.instance.isModeUnlocked('online')) {
+          return '/mode-select';
+        }
+        return null;
+      },
+      builder: (context, state) {
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        return DominoOnlineScreen(
           roomCode: extra['code']?.toString() ?? '',
           playerToken: extra['token']?.toString(),
           isHost: extra['isHost'] as bool? ?? false,

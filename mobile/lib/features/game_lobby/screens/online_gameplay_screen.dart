@@ -24,7 +24,8 @@ class OnlineGameplayScreen extends StatefulWidget {
   State<OnlineGameplayScreen> createState() => _OnlineGameplayScreenState();
 }
 
-class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with SingleTickerProviderStateMixin {
+class _OnlineGameplayScreenState extends State<OnlineGameplayScreen>
+    with SingleTickerProviderStateMixin, WidgetsBindingObserver {
   late String _code;
   late String? _playerToken;
   late bool _isHost;
@@ -33,6 +34,8 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
   Timer? _syncTimer;
 
   bool _isLoading = true;
+  bool _isFetchingState = false;
+  bool _isAppActive = true;
   int _currentRound = 1;
   int _totalRounds = 10;
   int _roundDuration = 20;
@@ -73,15 +76,16 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _code = widget.roomCode;
     _playerToken = widget.playerToken;
     _isHost = widget.isHost;
 
     _fetchState();
 
-    // مؤقت مزامنة حالة الغرفة الذكية كل 3 ثوانٍ لتخفيف الحمل على الشبكة والجهاز
-    _syncTimer = Timer.periodic(const Duration(milliseconds: 3000), (_) {
-      _fetchState();
+    // مؤقت مزامنة حالة الغرفة كل 2.5 ثانية مع منع تداخل الطلبات وتوقيفه في الخلفية
+    _syncTimer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
+      if (_isAppActive) _fetchState();
     });
 
     // عداد الوقت التنازلي التفاعلي
@@ -96,14 +100,22 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppActive = state == AppLifecycleState.resumed;
+    if (_isAppActive) _fetchState();
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _countdownTimer?.cancel();
     _syncTimer?.cancel();
     super.dispose();
   }
 
   Future<void> _fetchState() async {
-    if (!mounted) return;
+    if (!mounted || _isFetchingState) return;
+    _isFetchingState = true;
 
     try {
       final res = await ApiService.instance.getRoomState(_code, token: _playerToken);
@@ -170,7 +182,10 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
 
         _leaderboard = newLeaderboard;
       });
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      _isFetchingState = false;
+    }
   }
 
   Future<void> _submitAnswer(String answer) async {
@@ -211,7 +226,10 @@ class _OnlineGameplayScreenState extends State<OnlineGameplayScreen> with Single
   Future<void> _triggerTimeout() async {
     try {
       await ApiService.instance.timeoutRoom(_code);
-    } catch (_) {}
+    } catch (_) {
+    } finally {
+      _isFetchingState = false;
+    }
   }
 
   Future<void> _handleNextRound() async {

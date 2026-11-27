@@ -56,6 +56,13 @@ Route::prefix('rooms')->group(function () {
     Route::post('/{code}/timeout', [RoomController::class, 'timeout']);
     Route::post('/{code}/finish', [RoomController::class, 'finish']);
     Route::post('/{code}/leave', [RoomController::class, 'leave']);
+
+    // مسارات لعبة الدومينو الأونلاين
+    Route::post('/{code}/domino/play', [\App\Http\Controllers\Api\DominoController::class, 'play']);
+    Route::post('/{code}/domino/draw', [\App\Http\Controllers\Api\DominoController::class, 'draw']);
+    Route::post('/{code}/domino/pass', [\App\Http\Controllers\Api\DominoController::class, 'pass']);
+    Route::post('/{code}/domino/timeout', [\App\Http\Controllers\Api\DominoController::class, 'timeout']);
+    Route::post('/{code}/domino/next-round', [\App\Http\Controllers\Api\DominoController::class, 'nextRound']);
 });
 
 // مسارات المحتوى والإنتاجية الجديدة

@@ -1176,6 +1176,8 @@ class ApiService {
     int totalRounds = 10,
     int roundDurationSeconds = 20,
     int maxPlayers = 8,
+    bool? teamMode,
+    int? targetScore,
   }) async {
     final resolvedName = (hostName != null && hostName.trim().isNotEmpty)
         ? hostName.trim()
@@ -1189,6 +1191,8 @@ class ApiService {
       'total_rounds': totalRounds,
       'round_duration_seconds': roundDurationSeconds,
       'max_players': maxPlayers,
+      if (teamMode != null) 'team_mode': teamMode,
+      if (targetScore != null) 'target_score': targetScore,
     };
 
     final res = await http.post(
@@ -1394,4 +1398,42 @@ class ApiService {
       ).timeout(const Duration(seconds: 4));
     } catch (_) {}
   }
+
+  /// إجراءات لعبة الدومينو الأونلاين
+  Future<Map<String, dynamic>> _dominoPost(
+    String code,
+    String action, {
+    String? playerToken,
+    Map<String, dynamic>? body,
+  }) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null) headers['X-Player-Token'] = playerToken;
+
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/rooms/$code/domino/$action'),
+          headers: headers,
+          body: body != null ? jsonEncode(body) : null,
+        )
+        .timeout(const Duration(seconds: 8));
+
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200) return data;
+    throw Exception(data['message'] ?? 'تعذر تنفيذ الحركة');
+  }
+
+  Future<Map<String, dynamic>> playDominoTile(String code, List<int> tile, String side, {String? playerToken}) =>
+      _dominoPost(code, 'play', playerToken: playerToken, body: {'tile': tile, 'side': side});
+
+  Future<Map<String, dynamic>> drawDominoTile(String code, {String? playerToken}) =>
+      _dominoPost(code, 'draw', playerToken: playerToken);
+
+  Future<Map<String, dynamic>> passDominoTurn(String code, {String? playerToken}) =>
+      _dominoPost(code, 'pass', playerToken: playerToken);
+
+  Future<Map<String, dynamic>> timeoutDominoTurn(String code, {String? playerToken}) =>
+      _dominoPost(code, 'timeout', playerToken: playerToken);
+
+  Future<Map<String, dynamic>> nextDominoRound(String code, {String? playerToken}) =>
+      _dominoPost(code, 'next-round', playerToken: playerToken);
 }

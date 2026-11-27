@@ -915,6 +915,9 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
   String _selectedGameSlug = 'amthal-shaabiya';
   int _totalRounds = 10;
   int _roundDuration = 20;
+  int _dominoMaxPlayers = 4;
+  bool _dominoTeamMode = true; // فردي أو 2 ضد 2
+  int _dominoTargetScore = 100;
   bool _isLoadingHost = false;
 
   // Join state
@@ -984,11 +987,15 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
           ? AuthService.instance.userName.trim()
           : (ApiService.instance.currentUser?['name']?.toString().trim() ?? '');
 
+      final isDomino = _selectedGameSlug == 'domino';
       final res = await ApiService.instance.createRoom(
         gameSlug: _selectedGameSlug,
         hostName: hostName.isNotEmpty ? hostName : null,
         totalRounds: _totalRounds,
-        roundDurationSeconds: _roundDuration,
+        roundDurationSeconds: isDomino ? 25 : _roundDuration,
+        maxPlayers: isDomino ? _dominoMaxPlayers : 8,
+        teamMode: isDomino ? (_dominoMaxPlayers == 4 && _dominoTeamMode) : null,
+        targetScore: isDomino ? _dominoTargetScore : null,
       );
 
       final code = res['room']?['code']?.toString() ?? '';
@@ -1311,6 +1318,118 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
 
         const SizedBox(height: 16),
 
+        if (_selectedGameSlug == 'domino') ...[
+          Text(
+            '2. عدد اللاعبين في الدومينو:',
+            style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [2, 3, 4].map((cnt) {
+              final isSel = _dominoMaxPlayers == cnt;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() {
+                    _dominoMaxPlayers = cnt;
+                    if (cnt != 4) _dominoTeamMode = false;
+                  }),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSel ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSel ? Colors.white : Colors.white24),
+                    ),
+                    child: Center(
+                      child: Text(
+                        '$cnt لاعبين',
+                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          if (_dominoMaxPlayers == 4) ...[
+            const SizedBox(height: 14),
+            Text(
+              '3. نظام اللعب:',
+              style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+            ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _dominoTeamMode = false),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: !_dominoTeamMode ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: !_dominoTeamMode ? Colors.white : Colors.white24),
+                      ),
+                      child: Center(
+                        child: Text('فردي (1 ضد الكل)', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                ),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () => setState(() => _dominoTeamMode = true),
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      decoration: BoxDecoration(
+                        color: _dominoTeamMode ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: _dominoTeamMode ? Colors.white : Colors.white24),
+                      ),
+                      child: Center(
+                        child: Text('فرق (2 ضد 2) 🤝', style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white)),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+          const SizedBox(height: 14),
+          Text(
+            '${_dominoMaxPlayers == 4 ? 4 : 3}. هدف الفوز:',
+            style: GoogleFonts.cairo(fontSize: 14, fontWeight: FontWeight.w800, color: LammaColors.gold500),
+          ),
+          const SizedBox(height: 6),
+          Row(
+            children: [100, 50].map((pts) {
+              final isSel = _dominoTargetScore == pts;
+              return Expanded(
+                child: GestureDetector(
+                  onTap: () => setState(() => _dominoTargetScore = pts),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    decoration: BoxDecoration(
+                      color: isSel ? const Color(0xFFA35BFF) : const Color(0xFF26144D),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: isSel ? Colors.white : Colors.white24),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'حتى $pts نقطة ${pts == 100 ? "🏆" : "⚡"}',
+                        style: GoogleFonts.cairo(fontSize: 13, fontWeight: FontWeight.w800, color: Colors.white),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+        ] else ...[
         // عدد الجولات
         Text(
           '2. عدد الجولات:',
@@ -1384,6 +1503,7 @@ class _OnlineSetupSheetState extends State<_OnlineSetupSheet> {
             );
           }).toList(),
         ),
+        ],
 
         const SizedBox(height: 22),
 
