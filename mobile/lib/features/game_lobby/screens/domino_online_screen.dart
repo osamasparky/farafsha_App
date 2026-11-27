@@ -357,116 +357,122 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
             children: [
               Column(
                 children: [
-                  // 1. الشريط العلوي (النقاط + الخصم/الشريك العلوي أو حالة الدور + إيقاف)
+                  // 1. الشريط العلوي المدمج (النقاط + صورة الخصم فقط + رقم المخزن + أيقونة السحب/الصوت/التدوير/إيقاف)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     child: Row(
                       children: [
                         _buildScoreChip(teamMode, targetScore, matchScores),
+                        const SizedBox(width: 6),
+                        if (_playMode == 'draw')
+                          Container(
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black38,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.layers_rounded, color: Color(0xFFA35BFF), size: 15),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '$boneyardCount',
+                                  style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
                         const Spacer(),
                         if (topOpponent != null)
                           _TopSeatWidget(
                             player: topOpponent,
                             tileCount: (handCounts['${topOpponent['id']}'] as int?) ?? 0,
                             isTurn: topOpponent['id'] == turnPid && !roundEnded,
-                            isPartner: teamMode,
                             progress: _remainingSeconds / (_turnDuration > 0 ? _turnDuration : 25),
                           )
                         else
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
                               color: Colors.black38,
-                              borderRadius: BorderRadius.circular(20),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.4)),
                             ),
                             child: Text(
-                              _isMyTurn
-                                  ? '• دورك الآن!'
-                                  : '• دور ${_playerById(turnPid)?['player_name'] ?? "لاعب"}... بيفكّر',
-                              style: GoogleFonts.cairo(color: LammaColors.gold300, fontWeight: FontWeight.w800, fontSize: 12),
+                              _isMyTurn ? 'دورك!' : 'دور ${_playerById(turnPid)?['player_name'] ?? ""}',
+                              style: GoogleFonts.cairo(color: LammaColors.gold300, fontWeight: FontWeight.w800, fontSize: 11),
                             ),
                           ),
                         const Spacer(),
-                        // زر المايك والدردشة الصوتية LiveKit داخل مباراة الدومينو
+                        // زر المايك (أيقونة فقط)
                         ListenableBuilder(
                           listenable: LiveKitVoiceService.instance,
                           builder: (context, _) {
                             final voice = LiveKitVoiceService.instance;
                             final connected = voice.isConnected;
                             final muted = voice.isMuted;
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                GestureDetector(
-                                  onTap: () async {
-                                    HapticFeedback.selectionClick();
-                                    if (!connected) {
-                                      final ok = await voice.joinVoiceRoom(
-                                        roomCode: widget.roomCode,
-                                        playerToken: widget.playerToken,
-                                      );
-                                      if (!ok && voice.lastError != null && context.mounted) {
-                                        _showError(voice.lastError!);
-                                      }
-                                    } else {
-                                      await voice.toggleMute();
-                                    }
-                                  },
-                                  child: Container(
-                                    height: 36,
-                                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                                    decoration: BoxDecoration(
-                                      color: connected
-                                          ? (muted ? Colors.redAccent.withValues(alpha: 0.25) : const Color(0xFF25D366).withValues(alpha: 0.22))
-                                          : Colors.black38,
-                                      borderRadius: BorderRadius.circular(10),
-                                      border: Border.all(
-                                        color: connected
-                                            ? (muted ? Colors.redAccent : const Color(0xFF25D366))
-                                            : Colors.white12,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          connected
-                                              ? (muted ? Icons.mic_off_rounded : Icons.mic_rounded)
-                                              : Icons.headset_mic_rounded,
-                                          color: connected
-                                              ? (muted ? Colors.redAccent : const Color(0xFF25D366))
-                                              : Colors.white70,
-                                          size: 18,
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          connected ? (muted ? 'مكتوم' : 'المايك') : 'صوت',
-                                          style: GoogleFonts.cairo(color: Colors.white, fontSize: 11, fontWeight: FontWeight.w800),
-                                        ),
-                                      ],
-                                    ),
+                            return GestureDetector(
+                              onTap: () async {
+                                HapticFeedback.selectionClick();
+                                if (!connected) {
+                                  final ok = await voice.joinVoiceRoom(
+                                    roomCode: widget.roomCode,
+                                    playerToken: widget.playerToken,
+                                  );
+                                  if (!ok && voice.lastError != null && context.mounted) {
+                                    _showError(voice.lastError!);
+                                  }
+                                } else {
+                                  await voice.toggleMute();
+                                }
+                              },
+                              child: Container(
+                                width: 34,
+                                height: 34,
+                                margin: const EdgeInsets.only(left: 5),
+                                decoration: BoxDecoration(
+                                  color: connected
+                                      ? (muted ? Colors.redAccent.withValues(alpha: 0.25) : const Color(0xFF25D366).withValues(alpha: 0.22))
+                                      : Colors.black38,
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: connected
+                                        ? (muted ? Colors.redAccent : const Color(0xFF25D366))
+                                        : Colors.white12,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                              ],
+                                child: Icon(
+                                  connected
+                                      ? (muted ? Icons.mic_off_rounded : Icons.mic_rounded)
+                                      : Icons.headset_mic_rounded,
+                                  color: connected
+                                      ? (muted ? Colors.redAccent : const Color(0xFF25D366))
+                                      : Colors.white70,
+                                  size: 18,
+                                ),
+                              ),
                             );
                           },
                         ),
+                        // زر تبديل الطول/العرض (أيقونة فقط)
                         GestureDetector(
                           onTap: _toggleOrientation,
                           child: Container(
-                            width: 36,
-                            height: 36,
-                            margin: const EdgeInsets.only(left: 6),
+                            width: 34,
+                            height: 34,
+                            margin: const EdgeInsets.only(left: 5),
                             decoration: BoxDecoration(
                               color: Colors.black38,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: Colors.white12),
                             ),
-                            child: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 18),
+                            child: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 17),
                           ),
                         ),
+                        // زر السحب التلقائي/اليدوي (أيقونة فقط)
                         if (_playMode == 'draw')
                           GestureDetector(
                             onTap: () {
@@ -477,33 +483,32 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                               }
                             },
                             child: Container(
-                              height: 36,
-                              margin: const EdgeInsets.only(left: 6),
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              width: 34,
+                              height: 34,
+                              margin: const EdgeInsets.only(left: 5),
                               decoration: BoxDecoration(
                                 color: _autoDraw ? const Color(0xFF35B88E).withValues(alpha: 0.25) : Colors.black38,
                                 borderRadius: BorderRadius.circular(10),
                                 border: Border.all(color: _autoDraw ? const Color(0xFF35B88E) : Colors.white12),
                               ),
-                              child: Center(
-                                child: Text(
-                                  _autoDraw ? 'سحب: تلقائي ⚡' : 'سحب: يدوي ✋',
-                                  style: GoogleFonts.cairo(color: Colors.white, fontSize: 10.5, fontWeight: FontWeight.w800),
-                                ),
+                              child: Icon(
+                                _autoDraw ? Icons.bolt_rounded : Icons.pan_tool_alt_rounded,
+                                color: _autoDraw ? const Color(0xFF6FD9B5) : Colors.white70,
+                                size: 18,
                               ),
                             ),
                           ),
                         GestureDetector(
                           onTap: () => _showPauseDialog(),
                           child: Container(
-                            width: 36,
-                            height: 36,
+                            width: 34,
+                            height: 34,
                             decoration: BoxDecoration(
                               color: Colors.black38,
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(color: Colors.white12),
                             ),
-                            child: const Icon(Icons.pause_rounded, color: Colors.white, size: 20),
+                            child: const Icon(Icons.pause_rounded, color: Colors.white, size: 18),
                           ),
                         ),
                       ],
@@ -529,45 +534,18 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                       ),
                       child: Row(
                         children: [
-                          // المقعد الأيمن / المخزن
+                          // المقعد الأيمن
                           if (rightOpponent != null)
                             _SideSeatWidget(
                               player: rightOpponent,
                               tileCount: (handCounts['${rightOpponent['id']}'] as int?) ?? 0,
                               isTurn: rightOpponent['id'] == turnPid && !roundEnded,
                               lastMove: lastMove?['player_id'] == rightOpponent['id'] ? lastMove : null,
-                            )
-                          else if (_playMode == 'draw')
-                            _BoneyardPanel(
-                              count: boneyardCount,
-                              canDraw: canDraw,
-                              isSubmitting: _isSubmitting,
-                              onDraw: _drawTile,
                             ),
 
                           // سلسلة البلاطات في المنتصف
                           Expanded(
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                if (opponents.length == 2 && _playMode == 'draw')
-                                  Positioned(
-                                    top: 0,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                                      decoration: BoxDecoration(
-                                        color: Colors.black38,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: Text(
-                                        'المخزن · $boneyardCount',
-                                        style: GoogleFonts.cairo(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w700),
-                                      ),
-                                    ),
-                                  ),
-                                _buildBoardChain(lastPlayedTile),
-                              ],
-                            ),
+                            child: _buildBoardChain(lastPlayedTile),
                           ),
 
                           // المقعد الأيسر
@@ -613,16 +591,14 @@ class _DominoOnlineScreenState extends State<DominoOnlineScreen> with WidgetsBin
                                   ),
                                 )
                               else if (canDraw)
-                                ElevatedButton(
-                                  style: ElevatedButton.styleFrom(
+                                IconButton(
+                                  style: IconButton.styleFrom(
                                     backgroundColor: const Color(0xFFFF8A4C),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                   ),
                                   onPressed: _isSubmitting ? null : _drawTile,
-                                  child: Text(
-                                    'اسحب ($boneyardCount)',
-                                    style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
-                                  ),
+                                  icon: const Icon(Icons.add_box_rounded, color: Colors.white, size: 22),
+                                  tooltip: 'اسحب',
                                 ),
                               const SizedBox(height: 2),
                               Text(
@@ -1065,14 +1041,12 @@ class _TopSeatWidget extends StatelessWidget {
   final Map<String, dynamic> player;
   final int tileCount;
   final bool isTurn;
-  final bool isPartner;
   final double progress;
 
   const _TopSeatWidget({
     required this.player,
     required this.tileCount,
     required this.isTurn,
-    required this.isPartner,
     required this.progress,
   });
 
@@ -1082,49 +1056,34 @@ class _TopSeatWidget extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          children: List.generate(
-            tileCount.clamp(0, 7),
-            (_) => Container(
-              width: 14,
-              height: 22,
-              margin: const EdgeInsets.symmetric(horizontal: 1.5),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(colors: [Color(0xFFA35BFF), Color(0xFF6A24C9)]),
-                borderRadius: BorderRadius.circular(4),
-                border: Border.all(color: Colors.white30, width: 0.8),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              isPartner ? '$name (شريكك)' : name,
-              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 12),
-            ),
-            Text('معاه $tileCount قطع', style: GoogleFonts.cairo(color: Colors.white60, fontSize: 10)),
-          ],
-        ),
-        const SizedBox(width: 8),
         Stack(
           alignment: Alignment.center,
           children: [
             if (isTurn)
               SizedBox(
-                width: 38,
-                height: 38,
+                width: 36,
+                height: 36,
                 child: CircularProgressIndicator(value: progress.clamp(0.0, 1.0), strokeWidth: 2.5, color: LammaColors.gold500),
               ),
             CircleAvatar(
-              radius: 16,
+              radius: 15,
               backgroundColor: const Color(0xFF5A25B8),
-              child: Text(name.characters.first, style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 13)),
+              child: Text(name.characters.first, style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
             ),
           ],
+        ),
+        const SizedBox(width: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+          decoration: BoxDecoration(
+            color: const Color(0xFF6A24C9).withValues(alpha: 0.7),
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: Colors.white24),
+          ),
+          child: Text(
+            '$tileCount 🁣',
+            style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+          ),
         ),
       ],
     );
@@ -1201,57 +1160,6 @@ class _SideSeatWidget extends StatelessWidget {
               child: Text('حط ${playedTile[0]}|${playedTile[1]}', style: GoogleFonts.cairo(color: Colors.cyanAccent, fontSize: 9.5, fontWeight: FontWeight.w800)),
             ),
           ],
-        ],
-      ),
-    );
-  }
-}
-
-class _BoneyardPanel extends StatelessWidget {
-  final int count;
-  final bool canDraw;
-  final bool isSubmitting;
-  final VoidCallback onDraw;
-
-  const _BoneyardPanel({
-    required this.count,
-    required this.canDraw,
-    required this.isSubmitting,
-    required this.onDraw,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 90,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            width: 34,
-            height: 48,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [Color(0xFFA35BFF), Color(0xFF6A24C9)]),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.white38),
-            ),
-            child: Center(
-              child: Text('$count', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 14)),
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text('المخزن · $count', style: GoogleFonts.cairo(color: Colors.white70, fontSize: 10.5, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: canDraw ? const Color(0xFFFF8A4C) : Colors.white10,
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
-              minimumSize: const Size(0, 28),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-            ),
-            onPressed: (canDraw && !isSubmitting) ? onDraw : null,
-            child: Text('اسحب', style: GoogleFonts.cairo(color: canDraw ? Colors.white : Colors.white38, fontWeight: FontWeight.w900, fontSize: 11)),
-          ),
         ],
       ),
     );

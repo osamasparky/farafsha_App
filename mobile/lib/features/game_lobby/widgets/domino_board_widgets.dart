@@ -329,6 +329,7 @@ class DominoTileWidget extends StatelessWidget {
               ],
             )
           : Row(
+              textDirection: TextDirection.ltr,
               children: [
                 Expanded(child: _PipFace(value: a, scale: scale)),
                 Container(width: 1.5, height: h * 0.72, color: const Color(0xFF9E8E76)),

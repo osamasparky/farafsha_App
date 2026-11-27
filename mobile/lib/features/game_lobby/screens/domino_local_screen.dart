@@ -385,21 +385,21 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
             children: [
               Column(
                 children: [
-                  // الشريط العلوي + زر تدوير الشاشة (طولي / أفقي)
+                  // الشريط العلوي المدمج (النقاط + رقم المخزن + أيقونة السحب التلقائي/اليدوي + التدوير)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     child: Row(
                       children: [
                         IconButton(
-                          icon: const Icon(Icons.close_rounded, color: Colors.white70),
+                          icon: const Icon(Icons.close_rounded, color: Colors.white70, size: 22),
                           onPressed: () => context.pop(),
                         ),
                         Expanded(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                             decoration: BoxDecoration(
                               color: Colors.black38,
-                              borderRadius: BorderRadius.circular(14),
+                              borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: LammaColors.gold500.withValues(alpha: 0.45)),
                             ),
                             child: Text(
@@ -407,38 +407,106 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                               textAlign: TextAlign.center,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11.5),
+                              style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
                             ),
                           ),
                         ),
-                        const SizedBox(width: 6),
-                        IconButton(
-                          tooltip: _isPortrait ? 'وضع أفقي' : 'وضع طولي',
-                          icon: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 22),
-                          onPressed: _toggleOrientation,
+                        if (widget.playMode == 'draw') ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            decoration: BoxDecoration(
+                              color: Colors.black38,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.layers_rounded, color: Color(0xFFA35BFF), size: 15),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${_boneyard.length}',
+                                  style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 5),
+                          GestureDetector(
+                            onTap: () {
+                              HapticFeedback.selectionClick();
+                              setState(() => _autoDraw = !_autoDraw);
+                              if (_autoDraw) _scheduleAutoDrawIfNeeded();
+                            },
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: _autoDraw ? const Color(0xFF35B88E).withValues(alpha: 0.25) : Colors.black38,
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: _autoDraw ? const Color(0xFF35B88E) : Colors.white12),
+                              ),
+                              child: Icon(
+                                _autoDraw ? Icons.bolt_rounded : Icons.pan_tool_alt_rounded,
+                                color: _autoDraw ? const Color(0xFF6FD9B5) : Colors.white70,
+                                size: 18,
+                              ),
+                            ),
+                          ),
+                        ],
+                        const SizedBox(width: 5),
+                        GestureDetector(
+                          onTap: _toggleOrientation,
+                          child: Container(
+                            width: 34,
+                            height: 34,
+                            decoration: BoxDecoration(
+                              color: Colors.black38,
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: Colors.white12),
+                            ),
+                            child: const Icon(Icons.screen_rotation_rounded, color: LammaColors.gold500, size: 18),
+                          ),
                         ),
                       ],
                     ),
                   ),
 
-                  // مقاعد الخصوم
+                  // مقاعد الخصوم (أفاتار + عدد القطع فقط لتوفير المساحة)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12),
                     child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: List.generate(widget.playersCount - 1, (idx) {
                         final pIdx = idx + 1;
                         final isTurn = _currentTurn == pIdx && !_roundEnded;
                         return Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          margin: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: isTurn ? const Color(0xFF5A25B8) : Colors.black26,
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(20),
                             border: Border.all(color: isTurn ? LammaColors.gold500 : Colors.white12),
                           ),
-                          child: Text(
-                            '${_names[pIdx]} · ${_hands[pIdx].length} 🁣',
-                            style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11.5),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              CircleAvatar(
+                                radius: 12,
+                                backgroundColor: const Color(0xFF6A24C9),
+                                child: Text(
+                                  _names[pIdx].characters.first,
+                                  style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 11),
+                                ),
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                '${_hands[pIdx].length} 🁣',
+                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
+                              ),
+                            ],
                           ),
                         );
                       }),
@@ -484,37 +552,15 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                             style: GoogleFonts.cairo(color: LammaColors.gold300, fontWeight: FontWeight.w800, fontSize: 12),
                           ),
                         ),
-                        if (widget.playMode == 'draw') ...[
-                          GestureDetector(
-                            onTap: () {
-                              HapticFeedback.selectionClick();
-                              setState(() => _autoDraw = !_autoDraw);
-                              if (_autoDraw) _scheduleAutoDrawIfNeeded();
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                              margin: const EdgeInsets.only(left: 8),
-                              decoration: BoxDecoration(
-                                color: _autoDraw ? const Color(0xFF35B88E).withValues(alpha: 0.25) : Colors.black26,
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(color: _autoDraw ? const Color(0xFF35B88E) : Colors.white24),
-                              ),
-                              child: Text(
-                                _autoDraw ? 'سحب: تلقائي ⚡' : 'سحب: يدوي ✋',
-                                style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 11),
-                              ),
-                            ),
-                          ),
-                        ],
                         if (canDraw && !_autoDraw)
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
+                          IconButton(
+                            style: IconButton.styleFrom(
                               backgroundColor: const Color(0xFFFF8A4C),
-                              minimumSize: const Size(0, 34),
-                              padding: const EdgeInsets.symmetric(horizontal: 14),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                             ),
                             onPressed: _onDrawMyTile,
-                            child: Text('اسحب (${_boneyard.length})', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
+                            icon: const Icon(Icons.add_box_rounded, color: Colors.white, size: 22),
+                            tooltip: 'اسحب',
                           )
                         else if (canPass)
                           ElevatedButton(
@@ -525,9 +571,7 @@ class _DominoLocalScreenState extends State<DominoLocalScreen> {
                             ),
                             onPressed: _onPassMyTurn,
                             child: Text('دق (باص)', style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 12)),
-                          )
-                        else if (widget.playMode == 'draw')
-                          Text('المخزن: ${_boneyard.length}', style: GoogleFonts.cairo(color: Colors.white60, fontSize: 11.5)),
+                          ),
                       ],
                     ),
                   ),
