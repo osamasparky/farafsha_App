@@ -61,6 +61,9 @@ class _LammahAppState extends State<LammahApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (AuthService.instance.isLoggedIn) {
+      ApiService.instance.updatePresence();
+    }
   }
 
   @override
@@ -73,6 +76,9 @@ class _LammahAppState extends State<LammahApp> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
       _checkStoreUpdateOnResume();
+      if (AuthService.instance.isLoggedIn) {
+        ApiService.instance.updatePresence();
+      }
     }
   }
 

@@ -32,6 +32,7 @@ import '../../features/profile/screens/profile_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../../features/store/screens/store_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
+import '../../features/social/screens/friends_crews_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -400,6 +401,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsScreen(),
+    ),
+    GoRoute(
+      path: '/friends',
+      builder: (context, state) => const FriendsCrewsScreen(),
     ),
   ],
 );

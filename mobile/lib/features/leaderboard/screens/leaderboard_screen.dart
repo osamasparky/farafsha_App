@@ -156,7 +156,14 @@ class _LeaderboardScreenState extends State<LeaderboardScreen> {
                       'لوحة الترتيب 🏆',
                       style: GoogleFonts.cairo(fontSize: 22, fontWeight: FontWeight.w900, color: Colors.white),
                     ),
-                    const SizedBox(width: 44),
+                    IconButton(
+                      tooltip: 'أصحابي والشلل',
+                      icon: const Icon(Icons.group_rounded, color: LammaColors.gold500, size: 24),
+                      onPressed: () {
+                        SoundService.instance.playClick();
+                        context.push('/friends');
+                      },
+                    ),
                   ],
                 ),
 

@@ -1514,4 +1514,202 @@ class ApiService {
       throw Exception(data['message'] ?? 'تعذر إضافة البوت');
     }
   }
+
+  // =========================================================================
+  // نظام الأصدقاء (@username)، الحالة الحية، والشلل/الفرق (Social Competition)
+  // =========================================================================
+
+  /// تحديث حالة الاتصال والغرفة الحالية للاعب
+  Future<void> updatePresence({String? currentRoomCode}) async {
+    if (_authToken == null || _authToken!.isEmpty) return;
+    try {
+      await http
+          .post(
+            Uri.parse('$baseUrl/social/presence'),
+            headers: _headers,
+            body: jsonEncode({
+              if (currentRoomCode != null) 'current_room_code': currentRoomCode,
+            }),
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
+  }
+
+  /// تحديث @username الفريد للاعب
+  Future<String> updateUsername(String username) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/username'),
+          headers: _headers,
+          body: jsonEncode({'username': username.trim()}),
+        )
+        .timeout(const Duration(seconds: 8));
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200 && data['status'] == 'success') {
+      final newUsername = data['username']?.toString() ?? username;
+      if (_currentUser != null) {
+        _currentUser!['username'] = newUsername;
+      }
+      return newUsername;
+    }
+    throw Exception(data['message'] ?? 'تعذر تحديث اسم المستخدم');
+  }
+
+  /// البحث عن لاعبين عبر @username أو الاسم
+  Future<List<Map<String, dynamic>>> searchSocialUsers(String query) async {
+    final res = await http
+        .get(
+          Uri.parse('$baseUrl/social/users/search?q=${Uri.encodeQueryComponent(query)}'),
+          headers: _headers,
+        )
+        .timeout(const Duration(seconds: 8));
+    if (res.statusCode == 200) {
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      return List<Map<String, dynamic>>.from(data['users'] ?? []);
+    }
+    return [];
+  }
+
+  /// جلب قائمة الأصدقاء وطلبات الصداقة الواردة
+  Future<Map<String, dynamic>?> getFriendsData() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/social/friends'), headers: _headers)
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// إرسال طلب صداقة عبر @username أو المعرّف
+  Future<String> sendFriendRequest({int? friendId, String? username}) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/friends/request'),
+          headers: _headers,
+          body: jsonEncode({
+            if (friendId != null) 'friend_id': friendId,
+            if (username != null) 'username': username,
+          }),
+        )
+        .timeout(const Duration(seconds: 8));
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200) {
+      return data['message']?.toString() ?? 'تم إرسال طلب الصداقة';
+    }
+    throw Exception(data['message'] ?? 'تعذر إرسال طلب الصداقة');
+  }
+
+  /// قبول أو رفض أو إزالة صداقة
+  Future<void> respondFriendRequest({required int friendId, required String action}) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/friends/respond'),
+          headers: _headers,
+          body: jsonEncode({'friend_id': friendId, 'action': action}),
+        )
+        .timeout(const Duration(seconds: 8));
+    if (res.statusCode != 200) {
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      throw Exception(data['message'] ?? 'تعذر تنفيذ الطلب');
+    }
+  }
+
+  /// جلب لوحة الصدارة الأسبوعية للأصدقاء
+  Future<List<Map<String, dynamic>>> getFriendsLeaderboard() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/social/friends/leaderboard'), headers: _headers)
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+        return List<Map<String, dynamic>>.from(data['rankings'] ?? []);
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /// جلب الشلل والمجموعات الخاصة باللاعب
+  Future<List<Map<String, dynamic>>> getMyCrews() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/social/crews'), headers: _headers)
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+        return List<Map<String, dynamic>>.from(data['crews'] ?? []);
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  /// إنشاء شلة أو فريق جديد
+  Future<Map<String, dynamic>> createCrew({
+    required String name,
+    String emoji = '🔥',
+    String badgeColor = '#A35BFF',
+  }) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/crews'),
+          headers: _headers,
+          body: jsonEncode({
+            'name': name.trim(),
+            'emoji': emoji,
+            'badge_color': badgeColor,
+          }),
+        )
+        .timeout(const Duration(seconds: 8));
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200 || res.statusCode == 201) {
+      return Map<String, dynamic>.from(data['crew'] ?? {});
+    }
+    throw Exception(data['message'] ?? 'تعذر إنشاء الشلة');
+  }
+
+  /// الانضمام لشلة عبر الكود
+  Future<String> joinCrewByCode(String code) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/crews/join'),
+          headers: _headers,
+          body: jsonEncode({'code': code.trim().toUpperCase()}),
+        )
+        .timeout(const Duration(seconds: 8));
+    final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+    if (res.statusCode == 200) {
+      return data['message']?.toString() ?? 'تم الانضمام بنجاح!';
+    }
+    throw Exception(data['message'] ?? 'كود الشلة غير صحيح');
+  }
+
+  /// جلب تفاصيل الشلة وترتيب أعضائها الأسبوعي
+  Future<Map<String, dynamic>?> getCrewDetails(int crewId) async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/social/crews/$crewId'), headers: _headers)
+          .timeout(const Duration(seconds: 8));
+      if (res.statusCode == 200) {
+        return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      }
+    } catch (_) {}
+    return null;
+  }
+
+  /// إضافة صديق مباشرة إلى الشلة
+  Future<void> inviteFriendToCrew({required int crewId, required int userId}) async {
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/social/crews/$crewId/invite'),
+          headers: _headers,
+          body: jsonEncode({'user_id': userId}),
+        )
+        .timeout(const Duration(seconds: 8));
+    if (res.statusCode != 200) {
+      final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+      throw Exception(data['message'] ?? 'تعذر إضافة الصديق');
+    }
+  }
 }

@@ -271,37 +271,67 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: () {
-                        SoundService.instance.playClick();
-                        context.push('/notifications');
-                      },
-                      child: Container(
-                        width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(14),
-                      border: Border.all(color: LammaColors.cardBorder),
-                    ),
-                    child: Stack(
-                      alignment: Alignment.center,
+                    Row(
                       children: [
-                        const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
-                        Positioned(
-                          top: 10,
-                          left: 10,
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            SoundService.instance.playClick();
+                            if (isGuest) {
+                              GuestLockedModal.show(
+                                context,
+                                customTitle: 'ميزة الأصدقاء والشلل',
+                                customMessage: 'سجّل حسابك مجاناً لإضافة صحابك بـ @username واللعب مع شلتك!',
+                              );
+                            } else {
+                              context.push('/friends');
+                            }
+                          },
                           child: Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(color: Color(0xFFFF568A), shape: BoxShape.circle),
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: LammaColors.cardBorder),
+                            ),
+                            child: const Icon(Icons.group_rounded, color: LammaColors.gold500, size: 22),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        GestureDetector(
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () {
+                            SoundService.instance.playClick();
+                            context.push('/notifications');
+                          },
+                          child: Container(
+                            width: 44,
+                            height: 44,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.08),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(color: LammaColors.cardBorder),
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                const Icon(Icons.notifications_outlined, color: Colors.white, size: 22),
+                                Positioned(
+                                  top: 10,
+                                  left: 10,
+                                  child: Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(color: Color(0xFFFF568A), shape: BoxShape.circle),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
                     ),
-                  ),
-                ),
               ],
             ),
           ),
