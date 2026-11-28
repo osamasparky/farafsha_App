@@ -20,7 +20,7 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: المفضلة
+  int _selectedTabIndex = 0; // 0: الألعاب, 1: التحديات, 2: الكوتشينة
   bool _isLoading = false;
   List<Map<String, dynamic>> _games = [];
   List<Map<String, dynamic>> _banners = [];
@@ -145,10 +145,13 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   List<Map<String, dynamic>> get _filteredGames {
+    const cardSlugs = {'komi', 'tarneeb', 'estimation', 'shayeb'};
     if (_selectedTabIndex == 1) {
-      return _games.where((g) => g['is_featured'] == true || g['id'] % 2 == 1).toList();
+      return _games.where((g) => g['is_featured'] == true || (g['id'] is int && (g['id'] as int) % 2 == 1)).toList();
     } else if (_selectedTabIndex == 2) {
-      return _games.take(3).toList();
+      return _games
+          .where((g) => cardSlugs.contains(g['slug']) || g['category']?.toString() == 'كوتشينة')
+          .toList();
     }
     return _games;
   }
@@ -357,7 +360,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   _buildTabItem(title: 'الألعاب', index: 0),
                   _buildTabItem(title: 'التحديات', index: 1),
-                  _buildTabItem(title: 'المفضلة', index: 2),
+                  _buildTabItem(title: 'الكوتشينة 🃏', index: 2),
                 ],
               ),
             ),
@@ -596,6 +599,8 @@ class _HomeScreenState extends State<HomeScreen> {
           } else {
             if (game['slug'] == 'domino') {
               context.push('/domino-setup');
+            } else if (const {'komi', 'tarneeb', 'estimation', 'shayeb'}.contains(game['slug'])) {
+              context.push('/card-setup/${game['slug']}', extra: game);
             } else {
               context.push('/game-setup', extra: game);
             }

@@ -325,17 +325,40 @@ class _FriendsCrewsScreenState extends State<FriendsCrewsScreen> with SingleTick
               ],
             ),
             const SizedBox(height: 10),
-            if (_friends.isNotEmpty)
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF341765),
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+            Row(
+              children: [
+                Expanded(
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: LammaColors.gold500,
+                      foregroundColor: const Color(0xFF1F0C3C),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    ),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      _startCrewChallenge(crew['name']?.toString() ?? 'الشلة');
+                    },
+                    icon: const Icon(Icons.sports_esports_rounded, size: 18),
+                    label: Text('ابدأ تحدي للشلة 🎮', style: GoogleFonts.cairo(fontWeight: FontWeight.w900, fontSize: 12)),
+                  ),
                 ),
-                onPressed: () => _pickFriendToInvite(crewId),
-                icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
-                label: Text('إضافة صديق للشلة', style: GoogleFonts.cairo(fontWeight: FontWeight.w800)),
-              ),
+                if (_friends.isNotEmpty) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF341765),
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      ),
+                      onPressed: () => _pickFriendToInvite(crewId),
+                      icon: const Icon(Icons.person_add_alt_1_rounded, size: 18),
+                      label: Text('إضافة صديق', style: GoogleFonts.cairo(fontWeight: FontWeight.w800, fontSize: 12)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             const SizedBox(height: 12),
             Text(
               'ترتيب أعضاء الشلة هذا الأسبوع 🏆',
@@ -352,6 +375,69 @@ class _FriendsCrewsScreenState extends State<FriendsCrewsScreen> with SingleTick
         ),
       ),
     );
+  }
+
+  Future<void> _startCrewChallenge(String crewName) async {
+    final games = [
+      {'slug': 'komi', 'name': 'الكومي (البصرة) 🃏'},
+      {'slug': 'tarneeb', 'name': 'طرنيب مصري ♠️'},
+      {'slug': 'estimation', 'name': 'استيميشن 🎯'},
+      {'slug': 'shayeb', 'name': 'الشايب 👴'},
+      {'slug': 'domino', 'name': 'الدومينو 🎲'},
+      {'slug': 'autobus-complete', 'name': 'أتوبيس كومبليت 🚌'},
+    ];
+
+    final picked = await showModalBottomSheet<Map<String, String>>(
+      context: context,
+      backgroundColor: const Color(0xFF24104B),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Text(
+              'اختر لعبة لتحدي $crewName 🎮',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.cairo(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900),
+            ),
+            const SizedBox(height: 12),
+            ...games.map((g) => ListTile(
+                  title: Text(g['name']!, style: GoogleFonts.cairo(color: Colors.white, fontWeight: FontWeight.w800)),
+                  trailing: const Icon(Icons.arrow_back_ios_new_rounded, color: LammaColors.gold500, size: 16),
+                  onTap: () => Navigator.pop(ctx, g),
+                )),
+          ],
+        ),
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+    try {
+      final data = await ApiService.instance.createRoom(
+        gameSlug: picked['slug']!,
+        maxPlayers: 4,
+      );
+      final code = data['room']['code']?.toString() ?? '';
+      await ApiService.instance.updatePresence(currentRoomCode: code);
+      if (!mounted) return;
+      context.push(
+        '/online-room',
+        extra: {
+          'code': code,
+          'playerToken': data['player_token'],
+          'isHost': true,
+          'gameName': picked['name']!,
+          'gameSlug': picked['slug']!,
+          'maxPlayers': 4,
+        },
+      );
+    } catch (e) {
+      _showMessage(e.toString().replaceFirst('Exception: ', ''), isError: true);
+    }
   }
 
   Future<void> _pickFriendToInvite(int crewId) async {

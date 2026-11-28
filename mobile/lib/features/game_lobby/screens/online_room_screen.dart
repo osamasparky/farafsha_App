@@ -53,6 +53,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
     _isHost = widget.isHost;
 
     _fetchRoomState();
+    ApiService.instance.updatePresence(currentRoomCode: _code);
     // بدء مزامنة حالة الغرفة كل 2.5 ثانية مع منع تداخل الطلبات
     _syncTimer = Timer.periodic(const Duration(milliseconds: 2500), (_) {
       if (_isAppActive) _fetchRoomState();
@@ -69,6 +70,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _syncTimer?.cancel();
+    ApiService.instance.updatePresence(currentRoomCode: '');
     super.dispose();
   }
 

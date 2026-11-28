@@ -33,6 +33,11 @@ import '../../features/settings/screens/settings_screen.dart';
 import '../../features/store/screens/store_screen.dart';
 import '../../features/notifications/screens/notifications_screen.dart';
 import '../../features/social/screens/friends_crews_screen.dart';
+import '../../features/card_games/screens/card_game_setup_screen.dart';
+import '../../features/card_games/screens/komi_game_screen.dart';
+import '../../features/card_games/screens/tarneeb_game_screen.dart';
+import '../../features/card_games/screens/estimation_game_screen.dart';
+import '../../features/card_games/screens/shayeb_game_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -405,6 +410,51 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/friends',
       builder: (context, state) => const FriendsCrewsScreen(),
+    ),
+    GoRoute(
+      path: '/card-setup/:slug',
+      builder: (context, state) {
+        final slug = state.pathParameters['slug'] ?? 'komi';
+        final extra = state.extra as Map<String, dynamic>?;
+        return CardGameSetupScreen(slug: slug, gameData: extra);
+      },
+    ),
+    GoRoute(
+      path: '/card-play/:slug',
+      builder: (context, state) {
+        final slug = state.pathParameters['slug'] ?? 'komi';
+        final extra = state.extra as Map<String, dynamic>? ?? {};
+        switch (slug) {
+          case 'tarneeb':
+            return TarneebGameScreen(
+              targetScore: extra['targetScore'] as int? ?? 41,
+              turnSeconds: extra['turnSeconds'] as int? ?? 30,
+              isLandscape: extra['isLandscape'] as bool? ?? false,
+            );
+          case 'estimation':
+            return EstimationGameScreen(
+              roundsCount: extra['roundsCount'] as int? ?? 10,
+              turnSeconds: extra['turnSeconds'] as int? ?? 30,
+              isLandscape: extra['isLandscape'] as bool? ?? false,
+            );
+          case 'shayeb':
+            return ShayebGameScreen(
+              playersCount: extra['playersCount'] as int? ?? 4,
+              roundsCount: extra['roundsCount'] as int? ?? 5,
+              turnSeconds: extra['turnSeconds'] as int? ?? 20,
+              isLandscape: extra['isLandscape'] as bool? ?? false,
+            );
+          case 'komi':
+          default:
+            return KomiGameScreen(
+              playersCount: extra['playersCount'] as int? ?? 2,
+              targetScore: extra['targetScore'] as int? ?? 121,
+              turnSeconds: extra['turnSeconds'] as int? ?? 30,
+              isLandscape: extra['isLandscape'] as bool? ?? false,
+              botDifficulty: extra['botDifficulty'] as String? ?? 'medium',
+            );
+        }
+      },
     ),
   ],
 );
