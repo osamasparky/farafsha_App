@@ -15,10 +15,10 @@ class EnsureAdmin
     {
         $user = $request->user();
 
-        if (!$user || !$user->is_admin) {
+        if (!$user || !$user->is_admin || ($user->status !== null && $user->status !== 'active')) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'غير مصرح لك بتنفيذ هذه العملية، الصلاحية مقتصرة على المشرفين فقط.',
+                'message' => 'غير مصرح لك بتنفيذ هذه العملية، الصلاحية مقتصرة على المشرفين المفعلين فقط.',
             ], 403);
         }
 

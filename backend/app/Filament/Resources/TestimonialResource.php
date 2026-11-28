@@ -83,7 +83,7 @@ class TestimonialResource extends Resource
                         Forms\Components\FileUpload::make('avatar')
                             ->label('صورة أو صورة الحساب (Avatar)')
                             ->image()
-                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                             ->maxSize(5120)
                             ->disk('public')
                             ->directory('testimonials')

@@ -45,7 +45,7 @@ Route::prefix('games')->group(function () {
 });
 
 // مسارات غرف اللعب أونلاين
-Route::prefix('rooms')->group(function () {
+Route::prefix('rooms')->middleware('throttle:60,1')->group(function () {
     Route::post('/', [RoomController::class, 'store']);
     Route::post('/matchmake', [RoomController::class, 'matchmake']);
     Route::get('/{code}', [RoomController::class, 'show']);
@@ -78,14 +78,14 @@ Route::get('/gameplay-modes', function () {
 Route::get('/banners', [AppContentController::class, 'banners']);
 Route::get('/dialects', [AppContentController::class, 'dialects']);
 Route::get('/leaderboard', [AppContentController::class, 'leaderboard']);
-Route::post('/leaderboard/record', [AppContentController::class, 'recordScore'])->middleware('auth:sanctum');
+Route::post('/leaderboard/record', [AppContentController::class, 'recordScore'])->middleware(['auth:sanctum', 'throttle:20,1']);
 Route::get('/notifications', [AppContentController::class, 'notifications']);
 Route::get('/pages/{slug}', [AppContentController::class, 'page']);
 Route::get('/contact-info', [AppContentController::class, 'contactInfo']);
 Route::get('/badges', [AppContentController::class, 'badges']);
 Route::get('/levels', [AppContentController::class, 'levels']);
 Route::get('/profile', [AppContentController::class, 'profile']);
-Route::post('/profile/update', [AppContentController::class, 'updateProfile']);
+Route::post('/profile/update', [AppContentController::class, 'updateProfile'])->middleware('auth:sanctum');
 Route::get('/app-version', [AppContentController::class, 'checkVersion']);
 
 // Social Authentication Architecture (v1 API)

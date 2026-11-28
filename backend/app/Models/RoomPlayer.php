@@ -30,6 +30,10 @@ class RoomPlayer extends Model
         'last_seen_at' => 'datetime',
     ];
 
+    protected $hidden = [
+        'session_token',
+    ];
+
     public function room(): BelongsTo
     {
         return $this->belongsTo(Room::class);

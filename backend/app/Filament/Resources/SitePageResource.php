@@ -71,7 +71,7 @@ class SitePageResource extends Resource
                                         Forms\Components\FileUpload::make('og_image')
                                             ->label('صورة المشاركة بشبكات التواصل (OG Image)')
                                             ->image()
-                                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                                             ->maxSize(5120)
                                             ->disk('public')
                                             ->directory('pages-og')

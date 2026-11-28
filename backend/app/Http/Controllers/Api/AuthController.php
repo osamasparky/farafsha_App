@@ -31,7 +31,7 @@ class AuthController extends Controller
             'is_admin' => false,
         ]);
 
-        $token = $user->createToken('mobile_guest_token')->plainTextToken;
+        $token = $user->createToken('mobile_guest_token', ['guest'])->plainTextToken;
 
         return response()->json([
             'status' => 'success',
@@ -146,6 +146,14 @@ class AuthController extends Controller
         ]);
 
         $normalized = $this->normalizePhone($validated['phone'], $validated['country_code'] ?? '+20');
+        $lockKey = "otp_lock:phone:{$normalized}";
+        if (Cache::get($lockKey)) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم حظر التحقق مؤقتاً لمدة 15 دقيقة بسبب تكرار المحاولات الخاطئة.',
+            ], 429);
+        }
+
         $cachedOtp = Cache::get("otp:phone:{$normalized}");
 
         $isValid = ($cachedOtp && $cachedOtp === $validated['otp'])
@@ -154,14 +162,14 @@ class AuthController extends Controller
         if (!$isValid) {
             $failKey = "otp_fails:phone:{$normalized}";
             $fails = Cache::increment($failKey);
-            Cache::put($failKey, $fails, 300);
+            Cache::put($failKey, $fails, 900);
 
             if ($fails >= 5) {
                 Cache::forget("otp:phone:{$normalized}");
-                Cache::forget($failKey);
+                Cache::put($lockKey, true, 900);
                 return response()->json([
                     'status' => 'error',
-                    'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب.',
+                    'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم حظر التحقق مؤقتاً.',
                 ], 429);
             }
 
@@ -191,6 +199,12 @@ class AuthController extends Controller
             ->first();
 
         if ($user) {
+            if (($user->status !== null && $user->status !== 'active') || $user->deletionRequests()->where('status', 'pending')->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم تعليق أو إيقاف هذا الحساب حالياً.',
+                ], 403);
+            }
             $user->update([
                 'phone' => $normalized,
                 'phone_verified_at' => now(),
@@ -264,6 +278,13 @@ class AuthController extends Controller
         ]);
 
         $email = strtolower(trim($validated['email']));
+        if (Cache::has("otp_lock:email:{$email}")) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم حظر المحاولات مؤقتاً لمدة 15 دقيقة بسبب تجاوز الحد الأقصى للمحاولات الخاطئة.',
+            ], 429);
+        }
+
         $cachedOtp = Cache::get("otp:email:{$email}");
 
         $isValid = ($cachedOtp && $cachedOtp === $validated['otp'])
@@ -277,6 +298,7 @@ class AuthController extends Controller
             if ($fails >= 5) {
                 Cache::forget("otp:email:{$email}");
                 Cache::forget($failKey);
+                Cache::put("otp_lock:email:{$email}", true, 900);
                 return response()->json([
                     'status' => 'error',
                     'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب.',
@@ -447,6 +469,12 @@ class AuthController extends Controller
 
         // إذا تم إرسال كود OTP مع طلب التسجيل مباشرة، نتحقق منه فوراً
         if (!$phoneVerified && !empty($request->otp)) {
+            if (Cache::has("otp_lock:register:{$normalizedPhone}")) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم حظر المحاولات مؤقتاً لمدة 15 دقيقة بسبب تجاوز الحد الأقصى للمحاولات الخاطئة.',
+                ], 429);
+            }
             $cachedPhoneOtp = Cache::get("otp:phone:{$normalizedPhone}");
             $cachedEmailOtp = Cache::get("otp:email:{$normalizedEmail}");
             $inputOtp = (string) $request->otp;
@@ -457,6 +485,21 @@ class AuthController extends Controller
                 $emailVerified = true;
                 Cache::forget("otp:phone:{$normalizedPhone}");
                 Cache::forget("otp:email:{$normalizedEmail}");
+                Cache::forget("otp_fails:register:{$normalizedPhone}");
+            } else {
+                $failKey = "otp_fails:register:{$normalizedPhone}";
+                $fails = Cache::increment($failKey);
+                Cache::put($failKey, $fails, 300);
+                if ($fails >= 5) {
+                    Cache::forget("otp:phone:{$normalizedPhone}");
+                    Cache::forget("otp:email:{$normalizedEmail}");
+                    Cache::forget($failKey);
+                    Cache::put("otp_lock:register:{$normalizedPhone}", true, 900);
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب.',
+                    ], 429);
+                }
             }
         }
 
@@ -542,55 +585,10 @@ class AuthController extends Controller
      */
     public function socialLogin(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'provider' => 'required|string|in:google,apple,facebook',
-            'provider_id' => 'nullable|string',
-            'email' => 'required|email',
-        ]);
-
-        $provider = SocialProvider::where('provider', $validated['provider'])->first();
-        if ($provider && !$provider->is_enabled) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'تسجيل الدخول عبر ' . $provider->name . ' غير مفعل حالياً من لوحة التحكم.',
-            ], 403);
-        }
-
-        $user = User::where('email', $validated['email'])->first();
-
-        if (!$user) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'لم يتم العثور على حساب مسجل بهذا البريد الإلكتروني. يرجى إنشاء حساب جديد أولاً برقم هاتفك واسمك.',
-                'requires_registration' => true,
-            ], 404);
-        }
-
-        // التحقق من تعليق الحساب لطلب الحذف
-        if ($user->status === 'deletion_pending' || $user->deletionRequests()->where('status', 'pending')->exists()) {
-            return response()->json([
-                'status' => 'error',
-                'message' => 'تم تعليق هذا الحساب بناءً على طلب الحذف المُقدّم من قبلك وهو بانتظار قرار إدارة فرفشة.',
-            ], 403);
-        }
-
-        $token = $user->createToken('social_user_token')->plainTextToken;
-
         return response()->json([
-            'status' => 'success',
-            'message' => 'تم تسجيل الدخول بنجاح عبر ' . ucfirst($validated['provider']),
-            'token' => $token,
-            'user' => [
-                'id' => $user->id,
-                'name' => $user->name,
-                'email' => $user->email,
-                'phone' => $user->phone,
-                'avatar' => $user->avatar,
-                'total_points' => $user->total_score ?? 0,
-                'wins' => $user->wins_count ?? 0,
-                'games_played' => $user->games_played ?? 0,
-            ],
-        ]);
+            'status' => 'error',
+            'message' => 'تم إيقاف هذا المسار غير الآمن. يرجى تسجيل الدخول عبر التحقق الرسمي (/api/v1/auth/social/{provider}).',
+        ], 403);
     }
 
     /**
@@ -689,6 +687,12 @@ class AuthController extends Controller
 
         // إذا كان المستخدم موجوداً، يجب التحقق من كلمة المرور أو كود التحقق للبريد
         if ($user) {
+            if (($user->status !== null && $user->status !== 'active') || $user->deletionRequests()->where('status', 'pending')->exists()) {
+                return response()->json([
+                    'status' => 'error',
+                    'message' => 'تم تعليق أو إيقاف هذا الحساب حالياً.',
+                ], 403);
+            }
             $hasVerifiedEmailOtp = Cache::get("verified_email:{$email}") === true;
             $passwordValid = !empty($validated['password']) && Hash::check($validated['password'], $user->password);
 
@@ -852,6 +856,13 @@ class AuthController extends Controller
         $type = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'phone';
         $target = $type === 'email' ? strtolower($identifier) : $this->normalizePhone($identifier);
 
+        if (Cache::has("password_reset_lock:{$type}:{$target}")) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تم حظر المحاولات مؤقتاً لمدة 15 دقيقة بسبب تجاوز الحد الأقصى للمحاولات الخاطئة.',
+            ], 429);
+        }
+
         $cacheKey = "password_reset_otp:{$type}:{$target}";
         $cached = Cache::get($cacheKey);
 
@@ -866,6 +877,7 @@ class AuthController extends Controller
             if ($fails >= 5) {
                 Cache::forget($cacheKey);
                 Cache::forget($failKey);
+                Cache::put("password_reset_lock:{$type}:{$target}", true, 900);
                 return response()->json([
                     'status' => 'error',
                     'message' => 'تم تجاوز الحد الأقصى للمحاولات الخاطئة (5 محاولات). تم إبطال الرمز لحماية الحساب، يرجى طلب رمز جديد.',
@@ -929,6 +941,13 @@ class AuthController extends Controller
                 'status' => 'error',
                 'message' => 'المستخدم غير موجود.',
             ], 404);
+        }
+
+        if ($user->status !== null && $user->status !== 'active') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'الحساب موقوف أو غير نشط.',
+            ], 403);
         }
 
         $user->update([

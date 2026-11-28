@@ -36,6 +36,17 @@ class GoogleTokenVerifier
             ]);
         }
 
+        $expectedAud = config('services.google.client_id');
+        if (!empty($expectedAud)) {
+            $aud = $data['aud'] ?? '';
+            $azp = $data['azp'] ?? '';
+            if ($aud !== $expectedAud && $azp !== $expectedAud) {
+                throw ValidationException::withMessages([
+                    'id_token' => ['رمز Google غير مخصص لهذا التطبيق.'],
+                ]);
+            }
+        }
+
         $sub = $data['sub'] ?? null;
         if (!$sub) {
             throw ValidationException::withMessages([

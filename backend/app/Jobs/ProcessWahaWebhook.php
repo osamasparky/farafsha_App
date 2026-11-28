@@ -28,8 +28,10 @@ class ProcessWahaWebhook implements ShouldQueue
         DB::transaction(function () use ($event, $data, $p) {
             if ($event->event_name === 'session.status' && $event->session) {
                 $name = $event->session;
+                $rawPhone = data_get($data, 'me.id');
+                $sanitizedPhone = $rawPhone !== null ? preg_replace('/\D+/', '', (string) $rawPhone) : null;
                 WahaSession::updateOrCreate(['name' => $name], [
-                    'status' => $p['status'] ?? 'UNKNOWN', 'phone' => data_get($data, 'me.id'), 'last_seen_at' => now(),
+                    'status' => $p['status'] ?? 'UNKNOWN', 'phone' => $sanitizedPhone ?: null, 'last_seen_at' => now(),
                 ]);
             }
             if (in_array($event->event_name, ['message', 'message.any'], true) && !empty($p['id'])) {

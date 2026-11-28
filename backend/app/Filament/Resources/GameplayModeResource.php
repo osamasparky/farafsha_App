@@ -72,7 +72,7 @@ class GameplayModeResource extends Resource
                             ->image()
                             ->imagePreviewHeight('240')
                             ->imageEditor()
-                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                             ->openable()
                             ->downloadable()
                             ->maxSize(10240)

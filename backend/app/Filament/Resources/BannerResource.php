@@ -37,7 +37,7 @@ class BannerResource extends Resource
                             ->directory('banners')
                             ->visibility('public')
                             ->image()
-                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                            ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                             ->imageEditor()
                             ->openable()
                             ->downloadable()

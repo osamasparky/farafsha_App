@@ -264,7 +264,7 @@ class _OnlineRoomScreenState extends State<OnlineRoomScreen> with WidgetsBinding
   Future<void> _onAddBot() async {
     try {
       HapticFeedback.selectionClick();
-      await ApiService.instance.addRoomBot(_code);
+      await ApiService.instance.addRoomBot(_code, playerToken: _playerToken);
       await _fetchRoomState();
     } catch (e) {
       if (mounted) {

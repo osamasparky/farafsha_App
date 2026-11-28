@@ -35,6 +35,10 @@ class Room extends Model
         'last_active_at' => 'datetime',
     ];
 
+    protected $hidden = [
+        'game_state',
+    ];
+
     public function game(): BelongsTo
     {
         return $this->belongsTo(Game::class);

@@ -1505,9 +1505,13 @@ class ApiService {
   }
 
   /// إضافة لاعب ذكي (NPC) من السيرفر للغرفة
-  Future<void> addRoomBot(String code) async {
+  Future<void> addRoomBot(String code, {String? playerToken}) async {
+    final headers = Map<String, String>.from(_headers);
+    if (playerToken != null && playerToken.isNotEmpty) {
+      headers['X-Player-Token'] = playerToken;
+    }
     final res = await http
-        .post(Uri.parse('$baseUrl/rooms/$code/add-bot'), headers: _headers)
+        .post(Uri.parse('$baseUrl/rooms/$code/add-bot'), headers: headers)
         .timeout(const Duration(seconds: 8));
     if (res.statusCode != 200) {
       final data = jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;

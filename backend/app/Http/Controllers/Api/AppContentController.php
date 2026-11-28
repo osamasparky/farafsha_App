@@ -260,14 +260,6 @@ class AppContentController extends Controller
      */
     public function updateProfile(Request $request): JsonResponse
     {
-        $validated = $request->validate([
-            'name' => 'nullable|string|max:100',
-            'avatar' => 'nullable|string|max:500',
-            'phone' => 'nullable|string|max:50',
-            'email' => 'nullable|email|max:150',
-            'photo' => 'nullable|image|max:10240', // يدعم حتى 10 ميجا
-        ]);
-
         $user = $request->user('sanctum') ?? auth('sanctum')->user();
         if (!$user) {
             return response()->json([
@@ -276,17 +268,27 @@ class AppContentController extends Controller
             ], 401);
         }
 
+        $validated = $request->validate([
+            'name' => 'nullable|string|max:100',
+            'avatar' => 'nullable|string|max:500',
+            'phone' => 'nullable|string|max:50|unique:users,phone,' . $user->id,
+            'email' => 'nullable|email|max:150|unique:users,email,' . $user->id,
+            'photo' => 'nullable|image|max:10240', // يدعم حتى 10 ميجا
+        ]);
+
         if (!empty($validated['name'])) {
             $user->name = $validated['name'];
         }
         if (!empty($validated['avatar'])) {
             $user->avatar = $validated['avatar'];
         }
-        if (!empty($validated['phone'])) {
+        if (!empty($validated['phone']) && $validated['phone'] !== $user->phone) {
             $user->phone = $validated['phone'];
+            $user->phone_verified_at = null;
         }
-        if (!empty($validated['email'])) {
-            $user->email = $validated['email'];
+        if (!empty($validated['email']) && strtolower($validated['email']) !== strtolower((string) $user->email)) {
+            $user->email = strtolower(trim($validated['email']));
+            $user->email_verified_at = null;
         }
         if ($request->hasFile('photo')) {
             $path = $request->file('photo')->store('avatars', 'public');

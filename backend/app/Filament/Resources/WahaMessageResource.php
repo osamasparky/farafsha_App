@@ -99,9 +99,9 @@ class WahaMessageResource extends Resource
                     ->modalCancelActionLabel('إغلاق')
                     ->modalContent(fn (WahaMessage $record) => new \Illuminate\Support\HtmlString("
                         <div class='space-y-4 p-2 text-sm'>
-                            <div><strong class='text-gray-400'>الرقم:</strong> {$record->chat_id}</div>
-                            <div><strong class='text-gray-400'>الحالة:</strong> {$record->status}</div>
-                            " . ($record->last_error ? "<div class='text-rose-400'><strong class='text-gray-400'>الخطأ:</strong> {$record->last_error}</div>" : '') . "
+                            <div><strong class='text-gray-400'>الرقم:</strong> " . e($record->chat_id) . "</div>
+                            <div><strong class='text-gray-400'>الحالة:</strong> " . e($record->status) . "</div>
+                            " . ($record->last_error ? "<div class='text-rose-400'><strong class='text-gray-400'>الخطأ:</strong> " . e($record->last_error) . "</div>" : '') . "
                             <div><strong class='text-gray-400'>نص الرسالة:</strong></div>
                             <div class='p-3 bg-white/5 rounded-xl border border-white/10 whitespace-pre-wrap'>" . e($record->body) . "</div>
                         </div>

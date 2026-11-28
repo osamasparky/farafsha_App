@@ -519,8 +519,26 @@ class SocialController extends Controller
             'user_id' => 'required|integer|exists:users,id',
         ]);
 
+        $targetId = (int) $validated['user_id'];
+        $isFriend = Friendship::where('status', 'accepted')
+            ->where(function ($q) use ($me, $targetId) {
+                $q->where(function ($sub) use ($me, $targetId) {
+                    $sub->where('user_id', $me->id)->where('friend_id', $targetId);
+                })->orWhere(function ($sub) use ($me, $targetId) {
+                    $sub->where('user_id', $targetId)->where('friend_id', $me->id);
+                });
+            })
+            ->exists();
+
+        if (!$isFriend) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'يمكنك فقط إضافة أصدقائك المقبولين إلى الشلة.',
+            ], 403);
+        }
+
         CrewMember::firstOrCreate(
-            ['crew_id' => $crew->id, 'user_id' => $validated['user_id']],
+            ['crew_id' => $crew->id, 'user_id' => $targetId],
             ['role' => 'member', 'weekly_score' => 0]
         );
 

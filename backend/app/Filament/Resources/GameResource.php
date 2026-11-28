@@ -202,7 +202,7 @@ class GameResource extends Resource
                                     ->image()
                                     ->imagePreviewHeight('240')
                                     ->imageEditor()
-                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                                     ->disk('public')
                                     ->directory('games')
                                     ->visibility('public')
@@ -303,7 +303,7 @@ class GameResource extends Resource
                                 Forms\Components\FileUpload::make('og_image')
                                     ->label('صورة المشاركة بشبكات التواصل (OG Image)')
                                     ->image()
-                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/svg+xml'])
+                                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp'])
                                     ->disk('public')
                                     ->directory('seo')
                                     ->visibility('public'),

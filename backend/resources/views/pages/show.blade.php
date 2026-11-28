@@ -39,7 +39,14 @@
             @if($page && $page->blocks)
                 @foreach($page->blocks as $block)
                     @if(($block['type'] ?? '') === 'rich_text')
-                        {!! $block['data']['body'] ?? '' !!}
+                        @php
+                            $rawBody = (string) ($block['data']['body'] ?? '');
+                            $cleanBody = strip_tags($rawBody, '<p><br><b><strong><i><em><u><s><ul><ol><li><a><h1><h2><h3><h4><h5><h6><blockquote><code><pre><hr><span><div>');
+                            $cleanBody = preg_replace('/\s+on[a-z]+\s*=\s*(["\']).*?\1/is', '', $cleanBody);
+                            $cleanBody = preg_replace('/\s+on[a-z]+\s*=\s*[^\s>]+/is', '', $cleanBody);
+                            $cleanBody = preg_replace('/href\s*=\s*(["\'])\s*javascript:.*?\1/is', 'href="#"', $cleanBody);
+                        @endphp
+                        {!! $cleanBody !!}
                     @endif
                 @endforeach
             @else

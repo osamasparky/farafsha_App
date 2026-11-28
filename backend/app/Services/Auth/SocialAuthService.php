@@ -81,6 +81,11 @@ class SocialAuthService
                     $user = $this->findOrCreateUser($providerEmail, $name, $avatar);
                     $socialAccount->update(['user_id' => $user->id]);
                 } else {
+                    if ($user->status !== null && $user->status !== 'active') {
+                        throw ValidationException::withMessages([
+                            'provider' => ['هذا الحساب موقوف أو قيد الحذف حالياً.'],
+                        ]);
+                    }
                     // تحديث الميتاداتا
                     $socialAccount->update([
                         'provider_email' => $providerEmail ?? $socialAccount->provider_email,
@@ -97,12 +102,17 @@ class SocialAuthService
                 ];
             }
 
-            // سيناريو 3: حساب جديد غير مسجل -> ربطه بالبريد الإلكتروني الموثق أو إنشاء حساب جديد
+            // سيناريو 3: حساب جديد غير مسجل -> ربطه فقط إذا كان البريد موثقاً من المزود
             $user = null;
             $isNew = false;
 
-            if (!empty($providerEmail)) {
+            if (!empty($providerEmail) && !empty($metadata['email_verified'])) {
                 $user = User::where('email', $providerEmail)->first();
+                if ($user && $user->status !== null && $user->status !== 'active') {
+                    throw ValidationException::withMessages([
+                        'provider' => ['هذا الحساب موقوف أو قيد الحذف حالياً.'],
+                    ]);
+                }
             }
 
             if (!$user) {

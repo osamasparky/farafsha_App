@@ -50,7 +50,12 @@ android {
 
     buildTypes {
         release {
-            signingConfig = if (keystorePropertiesFile.exists() && keystoreProperties.getProperty("storeFile") != null) {
+            val hasReleaseKeystore = keystorePropertiesFile.exists() && keystoreProperties.getProperty("storeFile") != null
+            val allowDebugSigning = project.findProperty("allowDebugSigning")?.toString()?.toBoolean() == true
+            if (!hasReleaseKeystore && !allowDebugSigning) {
+                throw GradleException("Release signing requires android/key.properties with storeFile configured (or pass -PallowDebugSigning=true for local unsigned testing).")
+            }
+            signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")
             } else {
                 signingConfigs.getByName("debug")

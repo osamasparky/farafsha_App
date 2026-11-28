@@ -71,6 +71,9 @@ return new class extends Migration
         Schema::dropIfExists('friendships');
 
         Schema::table('users', function (Blueprint $table) {
+            if (Schema::hasColumn('users', 'username')) {
+                $table->dropUnique(['username']);
+            }
             foreach (['username', 'last_seen_at', 'current_room_code', 'weekly_score'] as $col) {
                 if (Schema::hasColumn('users', $col)) {
                     $table->dropColumn($col);

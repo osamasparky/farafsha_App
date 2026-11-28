@@ -55,9 +55,20 @@ class RoomController extends Controller
             : ($validated['max_players'] ?? 8);
 
         // توليد رمز غرفة عشوائي مكون من 6 أرقام فريدة
-        do {
-            $code = (string) random_int(100000, 999999);
-        } while (Room::where('code', $code)->exists());
+        $code = null;
+        for ($attempt = 0; $attempt < 30; $attempt++) {
+            $candidate = (string) random_int(100000, 999999);
+            if (!Room::where('code', $candidate)->exists()) {
+                $code = $candidate;
+                break;
+            }
+        }
+        if ($code === null) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'تعذر توليد رمز غرفة متاح حالياً، يرجى المحاولة مجدداً.',
+            ], 503);
+        }
 
         $initialGameState = $isDomino ? [
             'game_type' => 'domino',
@@ -502,6 +513,14 @@ class RoomController extends Controller
     public function timeout(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->firstOrFail();
+        $playerToken = $request->header('X-Player-Token') ?? $request->input('player_token');
+        $authUser = $request->user('sanctum') ?? auth('sanctum')->user();
+        $isMember = ($playerToken && $room->players()->where('session_token', $playerToken)->exists())
+            || ($authUser && ($room->host_user_id === $authUser->id || $room->players()->where('user_id', $authUser->id)->exists()));
+        if (!$isMember) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح لك بإنهاء الجولة.'], 403);
+        }
+
         $gameState = $room->game_state ?? [];
 
         if (!empty($gameState['round_ended'])) {
@@ -612,6 +631,14 @@ class RoomController extends Controller
     public function finish(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->firstOrFail();
+        $playerToken = $request->header('X-Player-Token') ?? $request->input('player_token');
+        $authUser = $request->user('sanctum') ?? auth('sanctum')->user();
+        $isMember = ($playerToken && $room->players()->where('session_token', $playerToken)->exists())
+            || ($authUser && ($room->host_user_id === $authUser->id || $room->players()->where('user_id', $authUser->id)->exists()));
+        if (!$isMember) {
+            return response()->json(['status' => 'error', 'message' => 'غير مصرح لك بإنهاء الغرفة.'], 403);
+        }
+
         $alreadyFinished = $room->status === 'finished';
         if (!$alreadyFinished) {
             $room->update(['status' => 'finished']);
@@ -690,9 +717,15 @@ class RoomController extends Controller
         $identity = 'player_' . $player->id;
         $name = $player->player_name;
 
-        $apiKey = config('services.livekit.api_key', 'LK_80f58bd391822d64');
-        $apiSecret = config('services.livekit.api_secret', 'OXtljvd4ni1nWlXUaieMm0vFcgcaKdfzxk5Rh94gW3ThfvIp');
-        $serverUrl = config('services.livekit.url', 'wss://farafsha.com/livekit');
+        $apiKey = (string) config('services.livekit.api_key');
+        $apiSecret = (string) config('services.livekit.api_secret');
+        $serverUrl = (string) config('services.livekit.url', 'wss://farafsha.com/livekit');
+        if ($apiKey === '' || $apiSecret === '') {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'خدمة الصوت غير مهيأة على السيرفر حالياً.',
+            ], 503);
+        }
 
         $header = ['alg' => 'HS256', 'typ' => 'JWT'];
         $now = time();
@@ -779,6 +812,7 @@ class RoomController extends Controller
             ->where('last_active_at', '>=', now()->subMinutes(15))
             ->withCount('players')
             ->orderByDesc('id')
+            ->limit(25)
             ->get()
             ->first(fn ($r) => $r->players_count < $r->max_players);
 
@@ -801,6 +835,14 @@ class RoomController extends Controller
     public function addBot(Request $request, string $code): JsonResponse
     {
         $room = Room::where('code', $code)->with('players')->firstOrFail();
+        $playerToken = $request->header('X-Player-Token') ?? $request->input('player_token');
+        $authUser = $request->user('sanctum') ?? auth('sanctum')->user();
+        $isHost = ($playerToken && $room->players->where('session_token', $playerToken)->where('is_host', true)->isNotEmpty())
+            || ($authUser && $room->host_user_id === $authUser->id);
+        if (!$isHost) {
+            return response()->json(['status' => 'error', 'message' => 'إضافة البوت مقتصرة على مضيف الغرفة فقط.'], 403);
+        }
+
         if ($room->status !== 'waiting') {
             return response()->json(['status' => 'error', 'message' => 'اللعبة بدأت بالفعل.'], 422);
         }

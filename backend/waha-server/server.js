@@ -25,9 +25,14 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const API_KEY = process.env.WAHA_API_KEY || 'farfasha_waha_api_key_secure_2026_random_token_xyz';
-const WEBHOOK_TOKEN = process.env.WAHA_WEBHOOK_TOKEN || 'farfasha_waha_webhook_token_secure_2026_secret';
+const API_KEY = process.env.WAHA_API_KEY;
+const WEBHOOK_TOKEN = process.env.WAHA_WEBHOOK_TOKEN;
 const WEBHOOK_URL = process.env.WAHA_WEBHOOK_URL || 'http://127.0.0.1:8000/api/webhooks/waha';
+
+if (!API_KEY || !WEBHOOK_TOKEN) {
+    console.error('[WAHA] FATAL: WAHA_API_KEY and WAHA_WEBHOOK_TOKEN environment variables must be set.');
+    process.exit(1);
+}
 
 // Sessions storage directory
 const SESSIONS_DIR = path.resolve(__dirname, '../storage/app/waha_sessions');
@@ -72,7 +77,22 @@ async function sendWebhook(event, sessionName, payload, extra = {}) {
 /**
  * Initialize / Start a Baileys session
  */
+const SESSION_NAME_REGEX = /^[A-Za-z0-9_-]{1,64}$/;
+
+function resolveSafeSessionPath(sessionName) {
+    if (typeof sessionName !== 'string' || !SESSION_NAME_REGEX.test(sessionName)) {
+        throw new Error('Invalid session name');
+    }
+    const resolved = path.resolve(SESSIONS_DIR, sessionName);
+    if (!resolved.startsWith(SESSIONS_DIR + path.sep)) {
+        throw new Error('Invalid session path');
+    }
+    return resolved;
+}
+
 async function startSession(sessionName, forceClean = false) {
+    const sessionPath = resolveSafeSessionPath(sessionName);
+
     if (activeSessions.has(sessionName) && !forceClean) {
         const current = activeSessions.get(sessionName);
         if (current.status === 'WORKING' || (current.status === 'STARTING' && current.sock)) {
@@ -80,7 +100,6 @@ async function startSession(sessionName, forceClean = false) {
         }
     }
 
-    const sessionPath = path.join(SESSIONS_DIR, sessionName);
     if (forceClean) {
         try {
             fs.rmSync(sessionPath, { recursive: true, force: true });
@@ -221,11 +240,18 @@ async function stopSession(sessionName) {
 // WAHA REST API Endpoints
 // -------------------------------------------------------------
 
-// API Key check middleware
+// API Key check middleware (fail-closed)
 app.use('/api', (req, res, next) => {
     const providedKey = req.headers['x-api-key'];
-    if (API_KEY && providedKey && providedKey !== API_KEY) {
+    if (!API_KEY || !providedKey || providedKey !== API_KEY) {
         return res.status(401).json({ error: 'Unauthorized: Invalid X-Api-Key' });
+    }
+    next();
+});
+
+app.param('name', (req, res, next, name) => {
+    if (!SESSION_NAME_REGEX.test(name)) {
+        return res.status(400).json({ error: 'Invalid session name' });
     }
     next();
 });

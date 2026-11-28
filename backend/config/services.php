@@ -69,8 +69,8 @@ return [
 
     'livekit' => [
         'url' => env('LIVEKIT_URL', 'wss://farafsha.com/livekit'),
-        'api_key' => env('LIVEKIT_API_KEY', 'LK_80f58bd391822d64'),
-        'api_secret' => env('LIVEKIT_API_SECRET', 'OXtljvd4ni1nWlXUaieMm0vFcgcaKdfzxk5Rh94gW3ThfvIp'),
+        'api_key' => env('LIVEKIT_API_KEY'),
+        'api_secret' => env('LIVEKIT_API_SECRET'),
     ],
 
 ];

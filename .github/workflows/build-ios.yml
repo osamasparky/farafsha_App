@@ -87,8 +87,8 @@ jobs:
           # Decrypt certificate
           CLEAN_PASS=$(echo "$P12_PASSWORD" | tr -d '\r\n"')
           SUCCESS=0
-          for pass in "$P12_PASSWORD" "$CLEAN_PASS" "123456" ""; do
-            if openssl pkcs12 -in "$CERTIFICATE_RAW" -nodes -passin pass:"$pass" -out "$PEM_PATH" 2>/dev/null; then
+          for pass in "$P12_PASSWORD" "$CLEAN_PASS"; do
+            if [ -n "$pass" ] && openssl pkcs12 -in "$CERTIFICATE_RAW" -nodes -passin pass:"$pass" -out "$PEM_PATH" 2>/dev/null; then
               echo "Certificate decrypted successfully!"
               SUCCESS=1
               break
@@ -100,9 +100,10 @@ jobs:
             openssl pkcs12 -in "$CERTIFICATE_RAW" -nodes -passin pass:"$P12_PASSWORD" -out "$PEM_PATH"
           fi
 
-          # Re-encode natively for Apple macOS Keychain
-          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"123456" || \
-          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"123456" -legacy
+          # Re-encode natively for Apple macOS Keychain using an ephemeral random password
+          COMPAT_PASS=$(openssl rand -hex 16)
+          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"$COMPAT_PASS" || \
+          openssl pkcs12 -export -in "$PEM_PATH" -out "$CERTIFICATE_COMPAT" -passout pass:"$COMPAT_PASS" -legacy
 
           # 3. Create and unlock temporary keychain
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
@@ -114,7 +115,7 @@ jobs:
           security import AppleWWDRCAG3.cer -k "$KEYCHAIN_PATH" -T /usr/bin/codesign -A || true
 
           # 5. Import the certificate into keychain
-          security import "$CERTIFICATE_COMPAT" -k "$KEYCHAIN_PATH" -P "123456" -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/xcodebuild
+          security import "$CERTIFICATE_COMPAT" -k "$KEYCHAIN_PATH" -P "$COMPAT_PASS" -T /usr/bin/codesign -T /usr/bin/security -T /usr/bin/xcodebuild
           security set-key-partition-list -S apple-tool:,apple:,codesign:,xcode: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security default-keychain -s "$KEYCHAIN_PATH"
           security list-keychains -d user -s "$KEYCHAIN_PATH" $(security list-keychains -d user | tr -d '"')

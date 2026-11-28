@@ -165,21 +165,23 @@ class WahaSessionResource extends Resource
                     ->modalContent(function (WahaSession $record, WahaClient $client) {
                         try {
                             if ($record->status === 'WORKING' && $record->phone) {
+                                $safePhone = e($record->phone);
                                 return new HtmlString("
                                     <div class='text-center p-6 space-y-3'>
                                         <div class='text-5xl'>✅</div>
                                         <h3 class='text-lg font-bold text-emerald-400'>الجلسة متصلة وتعمل بالفعل!</h3>
-                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$record->phone}</span></p>
+                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$safePhone}</span></p>
                                     </div>
                                 ");
                             }
                             $png = $client->qr($record->name);
                             if (str_contains($png, 'already connected')) {
+                                $safePhone = e($record->phone);
                                 return new HtmlString("
                                     <div class='text-center p-6 space-y-3'>
                                         <div class='text-5xl'>✅</div>
                                         <h3 class='text-lg font-bold text-emerald-400'>الجلسة متصلة وتعمل بالفعل!</h3>
-                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$record->phone}</span></p>
+                                        <p class='text-sm text-gray-300'>رقم الهاتف المرتبط: <span class='font-mono font-bold text-white' dir='ltr'>+{$safePhone}</span></p>
                                     </div>
                                 ");
                             }
@@ -193,10 +195,11 @@ class WahaSessionResource extends Resource
                                 </div>
                             ");
                         } catch (\Throwable $e) {
+                            $safeErr = e($e->getMessage());
                             return new HtmlString("
                                 <div class='p-4 text-center text-amber-400'>
                                     <p>تعذر جلب رمز QR حالياً. تأكد من تشغيل الجلسة أو التحقق من خادم WAHA.</p>
-                                    <p class='text-xs mt-2 text-gray-500'>{$e->getMessage()}</p>
+                                    <p class='text-xs mt-2 text-gray-500'>{$safeErr}</p>
                                 </div>
                             ");
                         }
