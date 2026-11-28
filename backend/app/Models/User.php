@@ -16,6 +16,7 @@ class User extends Authenticatable implements FilamentUser
 
     protected $fillable = [
         'name',
+        'username',
         'email',
         'phone',
         'phone_verified_at',
@@ -23,9 +24,12 @@ class User extends Authenticatable implements FilamentUser
         'deletion_requested_at',
         'password',
         'avatar',
+        'last_seen_at',
+        'current_room_code',
         'is_admin',
         'level',
         'total_score',
+        'weekly_score',
         'wins_count',
         'games_played',
     ];
@@ -41,10 +45,12 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
             'deletion_requested_at' => 'datetime',
+            'last_seen_at' => 'datetime',
             'password' => 'hashed',
             'is_admin' => 'boolean',
             'level' => 'integer',
             'total_score' => 'integer',
+            'weekly_score' => 'integer',
             'wins_count' => 'integer',
             'games_played' => 'integer',
         ];
@@ -63,5 +69,33 @@ class User extends Authenticatable implements FilamentUser
     public function deletionRequests()
     {
         return $this->hasMany(AccountDeletionRequest::class);
+    }
+
+    public function isOnline(): bool
+    {
+        return $this->last_seen_at !== null && $this->last_seen_at->greaterThanOrEqualTo(now()->subMinutes(2));
+    }
+
+    public function ensureUsername(): string
+    {
+        if (!empty($this->username)) {
+            return $this->username;
+        }
+
+        $base = preg_replace('/[^a-zA-Z0-9_]/', '', strtolower($this->name ?? ''));
+        if (strlen($base) < 3) {
+            $base = 'player';
+        }
+        $base = substr($base, 0, 18);
+        $candidate = $base . '_' . $this->id;
+        $suffix = 1;
+        while (static::where('username', $candidate)->where('id', '!=', $this->id)->exists()) {
+            $candidate = $base . '_' . $this->id . '_' . $suffix;
+            $suffix++;
+        }
+
+        $this->username = $candidate;
+        $this->saveQuietly();
+        return $this->username;
     }
 }

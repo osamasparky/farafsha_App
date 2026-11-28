@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AppContentController;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\SocialController;
 use App\Http\Controllers\Api\GameController;
 use App\Http\Controllers\Api\RoomController;
 use Illuminate\Http\Request;
@@ -97,6 +98,22 @@ Route::prefix('v1/auth')->group(function () {
         Route::post('/logout-all', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'logoutAll']);
         Route::post('/unlink/{provider}', [\App\Http\Controllers\Api\V1\SocialAuthController::class, 'unlink']);
     });
+});
+
+// مسارات الأصدقاء والشلل والمنافسة الاجتماعية
+Route::middleware('auth:sanctum')->prefix('social')->group(function () {
+    Route::post('/presence', [SocialController::class, 'presence']);
+    Route::post('/username', [SocialController::class, 'updateUsername']);
+    Route::get('/users/search', [SocialController::class, 'searchUsers']);
+    Route::get('/friends', [SocialController::class, 'friends']);
+    Route::post('/friends/request', [SocialController::class, 'sendFriendRequest']);
+    Route::post('/friends/respond', [SocialController::class, 'respondFriendRequest']);
+    Route::get('/friends/leaderboard', [SocialController::class, 'friendsLeaderboard']);
+    Route::get('/crews', [SocialController::class, 'crews']);
+    Route::post('/crews', [SocialController::class, 'createCrew']);
+    Route::post('/crews/join', [SocialController::class, 'joinCrew']);
+    Route::get('/crews/{id}', [SocialController::class, 'crewDetails']);
+    Route::post('/crews/{id}/invite', [SocialController::class, 'inviteFriendToCrew']);
 });
 
 // مسارات تكامل واتساب عبر WAHA (جلسات، رسائل، ويب هوك)

@@ -738,9 +738,15 @@ class AuthController extends Controller
      */
     public function me(Request $request): JsonResponse
     {
+        $user = $request->user();
+        if ($user) {
+            $user->ensureUsername();
+            $user->last_seen_at = now();
+            $user->saveQuietly();
+        }
         return response()->json([
             'status' => 'success',
-            'user' => $request->user(),
+            'user' => $user,
         ]);
     }
 

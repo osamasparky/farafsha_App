@@ -153,6 +153,12 @@ class AppContentController extends Controller
         $user->increment('games_played');
         if ($score > 0) {
             $user->increment('total_score', $score);
+            $user->increment('weekly_score', $score);
+            \App\Models\CrewMember::where('user_id', $user->id)->increment('weekly_score', $score);
+            $crewIds = \App\Models\CrewMember::where('user_id', $user->id)->pluck('crew_id');
+            if ($crewIds->isNotEmpty()) {
+                \App\Models\Crew::whereIn('id', $crewIds)->increment('total_score', $score);
+            }
         }
         if (!empty($validated['is_win']) && $score > 0) {
             $user->increment('wins_count');
